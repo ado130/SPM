@@ -29,7 +29,7 @@ public Q_SLOTS:
     void getData(const QByteArray data, QString statusCode);
     void parseOnlineParameters(const QByteArray data, QString statusCode);
     void loadOnlineParametersSlot();
-    void getScreenerParams(QList<sSCREENERPARAM> params);  
+    void setScreenerParamsSlot(QList<sSCREENERPARAM> params);
     void loadDegiroCSVslot();
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);

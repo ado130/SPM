@@ -148,6 +148,36 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
     isRAWFile = true;
 }
 
+QStringList DeGiro::parseLine(QString line, char delimeter)
+{
+    QStringList list;
+
+    int tmp = 0;
+    int index = line.indexOf(delimeter, tmp);
+    list << line.mid(tmp, index-tmp);
+
+    do
+    {
+        if(line.at(index+1) == ("\""))
+        {
+            tmp = index + 2;
+            index = line.indexOf("\"", tmp);
+            list << line.mid(tmp, index-tmp);
+            index += 1;
+        }
+        else
+        {
+            tmp = index + 1;
+            index = line.indexOf(delimeter, tmp);
+            list << line.mid(tmp, index-tmp);
+        }
+    }while(list.count() != 12);
+
+
+
+    return list;
+}
+
 QVector<sDEGIRORAW> DeGiro::getDegiroRawData() const
 {
     return degiroRawData;
@@ -156,11 +186,6 @@ QVector<sDEGIRORAW> DeGiro::getDegiroRawData() const
 void DeGiro::setDegiroRawData(const QVector<sDEGIRORAW> &value)
 {
     degiroRawData = value;
-}
-
-bool DeGiro::getIsRAWFile() const
-{
-    return isRAWFile;
 }
 
 bool DeGiro::loadDegiroRaw()
@@ -193,6 +218,11 @@ void DeGiro::saveDegiroRaw()
     }
 }
 
+bool DeGiro::getIsRAWFile() const
+{
+    return isRAWFile;
+}
+
 QDataStream &operator<<(QDataStream &out, const sDEGIRORAW &param)
 {
     out << param.dateTime;
@@ -219,35 +249,5 @@ QDataStream &operator>>(QDataStream &in, sDEGIRORAW &param)
     in >> param.money;
 
     return in;
-}
-
-QStringList DeGiro::parseLine(QString line, char delimeter)
-{
-    QStringList list;
-
-    int tmp = 0;
-    int index = line.indexOf(delimeter, tmp);
-    list << line.mid(tmp, index-tmp);
-
-    do
-    {
-        if(line.at(index+1) == ("\""))
-        {
-            tmp = index + 2;
-            index = line.indexOf("\"", tmp);
-            list << line.mid(tmp, index-tmp);
-            index += 1;
-        }
-        else
-        {
-            tmp = index + 1;
-            index = line.indexOf(delimeter, tmp);
-            list << line.mid(tmp, index-tmp);
-        }
-    }while(list.count() != 12);
-
-
-
-    return list;
 }
 

@@ -29,8 +29,6 @@ Database::Database(QObject *parent) : QObject(parent)
 
 void Database::loadConfig()
 {
-    qDebug() << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE;
-
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE, QSettings::IniFormat);
     setting.degiroCSV = settings.value("DeGiro/path", "").toString();
     setting.CSVdelimeter = static_cast<eDELIMETER>(settings.value("DeGiro/delimeter", 0).toInt());

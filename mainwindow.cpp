@@ -21,15 +21,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qDebug() << QSslSocket::supportsSsl() << QSslSocket::sslLibraryBuildVersionString() << QSslSocket::sslLibraryVersionString();
 
-    QString status = QString("Autor: Andrej Copyright © 2019; Version: %1").arg(VERSION_STR);
-    ui->statusBar->showMessage(status);
-
     manager = std::make_shared<DownloadManager> (this);
     database = std::make_shared<Database> (this);
     degiro = std::make_shared<DeGiro> (this);
     screener = std::make_shared<Screener> (this);
 
-
+    /********************************
+     * Geometry
+    ********************************/
     if(database->getSetting().width == 0 || database->getSetting().height == 0)
     {
         centerAndResize();
@@ -53,9 +52,15 @@ MainWindow::MainWindow(QWidget *parent) :
         );
     }
 
+    QString status = QString("Autor: Andrej Copyright © 2019; Version: %1").arg(VERSION_STR);
+    ui->statusBar->showMessage(status);
+
+    // Enter keyPress
     installEventFilter(this);
 
-    // Degiro table
+    /********************************
+     * DeGiro table
+    ********************************/
     setDegiroHeader();
 
     if(database->getSetting().autoload && degiro->getIsRAWFile())
@@ -64,7 +69,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-    // Screener table
+    /********************************
+     * Screener table
+    ********************************/
     ui->cbFilter->setChecked(database->getSetting().filterON);
     ui->pbFilter->setEnabled(database->getSetting().filterON);
 
@@ -165,10 +172,10 @@ void MainWindow::on_actionSettings_triggered()
     SettingsForm *dlg = new SettingsForm(database->getSetting(), this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     connect(dlg, SIGNAL(setSetting(sSETTINGS)), database.get(), SLOT(setSetting(sSETTINGS)));
-    connect(dlg, SIGNAL(setScreenerParams(QList<sSCREENERPARAM>)), this, SLOT(getScreenerParams(QList<sSCREENERPARAM>)));
-    connect(dlg, SIGNAL(loadOnlineParameters()), this, SLOT(loadOnlineParametersSlot()));
-    connect(dlg, SIGNAL(loadDegiroCSV()), this, SLOT(loadDegiroCSVslot()));
-    connect(this, SIGNAL(updateScreenerParams(QList<sSCREENERPARAM>)), dlg, SLOT(updateScreenerParamsSlot(QList<sSCREENERPARAM>)));
+    connect(dlg, &SettingsForm::setScreenerParams, this, &MainWindow::setScreenerParamsSlot);
+    connect(dlg, &SettingsForm::loadOnlineParameters, this, &MainWindow::loadOnlineParametersSlot);
+    connect(dlg, &SettingsForm::loadDegiroCSV, this, &MainWindow::loadDegiroCSVslot);
+    connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
     dlg->show();
 }
 
@@ -184,7 +191,7 @@ void MainWindow::setStatus(QString text)
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 {
-    if (event->type()==QEvent::KeyPress)
+    if (event->type() == QEvent::KeyPress)
     {
         QKeyEvent* key = static_cast<QKeyEvent*>(event);
 
@@ -205,17 +212,24 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         }
         return true;
     }
+    else if(event->type() == QEvent::Resize)
+    {
+        sSETTINGS set = database->getSetting();
+        set.width = this->geometry().width();
+        set.height = this->geometry().height();
+        database->setSetting(set);
+    }
     else
     {
         return QObject::eventFilter(obj, event);
     }
 }
 
-/*
+/********************************
 *
 *  DEGIRO
 *
-*/
+********************************/
 
 void MainWindow::loadDegiroCSVslot()
 {
@@ -225,8 +239,9 @@ void MainWindow::loadDegiroCSVslot()
     if(degiro->getIsRAWFile())
     {
         fillDegiro();
-        QApplication::restoreOverrideCursor();
     }
+
+    QApplication::restoreOverrideCursor();
 }
 
 void MainWindow::on_pbDegiroLoad_clicked()
@@ -269,7 +284,6 @@ void MainWindow::fillDegiro()
     for(int a = 0; a<data.count(); ++a)
     {
         ui->tableDegiro->insertRow(a);
-
         ui->tableDegiro->setItem(a, 0, new QTableWidgetItem(data.at(a).dateTime.toString("dd.MM.yyyy hh:mm")));
         ui->tableDegiro->setItem(a, 1, new QTableWidgetItem(data.at(a).product));
         ui->tableDegiro->setItem(a, 2, new QTableWidgetItem(data.at(a).ISIN));
@@ -277,7 +291,6 @@ void MainWindow::fillDegiro()
         ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(data.at(a).currency)));
         ui->tableDegiro->setItem(a, 5, new QTableWidgetItem(QString::number(data.at(a).money, 'f', 2)));
     }
-
 
     ui->tableDegiro->resizeColumnsToContents();
 
@@ -290,11 +303,11 @@ void MainWindow::fillDegiro()
     }
 }
 
-/*
+/********************************
 *
 *  SCREENER
 *
-*/
+********************************/
 void MainWindow::loadOnlineParametersSlot()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -302,6 +315,7 @@ void MainWindow::loadOnlineParametersSlot()
     connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(parseOnlineParameters(QByteArray, QString)));
     lastRequestSource = FINVIZ;
 
+    // Clean and save screener params
     QList<sSCREENERPARAM> screenerParams = database->getScreenerParams();
     screenerParams.clear();
     database->setScreenerParams(screenerParams);
@@ -371,7 +385,9 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             manager.get()->execute("https://finance.yahoo.com/quote/T/key-statistics");
         }
         else        // end
-        {
+        {       
+            std::sort(screenerParams.begin(), screenerParams.end(), [](sSCREENERPARAM a, sSCREENERPARAM b) {return a.name < b.name; });
+
             QApplication::restoreOverrideCursor();
             emit updateScreenerParams(screenerParams);
             setStatus("Parameters have been loaded");
@@ -379,7 +395,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
     }
 }
 
-void MainWindow::getScreenerParams(QList<sSCREENERPARAM> params)
+void MainWindow::setScreenerParamsSlot(QList<sSCREENERPARAM> params)
 {
     database->setScreenerParams(params);
 
@@ -423,6 +439,7 @@ void MainWindow::on_pbAddTicker_clicked()
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     QString ticker = ui->leTicker->text().trimmed();
+    ui->leTicker->setText(ticker.toUpper());
 
     temporaryLoadedTable.row.clear();
     lastRequestSource = FINVIZ;
