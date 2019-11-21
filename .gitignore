@@ -6,8 +6,8 @@
 *.la
 *.lai
 *.so
-*.dll
 *.dylib
+*.exe
 
 # Qt-es
 object_script.*.Release
@@ -41,3 +41,18 @@ target_wrapper.*
 
 # QtCreator CMake
 CMakeLists.txt.user*
+
+# Directories to ignore
+# ---------------------
+debug/
+release/
+setup/setup/
+openssl-1.1.1b-win32/
+
+# MinGW generated files
+*.Debug
+*.Release
+
+# qbs builds
+/*-debug/
+/*-release/

@@ -1,0 +1,16 @@
+#include "mainwindow.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    QApplication a(argc, argv);
+    a.setOrganizationDomain("SPM");
+    a.setApplicationName("SPM");
+
+    MainWindow w;
+    w.show();
+
+    return a.exec();
+}
