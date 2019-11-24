@@ -54,6 +54,10 @@ private slots:
     void on_pbDeleteTickers_clicked();
 
     void clickedScreenerTabSlot(int index);
+    void on_mainTab_currentChanged(int index);
+
+    void on_actionAbout_Qt_triggered();
+
 signals:
     void updateScreenerParams(QList<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);

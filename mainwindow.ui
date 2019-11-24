@@ -70,7 +70,7 @@ QTabBar::close-button {
 </string>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabOverviewMain">
          <attribute name="title">
@@ -530,6 +530,7 @@ QTabBar::close-button {
     </property>
     <addaction name="actionHelp"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <addaction name="menuFIle"/>
    <addaction name="menuAbout"/>
@@ -561,6 +562,11 @@ QTabBar::close-button {
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

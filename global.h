@@ -54,6 +54,9 @@ struct sSETTINGS
     // Window
     int width;
     int height;
+    int xPos;
+    int yPos;
+    int lastOpenedTab;
 
     // Screener
     QList<sSCREENERPARAM> screenerParams;

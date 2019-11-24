@@ -15,12 +15,16 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
 
     ui->leWidth->setValidator(new QIntValidator(0, 4096, this));
     ui->leHeight->setValidator(new QIntValidator(0, 2160, this));
+    ui->lePosX->setValidator(new QIntValidator(0, 4096, this));
+    ui->lePosY->setValidator(new QIntValidator(0, 2160, this));
 
+    ui->leWidth->setText(QString::number(setting.width));
+    ui->leHeight->setText(QString::number(setting.height));
+    ui->lePosX->setText(QString::number(setting.xPos));
+    ui->lePosY->setText(QString::number(setting.yPos));
     ui->leDegiroCSV->setText(setting.degiroCSV);
     ui->cmCSV->setCurrentIndex(setting.CSVdelimeter);
     ui->cbAutoLoad->setChecked(setting.autoload);
-    ui->leWidth->setText(QString::number(setting.width));
-    ui->leHeight->setText(QString::number(setting.height));
     ui->cbFilterON->setChecked(setting.filterON);
 }
 
@@ -44,6 +48,8 @@ void SettingsForm::on_buttonBox_accepted()
 {
     setting.width = ui->leWidth->text().toInt();
     setting.height = ui->leHeight->text().toInt();
+    setting.xPos = ui->lePosX->text().toInt();
+    setting.yPos = ui->lePosY->text().toInt();
 
     emit setSetting(setting);
 }

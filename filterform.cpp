@@ -249,7 +249,7 @@ void FilterForm::colorChanged(const QString &text)
 
         if(valid == "HIDE")
         {
-            // keep text, do nothing
+            le->setStyleSheet("QLineEdit { background: white }");
         }
         else
         {
@@ -261,6 +261,11 @@ void FilterForm::colorChanged(const QString &text)
             if(v.validate(valid, pos) == QValidator::Acceptable)
             {
                 isHEX = true;
+                le->setStyleSheet("QLineEdit { background: white }");
+            }
+            else
+            {
+                le->setStyleSheet("QLineEdit { background: red }");
             }
 
             if(isHEX)
@@ -407,11 +412,12 @@ void FilterForm::on_pbSave_clicked()
 
     for(int a = 0; a<cnt; ++a)
     {
+        isValid = true;
+
         sFILTER filter;
-        filter.param = paramList.at(a)->currentText();
 
         int pos;
-        QString valid = expressionList.at(a)->text();
+        QString filterValid = expressionList.at(a)->text();
 
         // f <
         QRegExp rx1("[-]?(([0]{1}[.]{1}[0-9]+)|([1-9]+[0-9]*[.]{1}[0-9]+)|([0-9]+))[<]{1}");
@@ -425,36 +431,62 @@ void FilterForm::on_pbSave_clicked()
         QRegExp rx3("([<]{1})(([0-9]{1}[.]{1}[0-9]+)|([1-9]+[.]{1}[0-9]+)|([1-9]+))([;]{1})(([0-9]{1}[.]{1}[0-9]+)|([1-9]+[.]{1}[0-9]+)|([1-9]+))([>]{1})");
         QRegExpValidator v3(rx3, nullptr);
 
-        if(v1.validate(valid, pos) == QValidator::Acceptable)
+        QString colorValid = colorList.at(a)->text();
+
+        if(colorValid == "HIDE")
+        {
+            // keep text, do nothing
+        }
+        else
+        {
+            int pos;
+            QRegExp rx("[0-9a-fA-F]{6}");
+            QRegExpValidator v(rx, nullptr);
+
+            if(v.validate(colorValid, pos) != QValidator::Acceptable)
+            {
+                colorList.at(a)->setStyleSheet("QLineEdit { background: red }");
+                isValid = false;
+            }
+        }
+
+        if(v1.validate(filterValid, pos) == QValidator::Acceptable)
         {
             filter.filter = LOWER;
-            filter.val1 = valid.mid(0, valid.indexOf("<")).toDouble();
+            filter.val1 = filterValid.mid(0, filterValid.indexOf("<")).toDouble();
             filter.val2 = 0.0;
         }
-        else if(v2.validate(valid, pos) == QValidator::Acceptable)
+        else if(v2.validate(filterValid, pos) == QValidator::Acceptable)
         {
             filter.filter = HIGHER;
-            filter.val1 = valid.mid(0, valid.indexOf(">")).toDouble();
+            filter.val1 = filterValid.mid(0, filterValid.indexOf(">")).toDouble();
             filter.val2 = 0.0;
         }
-        else if(v3.validate(valid, pos) == QValidator::Acceptable)
+        else if(v3.validate(filterValid, pos) == QValidator::Acceptable)
         {
             filter.filter = BETWEEN;
 
-            int semicolon = valid.indexOf(";");
+            int semicolon = filterValid.indexOf(";");
 
-            filter.val1 = valid.mid(1, semicolon-1).toDouble();
-            filter.val2 = valid.mid(semicolon+1, valid.indexOf(">")-semicolon-1).toDouble();
+            filter.val1 = filterValid.mid(1, semicolon-1).toDouble();
+            filter.val2 = filterValid.mid(semicolon+1, filterValid.indexOf(">")-semicolon-1).toDouble();
         }
         else
         {
             isValid = false;
-            break;
         }
 
-        filter.color = colorList.at(a)->text();
+        if(isValid)
+        {
+            filter.param = paramList.at(a)->currentText();
+            filter.color = colorList.at(a)->text();
 
-        filterList.push_back(filter);
+            filterList.push_back(filter);
+        }
+        else
+        {
+            expressionList.at(a)->setStyleSheet("QLineEdit { background: red }");
+        }
     }
 
 

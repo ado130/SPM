@@ -33,10 +33,13 @@ void Database::loadConfig()
     setting.degiroCSV = settings.value("DeGiro/path", "").toString();
     setting.CSVdelimeter = static_cast<eDELIMETER>(settings.value("DeGiro/delimeter", 0).toInt());
     setting.autoload = settings.value("DeGiro/autoload", false).toBool();
-    setting.width = settings.value("General/width", 0).toInt();
-    setting.height = settings.value("General/height", 0).toInt();
     setting.lastScreenerIndex = settings.value("Screener/lastScreenerIndex", -1).toInt();
     setting.filterON = settings.value("Screener/filterON", false).toBool();
+    setting.width = settings.value("General/width", 0).toInt();
+    setting.height = settings.value("General/height", 0).toInt();
+    setting.xPos = settings.value("General/xPos", 0).toInt();
+    setting.yPos = settings.value("General/yPos", 0).toInt();
+    setting.lastOpenedTab = settings.value("General/lastOpenedTab", 0).toInt();
 }
 
 void Database::saveConfig()
@@ -45,10 +48,13 @@ void Database::saveConfig()
     settings.setValue("DeGiro/path", setting.degiroCSV);
     settings.setValue("DeGiro/delimeter", setting.CSVdelimeter);
     settings.setValue("DeGiro/autoload", setting.autoload);
-    settings.setValue("General/width", setting.width);
-    settings.setValue("General/height", setting.height);
     settings.setValue("Screener/lastScreenerIndex", setting.lastScreenerIndex);
     settings.setValue("Screener/filterON", setting.filterON);
+    settings.setValue("General/width", setting.width);
+    settings.setValue("General/height", setting.height);
+    settings.setValue("General/xPos", setting.xPos);
+    settings.setValue("General/yPos", setting.yPos);
+    settings.setValue("General/lastOpenedTab", setting.lastOpenedTab);
 }
 
 void Database::loadScreenParams()

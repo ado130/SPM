@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     /********************************
      * Geometry
     ********************************/
-    if(database->getSetting().width == 0 || database->getSetting().height == 0)
+    if(database->getSetting().width <= 0 || database->getSetting().height <= 0 || database->getSetting().xPos <= 0 || database->getSetting().yPos <= 0)
     {
         centerAndResize();
 
@@ -50,21 +50,32 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QSize newSize( database->getSetting().width, database->getSetting().height);
 
-        setGeometry(
+        QPoint point = this->mapFromGlobal(QPoint(database->getSetting().xPos, database->getSetting().yPos));
+
+        setGeometry(point.x(),
+                    point.y(),
+                    database->getSetting().width,
+                    database->getSetting().height);
+        /*setGeometry(
             QStyle::alignedRect(
                 Qt::LeftToRight,
                 Qt::AlignCenter,
                 newSize,
                 QGuiApplication::screens().first()->availableGeometry()
             )
-        );
+        );*/
+
+        //this->mapFromGlobal(QPoint(database->getSetting().xPos, database->getSetting().yPos));
     }
+
+    ui->mainTab->setCurrentIndex(database->getSetting().lastOpenedTab);
 
     QString status = QString("Autor: Andrej Copyright © 2019; Version: %1").arg(VERSION_STR);
     ui->statusBar->showMessage(status);
 
-    // Enter keyPress
+
     installEventFilter(this);
+
 
     /********************************
      * DeGiro table
@@ -155,16 +166,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::on_mainTab_currentChanged(int index)
+{
+    sSETTINGS set = database->getSetting();
+    set.lastOpenedTab = index;
+    database->setSetting(set);
+}
+
 
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
     text =  "========================================\n";
-    text += "........................Stock Portfolio Manager (SPM)...........................\n";
-    text += "..................Copyright © 2019 Stock Portfolio Manager..........\n";
-    text += ".......................https://www.investicnigramotnost.cz.................\n";
-    text += "...............................................Andrej...............................................\n";
-    text += "................................vlasaty.andrej@gmail.com..........................\n";
+    text += "Stock Portfolio Manager (SPM)\n\n";
+    text += "Copyright © 2019 Stock Portfolio Manager\n\n";
+    text += "Author: Andrej\n";
+    text += "E-mail: vlasaty.andrej@gmail.com\n";
+    text += "Website: https://www.investicnigramotnost.cz\n";
     text += "========================================\n";
 
     QMessageBox::about(this,
@@ -202,6 +220,13 @@ void MainWindow::on_actionSettings_triggered()
     connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
     dlg->show();
 }
+
+void MainWindow::on_actionAbout_Qt_triggered()
+{
+    QMessageBox::aboutQt(this,
+                         "SPM");
+}
+
 
 void MainWindow::on_actionExit_triggered()
 {
@@ -245,11 +270,22 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
         return true;
     }
+    else if(event->type() == QEvent::Move)
+    {
+        sSETTINGS set = database->getSetting();
+        QPoint point = this->mapToGlobal(QPoint(0, 0));
+        set.xPos = point.x();
+        set.yPos = point.y();
+        database->setSetting(set);
+
+        return true;
+    }
     else
     {
         return QObject::eventFilter(obj, event);
     }
 }
+
 
 /********************************
 *
@@ -338,6 +374,7 @@ void MainWindow::fillDegiro()
         }
     }
 }
+
 
 /********************************
 *
