@@ -9,6 +9,7 @@
 #include "global.h"
 #include "degiro.h"
 #include "screener.h"
+#include "screenertab.h"
 
 
 namespace Ui {
@@ -40,8 +41,6 @@ private slots:
     void on_actionSettings_triggered();
     void on_actionExit_triggered();
     void on_pbAddTicker_clicked();
-    void on_pbLeftScreener_clicked();
-    void on_pbRightScreener_clicked();
     void on_pbNewScreener_clicked();
     void on_pbDeleteScreener_clicked();
     void on_pbDegiroLoad_clicked();
@@ -54,6 +53,7 @@ private slots:
     void refreshTickersCanceled();
     void on_pbDeleteTickers_clicked();
 
+    void clickedScreenerTabSlot(int index);
 signals:
     void updateScreenerParams(QList<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);
@@ -69,6 +69,8 @@ private:
     std::shared_ptr<DeGiro> degiro;
     std::shared_ptr<Screener> screener;
 
+    QVector<ScreenerTab*> screenerTabs;
+
     QProgressDialog *progressDialog;
 
     /**
@@ -77,7 +79,6 @@ private:
      */
     sTABLE temporaryLoadedTable;
 
-    sSCREENER currentScreenerData;
     int currentScreenerIndex;
     QStringList currentTickers;
 
@@ -88,13 +89,16 @@ private:
 
     void centerAndResize();
 
+    void setDegiroHeader();
+    void fillDegiro();
+
+    void setScreenerHeader(ScreenerTab *st);
     void dataLoaded();
     int findScreenerTicker(QString ticker);
-    void setScreenerHeader();
-    void fillScreener();
-    void fillDegiro();
-    void insertScreenerRow(tickerDataType ticerData);
-    void setDegiroHeader();
+    void insertScreenerRow(tickerDataType tickerData);
+    void fillScreener(ScreenerTab *st);
+    void applyFilter(ScreenerTab *st);
+    int applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter);
 };
 
 #endif // MAINWINDOW_H

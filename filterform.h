@@ -34,6 +34,7 @@ private slots:
 
     void on_pbSave_clicked();
 
+    void colorContextMenuSlot(const QPoint &pos);
 private:
     Ui::FilterForm *ui;
 

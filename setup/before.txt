@@ -12,9 +12,14 @@
 =======================================================
 
 
-=== Client Release 1.0.0.1 22 Nov 2019
+=== Client Release 1.0.1.0 24 Nov 2019
 + Added screener ticker refresh
 + Added ticker deleteting
+- Fixed screener table sorting
+- Fixed few issues
+* Numbers are saved as values not strings
+* QTabWidget for screeners
+* Added color HEX palette in Filter window
 
 === Client Release 1.0.0.0 21 Nov 2019
 * First exe deploy

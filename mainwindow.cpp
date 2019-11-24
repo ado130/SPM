@@ -21,6 +21,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qDebug() << QSslSocket::supportsSsl() << QSslSocket::sslLibraryBuildVersionString() << QSslSocket::sslLibraryVersionString();
 
+    if(!QSslSocket::supportsSsl())
+    {
+        QMessageBox::critical(this,
+                              "SSL supports",
+                              "The platform does not support the SSL, the application might not work correct!",
+                              QMessageBox::Ok);
+    }
+
     manager = std::make_shared<DownloadManager> (this);
     database = std::make_shared<Database> (this);
     degiro = std::make_shared<DeGiro> (this);
@@ -77,18 +85,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
     filterList = database->getFilterList();
 
-    setScreenerHeader();
     currentScreenerIndex = database->getLastScreenerIndex();
 
-    if(currentScreenerIndex != -1)
+    if(currentScreenerIndex > -1)
     {
-        auto allData = screener->getAllScreenerData();
+        QVector<sSCREENER> allData = screener->getAllScreenerData();
 
         if(allData.count() > currentScreenerIndex)
         {
-            currentScreenerData = screener->getAllScreenerData().at(currentScreenerIndex);
-            ui->lbScreenerName->setText(currentScreenerData.screenerName);
-            fillScreener();
+            for(int a = 0; a<allData.count(); ++a)
+            {
+                ScreenerTab *st = new ScreenerTab(this);
+                st->setScreenerData(allData.at(a));
+                screenerTabs.append(st);
+
+                ui->tabScreener->addTab(st, allData.at(a).screenerName);
+
+                setScreenerHeader(st);
+                fillScreener(st);
+            }
+
+            ui->tabScreener->setCurrentIndex(currentScreenerIndex);
         }
         else
         {
@@ -96,8 +113,14 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 
-    ui->leScreenerIndex->setText(QString::number(currentScreenerIndex));
+    connect(ui->tabScreener, &QTabWidget::currentChanged, this, &MainWindow::clickedScreenerTabSlot);
     database->setLastScreenerIndex(currentScreenerIndex);
+
+
+    if(database->getEnabledScreenerParams().count() == 0 || screenerTabs.count() == 0)
+    {
+        ui->pbAddTicker->setEnabled(false);
+    }
 }
 
 void MainWindow::centerAndResize()
@@ -160,6 +183,7 @@ void MainWindow::on_actionHelp_triggered()
     text += "   3) <f;f>\n";
     text += "where the \"f\" means float number.\n\n";
     text += "The color column has to be either HEX color number or \"HIDE\".\n";
+    text += "The color HEX palette as available under the context menu (right click).\n";
 
 
     QMessageBox::about(this,
@@ -218,6 +242,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.width = this->geometry().width();
         set.height = this->geometry().height();
         database->setSetting(set);
+
+        return true;
     }
     else
     {
@@ -240,6 +266,10 @@ void MainWindow::loadDegiroCSVslot()
     {
         fillDegiro();
     }
+    else
+    {
+        setStatus("The CSV DeGiro path is not set!");
+    }
 
     QApplication::restoreOverrideCursor();
 }
@@ -249,6 +279,10 @@ void MainWindow::on_pbDegiroLoad_clicked()
     if(degiro->getIsRAWFile())
     {
         fillDegiro();
+    }
+    else
+    {
+        setStatus("The CSV DeGiro path is not set!");
     }
 }
 
@@ -279,8 +313,9 @@ void MainWindow::fillDegiro()
         return;
     }
 
-    ui->tableScreener->setRowCount(0);
+    ui->tableDegiro->setRowCount(0);
 
+    ui->tableDegiro->setSortingEnabled(false);
     for(int a = 0; a<data.count(); ++a)
     {
         ui->tableDegiro->insertRow(a);
@@ -291,6 +326,7 @@ void MainWindow::fillDegiro()
         ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(data.at(a).currency)));
         ui->tableDegiro->setItem(a, 5, new QTableWidgetItem(QString::number(data.at(a).money, 'f', 2)));
     }
+    ui->tableDegiro->setSortingEnabled(true);
 
     ui->tableDegiro->resizeColumnsToContents();
 
@@ -353,7 +389,6 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             }
         }
 
-
         switch (lastRequestSource)
         {
             case FINVIZ:
@@ -389,8 +424,14 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             std::sort(screenerParams.begin(), screenerParams.end(), [](sSCREENERPARAM a, sSCREENERPARAM b) {return a.name < b.name; });
 
             QApplication::restoreOverrideCursor();
+            database->setScreenerParams(screenerParams);
             emit updateScreenerParams(screenerParams);
             setStatus("Parameters have been loaded");
+
+            if(screenerTabs.count() != 0)
+            {
+                ui->pbAddTicker->setEnabled(true);
+            }
         }
     }
 }
@@ -399,29 +440,36 @@ void MainWindow::setScreenerParamsSlot(QList<sSCREENERPARAM> params)
 {
     database->setScreenerParams(params);
 
-    setScreenerHeader();
-    fillScreener();
+    for(int a = 0; a<screenerTabs.count(); ++a)
+    {
+        setScreenerHeader(screenerTabs.at(a));
+        fillScreener(screenerTabs.at(a));
+    }
 }
 
-void MainWindow::setScreenerHeader()
+void MainWindow::setScreenerHeader(ScreenerTab *st)
 {
-    ui->tableScreener->setRowCount(0);
+    if(!st) return;
+
+    QTableWidget *tab = st->getScreenerTable();
+
+    tab->setRowCount(0);
 
     QStringList header = database->getEnabledScreenerParams();
 
     header << "Delete";
 
-    ui->tableScreener->setColumnCount(header.count());
+    tab->setColumnCount(header.count());
 
-    ui->tableScreener->horizontalHeader()->setVisible(true);
-    ui->tableScreener->verticalHeader()->setVisible(true);
+    tab->horizontalHeader()->setVisible(true);
+    tab->verticalHeader()->setVisible(true);
 
-    ui->tableScreener->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableScreener->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->tableScreener->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->tableScreener->setShowGrid(true);
+    tab->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tab->setSelectionMode(QAbstractItemView::SingleSelection);
+    tab->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tab->setShowGrid(true);
 
-    ui->tableScreener->setHorizontalHeaderLabels(header);
+    tab->setHorizontalHeaderLabels(header);
 }
 
 void MainWindow::on_pbAddTicker_clicked()
@@ -433,6 +481,14 @@ void MainWindow::on_pbAddTicker_clicked()
                              "Please create at least one screener!",
                              QMessageBox::Ok);
 
+        setStatus("Please create at least one screener!");
+
+        return;
+    }
+
+    if(ui->leTicker->text().trimmed().isEmpty())
+    {
+        setStatus("The ticker field is empty!");
         return;
     }
 
@@ -503,7 +559,6 @@ void MainWindow::dataLoaded()
     tickerDataType tickerLine;
 
     QString ticker = ui->leTicker->text().trimmed();
-    int tickerOrder = findScreenerTicker(ticker);
 
     QStringList infoData;
     infoData << "Ticker" << "Stock name" << "Sector" << "Industry" << "Country";
@@ -567,18 +622,29 @@ void MainWindow::dataLoaded()
 
     if(tickerLine.isEmpty()) return;
 
+    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
 
-    if(tickerOrder == -1)       // Ticker does not exist, so add it
+    sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
+
+    int tickerOrder = findScreenerTicker(ticker);
+
+    if(tickerOrder == -2)
+    {
+        return;
+    }
+    else if(tickerOrder == -1)       // Ticker does not exist, so add it
     {
         currentScreenerData.screenerData.append(tickerLine);
 
-        auto allScreenerData = screener->getAllScreenerData();
+        QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
         if(currentScreenerIndex < allScreenerData.count())
         {
             allScreenerData[currentScreenerIndex] = currentScreenerData;
             screener->setAllScreenerData(allScreenerData);
         }
+
+        screenerTabs.at(currentScreenerIndex)->setScreenerData(currentScreenerData);
 
         insertScreenerRow(tickerLine);
 
@@ -588,30 +654,33 @@ void MainWindow::dataLoaded()
     {
         currentScreenerData.screenerData[tickerOrder] = tickerLine;
 
-        auto allScreenerData = screener->getAllScreenerData();
+        QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
         if(currentScreenerIndex < allScreenerData.count())
         {
             allScreenerData[currentScreenerIndex] = currentScreenerData;
             screener->setAllScreenerData(allScreenerData);
 
+            screenerTabs.at(currentScreenerIndex)->setScreenerData(currentScreenerData);
+
             setStatus(QString("Ticker %1 has been updated").arg(ticker));
         }
 
-        QStringList screenerParams = database->getEnabledScreenerParams();
-
         int currentRowInTable = -1;
+
+        if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+        ScreenerTab *tab = screenerTabs.at(currentScreenerIndex);
 
         // Check if the filter is enabled, if so, some tickers might be hidden, so find correct row in the table for our ticker
         if(ui->cbFilter->isChecked())
         {
             bool found = false;
 
-            for(int row = 0; row<ui->tableScreener->rowCount() && !found; ++row)
+            for(int row = 0; row<tab->getScreenerTable()->rowCount() && !found; ++row)
             {
-                for(int col = 0; col<ui->tableScreener->columnCount()-1 && !found; ++col)
+                for(int col = 0; col<tab->getScreenerTable()->columnCount()-1 && !found; ++col)
                 {
-                    if(ui->tableScreener->item(row, col) && ui->tableScreener->item(row, col)->text() == ui->leTicker->text())
+                    if(tab->getScreenerTable()->item(row, col) && tab->getScreenerTable()->item(row, col)->text() == ui->leTicker->text())
                     {
                         currentRowInTable = row;
                         found = true;
@@ -625,7 +694,6 @@ void MainWindow::dataLoaded()
             currentRowInTable = tickerOrder;
         }
 
-
         if(currentRowInTable != -1)
         {
             int pos = 0;
@@ -638,16 +706,53 @@ void MainWindow::dataLoaded()
                     {
                         QString text = tickerLine.at(col).second;
 
-                        if(!ui->tableScreener->item(currentRowInTable, param))      // the item does not exist, so create it
+                        if(!tab->getScreenerTable()->item(currentRowInTable, param))      // the item does not exist, so create it
                         {
-                            QTableWidgetItem *item = new QTableWidgetItem(text);
-                            item->setTextAlignment(Qt::AlignCenter);
-                            ui->tableScreener->setItem(currentRowInTable, param, item);
+                            QTableWidgetItem *item = new QTableWidgetItem;
+
+                            bool ok;
+                            double testNumber = text.toDouble(&ok);
+
+                            if(ok)
+                            {
+                                item->setData(Qt::EditRole, testNumber);
+                            }
+                            else
+                            {
+                                item->setData(Qt::EditRole, text);
+                            }
+
+                            item->setTextAlignment(Qt::AlignCenter);                           
+                            tab->getScreenerTable()->setSortingEnabled(false);
+                            tab->getScreenerTable()->setItem(currentRowInTable, param, item);
+                            tab->getScreenerTable()->setSortingEnabled(false);
+
+                            Q_FOREACH(sFILTER filter, filterList)
+                            {
+                                if(filter.param == screenerParams.at(param))
+                                {
+                                    applyFilterOnItem(screenerTabs.at(currentScreenerIndex), item, filter);
+                                }
+                            }
                         }
                         else            // update the data
                         {
-                            ui->tableScreener->item(currentRowInTable, param)->setText(text);
+                            QTableWidgetItem *item = tab->getScreenerTable()->item(currentRowInTable, param);
+
+                            if(item)
+                            {
+                                item->setText(text);
+
+                                Q_FOREACH(sFILTER filter, filterList)
+                                {
+                                    if(filter.param == screenerParams.at(param))
+                                    {
+                                        applyFilterOnItem(screenerTabs.at(currentScreenerIndex), item, filter);
+                                    }
+                                }
+                            }
                         }
+
                         pos++;
                         break;
                     }
@@ -662,18 +767,17 @@ void MainWindow::dataLoaded()
 // Return a row for specific ticker
 int MainWindow::findScreenerTicker(QString ticker)
 {
-    auto allData = screener->getAllScreenerData();
+    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return -2;
 
-    if(allData.count() > currentScreenerIndex)
+    sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
+
+    for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
     {
-        for(int row = 0; row<allData.at(currentScreenerIndex).screenerData.count(); ++row)
+        for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
         {
-            for(int col = 0; col<allData.at(currentScreenerIndex).screenerData.at(row).count(); ++col)
+            if(currentScreenerData.screenerData.at(row).at(col).second == ticker)
             {
-                if(allData.at(currentScreenerIndex).screenerData.at(row).at(col).second == ticker)
-                {
-                    return row;
-                }
+                return row;
             }
         }
     }
@@ -681,27 +785,50 @@ int MainWindow::findScreenerTicker(QString ticker)
     return -1;
 }
 
-void MainWindow::insertScreenerRow(tickerDataType ticerData)
+void MainWindow::insertScreenerRow(tickerDataType tickerData)
 {
-    int row = ui->tableScreener->rowCount();
-    ui->tableScreener->insertRow(row);
+    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+    ScreenerTab *st = screenerTabs.at(currentScreenerIndex);
 
-    if(currentScreenerData.screenerData.isEmpty() || ticerData.isEmpty()) return;
+    int row = st->getScreenerTable()->rowCount();
+    st->getScreenerTable()->insertRow(row);
 
     QStringList screenerParams = database->getEnabledScreenerParams();
 
-    int pos = 0;
-    for(int col = 0; col<ticerData.count(); ++col)
+    for(int col = 0; col<tickerData.count(); ++col)
     {
         for(int param = 0; param<screenerParams.count(); ++param)
         {
-            if(ticerData.at(col).first == screenerParams.at(param))
+            if(tickerData.at(col).first == screenerParams.at(param))
             {
-                QString text = ticerData.at(col).second;
-                QTableWidgetItem *item = new QTableWidgetItem(text);
-                item->setTextAlignment(Qt::AlignCenter);
-                ui->tableScreener->setItem(row, pos, item);
-                pos++;
+                QString text = tickerData.at(col).second;
+                QTableWidgetItem *item = new QTableWidgetItem();
+
+                bool ok;
+                double testNumber = text.toDouble(&ok);
+
+                if(ok)
+                {
+                    item->setData(Qt::EditRole, testNumber);
+                }
+                else
+                {
+                    item->setData(Qt::EditRole, text);
+                }
+
+                item->setTextAlignment(Qt::AlignCenter);                
+                st->getScreenerTable()->setSortingEnabled(false);
+                st->getScreenerTable()->setItem(row, param, item);
+                st->getScreenerTable()->setSortingEnabled(true);
+
+                Q_FOREACH(sFILTER filter, filterList)
+                {
+                    if(filter.param == screenerParams.at(param))
+                    {
+                        applyFilterOnItem(st, item, filter);
+                    }
+                }
+
                 break;
             }
         }
@@ -709,17 +836,23 @@ void MainWindow::insertScreenerRow(tickerDataType ticerData)
 
     QTableWidgetItem *item = new QTableWidgetItem("Delete");
     item->setCheckState(Qt::Unchecked);
-    item->setTextAlignment(Qt::AlignCenter);
-    ui->tableScreener->setItem(ui->tableScreener->rowCount()-1, ui->tableScreener->columnCount()-1, item);
+    item->setTextAlignment(Qt::AlignCenter);    
+    st->getScreenerTable()->setSortingEnabled(false);
+    st->getScreenerTable()->setItem(st->getScreenerTable()->rowCount()-1, st->getScreenerTable()->columnCount()-1, item);
+    st->getScreenerTable()->setSortingEnabled(true);
 
-    ui->tableScreener->resizeColumnsToContents();
+    st->getScreenerTable()->resizeColumnsToContents();
 }
 
-void MainWindow::fillScreener()
+void MainWindow::fillScreener(ScreenerTab *st)
 {
-    ui->tableScreener->setRowCount(0);
+    if(!st) return;
+
+    sSCREENER currentScreenerData = st->getScreenerData();
 
     if(currentScreenerData.screenerData.isEmpty()) return;
+
+    st->getScreenerTable()->setRowCount(0);
 
     QStringList screenerParams = database->getEnabledScreenerParams();
 
@@ -728,11 +861,11 @@ void MainWindow::fillScreener()
 
     for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
     {
-        ui->tableScreener->insertRow(row-hiddenRows);
+        st->getScreenerTable()->insertRow(row-hiddenRows);
 
-        for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+        for(int param = 0; param<screenerParams.count(); ++param)
         {
-            for(int param = 0; param<screenerParams.count(); ++param)
+            for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
             {
                 if(currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
                 {
@@ -745,7 +878,7 @@ void MainWindow::fillScreener()
                     if(ui->cbFilter->isChecked())
                     {
                         Q_FOREACH(sFILTER filter, filterList)
-                        {                           
+                        {
                             if(filter.param == screenerParams.at(param))
                             {
                                 color = filter.color;
@@ -759,7 +892,27 @@ void MainWindow::fillScreener()
                     }
 
                     QString text = currentScreenerData.screenerData.at(row).at(col).second;
-                    QTableWidgetItem *item = new QTableWidgetItem(text);
+                    int percentSign = text.indexOf("%");
+
+                    if(percentSign != -1)
+                    {
+                        text = text.mid(0, percentSign);
+                    }
+
+                    QTableWidgetItem *item = new QTableWidgetItem;
+
+                    bool ok;
+                    double testNumber = text.toDouble(&ok);
+
+                    if(ok)
+                    {
+                        item->setData(Qt::EditRole, testNumber);
+                    }
+                    else
+                    {
+                        item->setData(Qt::EditRole, text);
+                    }
+
                     item->setTextAlignment(Qt::AlignCenter);
 
                     if(isFilter)
@@ -771,8 +924,7 @@ void MainWindow::fillScreener()
                                 {
                                     if(color == "HIDE")
                                     {
-                                        qDebug() << ui->tableScreener->rowCount();
-                                        ui->tableScreener->setRowCount(ui->tableScreener->rowCount()-1);
+                                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
                                         goto nextRow;
                                     }
@@ -785,7 +937,7 @@ void MainWindow::fillScreener()
                                 {
                                     if(color == "HIDE")
                                     {
-                                        ui->tableScreener->setRowCount(ui->tableScreener->rowCount()-1);
+                                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
                                         goto nextRow;
                                     }
@@ -798,8 +950,7 @@ void MainWindow::fillScreener()
                                 {
                                     if(color == "HIDE")
                                     {
-                                        qDebug() << ui->tableScreener->rowCount();
-                                        ui->tableScreener->setRowCount(ui->tableScreener->rowCount()-1);
+                                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
                                         goto nextRow;
                                     }
@@ -810,7 +961,9 @@ void MainWindow::fillScreener()
                         }
                     }
 
-                    ui->tableScreener->setItem(row - hiddenRows, param, item);
+                    st->getScreenerTable()->setSortingEnabled(false);
+                    st->getScreenerTable()->setItem(row - hiddenRows, param, item);
+                    st->getScreenerTable()->setSortingEnabled(true);
 
                     break;
                 }
@@ -821,7 +974,9 @@ void MainWindow::fillScreener()
             QTableWidgetItem *item = new QTableWidgetItem("Delete");
             item->setCheckState(Qt::Unchecked);
             item->setTextAlignment(Qt::AlignCenter);
-            ui->tableScreener->setItem(ui->tableScreener->rowCount()-1, ui->tableScreener->columnCount()-1, item);
+            st->getScreenerTable()->setSortingEnabled(false);
+            st->getScreenerTable()->setItem(st->getScreenerTable()->rowCount()-1, st->getScreenerTable()->columnCount()-1, item);
+            st->getScreenerTable()->setSortingEnabled(true);
         }
 
         nextRow:
@@ -833,42 +988,136 @@ void MainWindow::fillScreener()
         }
     }
 
-    ui->lbHidden->setText(QString("Hidden rows: %1").arg(hiddenRows));
+    st->getHiddenRows()->setText(QString("Hidden rows: %1").arg(hiddenRows));
 
-    ui->tableScreener->resizeColumnsToContents();
+    st->getScreenerTable()->resizeColumnsToContents();
 }
 
-void MainWindow::on_pbLeftScreener_clicked()
+void MainWindow::applyFilter(ScreenerTab *st)
 {
-    if(currentScreenerIndex > 0)
+    if(!st) return;
+
+    QTableWidget *tab = st->getScreenerTable();
+    QStringList screenerParams = database->getEnabledScreenerParams();
+    sSCREENER currentScreenerData = st->getScreenerData();
+
+    int hiddenRows = 0;
+
+    for(int row = 0; row<tab->rowCount(); ++row)
     {
-        currentScreenerIndex--;
-        database->setLastScreenerIndex(currentScreenerIndex);
+        for(int param = 0; param<screenerParams.count(); ++param)
+        {
+            for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+            {
+                Q_FOREACH(sFILTER filter, filterList)
+                {
+                    if(filter.param == screenerParams.at(param) &&
+                            currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
+                    {
+                        QTableWidgetItem *item = tab->item(row, param);
 
-        auto allData = screener->getAllScreenerData();
-        currentScreenerData = allData.at(currentScreenerIndex);
-        ui->lbScreenerName->setText(currentScreenerData.screenerName);
-        ui->leScreenerIndex->setText(QString::number(currentScreenerIndex));
+                        hiddenRows += applyFilterOnItem(st, item, filter);
+                        break;
 
-        fillScreener();
+                    }
+                }
+            }
+        }
     }
+
+    st->getHiddenRows()->setText(QString("Hidden rows: %1").arg(hiddenRows));
+
+    st->getScreenerTable()->resizeColumnsToContents();
 }
 
-void MainWindow::on_pbRightScreener_clicked()
+int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter)
 {
-    auto allData = screener->getAllScreenerData();
-
-    if(currentScreenerIndex < allData.count() - 1)
+    if(!item || !st)
     {
-        currentScreenerIndex++;
-        database->setLastScreenerIndex(currentScreenerIndex);
-
-        currentScreenerData = allData.at(currentScreenerIndex);
-        ui->lbScreenerName->setText(currentScreenerData.screenerName);
-        ui->leScreenerIndex->setText(QString::number(currentScreenerIndex));
-
-        fillScreener();
+        return 0;
     }
+
+    int hiddenRows = 0;
+
+    QString color = filter.color;
+    double val1 = filter.val1;
+    double val2 = filter.val2;
+    eFILTER filterType = filter.filter;
+
+    QString text = item->text();
+    int percentSign = text.indexOf("%");
+
+    if(percentSign != -1)
+    {
+        text = text.mid(0, percentSign);
+    }
+
+    bool ok;
+    double testNumber = text.toDouble(&ok);
+
+    if(ok)
+    {
+        item->setData(Qt::EditRole, testNumber);
+        switch (filterType)
+        {
+            case LOWER:
+                if(text.toDouble() < val1)
+                {
+                    if(color == "HIDE")
+                    {
+                        hiddenRows++;
+                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
+                    }
+                    else
+                    {
+                        item->setBackground(QColor("#" + color));
+                    }
+                }
+                else
+                {
+                    item->setBackground(QColor(item->row()%2 ? "#dadbde" : "#f6f7fa"));
+                }
+                break;
+            case HIGHER:
+                if(text.toDouble() > val1)
+                {
+                    if(color == "HIDE")
+                    {
+                        hiddenRows++;
+                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
+                    }
+                    else
+                    {
+                        item->setBackground(QColor("#" + color));
+                    }
+                }
+                else
+                {
+                    item->setBackground(QColor(item->row()%2 ? "#dadbde" : "#f6f7fa"));
+                }
+                break;
+            case BETWEEN:
+                if(text.toDouble() > val1 && text.toDouble() < val2)
+                {
+                    if(color == "HIDE")
+                    {
+                        hiddenRows++;
+                        st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
+                    }
+                    else
+                    {
+                        item->setBackground(QColor("#" + color));
+                    }
+                }
+                else
+                {
+                    item->setBackground(QColor(item->row()%2 ? "#dadbde" : "#f6f7fa"));
+                }
+                break;
+        }
+    }
+
+    return hiddenRows;
 }
 
 void MainWindow::on_pbNewScreener_clicked()
@@ -885,17 +1134,27 @@ void MainWindow::on_pbNewScreener_clicked()
     {
         currentScreenerIndex++;
         database->setLastScreenerIndex(currentScreenerIndex);
-        ui->leScreenerIndex->setText(QString::number(currentScreenerIndex));
 
+        sSCREENER currentScreenerData;
         currentScreenerData.screenerName = text;
         currentScreenerData.screenerData.clear();
-        ui->lbScreenerName->setText(text);
 
-        auto allData = screener->getAllScreenerData();
+        QVector<sSCREENER> allData = screener->getAllScreenerData();
         allData.push_back(currentScreenerData);
         screener->setAllScreenerData(allData);
 
-        fillScreener();
+        ScreenerTab *st = new ScreenerTab(this);
+        screenerTabs.append(st);
+        st->setScreenerData(currentScreenerData);
+
+        ui->tabScreener->addTab(st, currentScreenerData.screenerName);
+        setScreenerHeader(st);
+        ui->tabScreener->setCurrentIndex(currentScreenerIndex);
+
+        if(screenerTabs.count() != 0)
+        {
+            ui->pbAddTicker->setEnabled(true);
+        }
     }
 }
 
@@ -910,26 +1169,35 @@ void MainWindow::on_pbDeleteScreener_clicked()
     {
         if(currentScreenerIndex < 0) return;
 
-        auto allData = screener->getAllScreenerData();
+        QVector<sSCREENER> allData = screener->getAllScreenerData();
         allData.removeAt(currentScreenerIndex);
         screener->setAllScreenerData(allData);
 
+        screenerTabs.removeAt(currentScreenerIndex);
+        ui->tabScreener->removeTab(currentScreenerIndex);
+
         currentScreenerIndex--;
         database->setLastScreenerIndex(currentScreenerIndex);
-        ui->leScreenerIndex->setText(QString::number(currentScreenerIndex));
 
-        if(currentScreenerIndex != -1)
+        if(currentScreenerIndex > -1)
         {
+            sSCREENER currentScreenerData;
             currentScreenerData = allData.at(currentScreenerIndex);
-            ui->lbScreenerName->setText(currentScreenerData.screenerName);
+            ui->tabScreener->setCurrentIndex(currentScreenerIndex);
         }
-        else
-        {
-            currentScreenerData.screenerData.clear();
-            ui->lbScreenerName->setText("No Screener");
-        }
+    }
+}
 
-        fillScreener();
+void MainWindow::clickedScreenerTabSlot(int index)
+{
+    if(index < screenerTabs.count())
+    {
+        currentScreenerIndex = index;
+        database->setLastScreenerIndex(currentScreenerIndex);
+    }
+    else
+    {
+        qCritical() << "This will never happen";
     }
 }
 
@@ -946,19 +1214,32 @@ void MainWindow::on_cbFilter_clicked(bool checked)
 {
     ui->pbFilter->setEnabled(checked);
     filterList = database->getFilterList();
-    fillScreener();
+
+    for(int a = 0; a<screenerTabs.count(); ++a)
+    {
+        fillScreener(screenerTabs.at(a));
+    }
 }
 
 void MainWindow::setFilterSlot(QVector<sFILTER> list)
 {
     database->setFilterList(list);
     filterList = list;
-    fillScreener();
+
+    for(int a = 0; a<screenerTabs.count(); ++a)
+    {
+        applyFilter(screenerTabs.at(a));
+    }
 }
+
 
 void MainWindow::on_pbRefresh_clicked()
 {
+    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+
     currentTickers.clear();
+
+    sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
 
     Q_FOREACH(tickerDataType scr, currentScreenerData.screenerData)
     {
@@ -974,7 +1255,7 @@ void MainWindow::on_pbRefresh_clicked()
 
     if(!currentTickers.isEmpty())
     {
-        progressDialog = new QProgressDialog("Operation in progress.", "Cancel", 0, currentTickers.count(), this);
+        progressDialog = new QProgressDialog("Operation in progress", "Cancel", 0, currentTickers.count(), this);
         connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
         progressDialog->setMinimumDuration(0);
         progressDialog->setWindowModality(Qt::WindowModal);
@@ -1032,41 +1313,52 @@ void MainWindow::refreshTickersCanceled()
 }
 
 void MainWindow::on_pbDeleteTickers_clicked()
-{
+{    
+    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+
+    currentTickers.clear();
+
+    sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
+
+    ScreenerTab *tab = screenerTabs.at(currentScreenerIndex);
+    QStringList screenerParams = database->getEnabledScreenerParams();
     QString ticker;
 
-    for(int tableRow = 0; tableRow<ui->tableScreener->rowCount(); ++tableRow)
+    for(int tableRow = 0; tableRow<tab->getScreenerTable()->rowCount(); ++tableRow)
     {
-        if(ui->tableScreener->item(tableRow, ui->tableScreener->columnCount()-1)->checkState() == Qt::Checked)
+        if(tab->getScreenerTable()->item(tableRow, tab->getScreenerTable()->columnCount()-1)->checkState() == Qt::Checked)
         {
-            Q_FOREACH(tickerDataType scr, currentScreenerData.screenerData)
             for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
             {
-                for(int col = 0; col<scr.count(); ++col)
+                for(int param = 0; param<screenerParams.count(); ++param)
                 {
-                    if(scr.at(col).first == "Ticker" && currentScreenerData.screenerData.at(row).at(col).second == ui->tableScreener->item(tableRow, col)->text())
+                    if(screenerParams.at(param) == "Ticker")
                     {
-                        currentScreenerData.screenerData.removeAt(row);
-
-                        auto allScreenerData = screener->getAllScreenerData();
-
-                        if(currentScreenerIndex < allScreenerData.count())
+                        for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
                         {
-                            allScreenerData[currentScreenerIndex] = currentScreenerData;
-                            screener->setAllScreenerData(allScreenerData);
-                        }
+                            if(currentScreenerData.screenerData.at(row).at(col).second == tab->getScreenerTable()->item(tableRow, param)->text())
+                            {
+                                currentScreenerData.screenerData.removeAt(row);
 
-                        break;
+                                QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
+
+                                if(currentScreenerIndex < allScreenerData.count())
+                                {
+                                    allScreenerData[currentScreenerIndex] = currentScreenerData;
+                                    screener->setAllScreenerData(allScreenerData);
+                                    screenerTabs.at(currentScreenerIndex)->setScreenerData(currentScreenerData);
+                                }
+
+                                break;
+                            }
+                        }
                     }
                 }
             }
 
-            ui->tableScreener->removeRow(tableRow);
+            tab->getScreenerTable()->removeRow(tableRow);
 
-            if(tableRow > 0)
-            {
-                tableRow--;
-            }
+            tableRow--;
         }
     }
 }

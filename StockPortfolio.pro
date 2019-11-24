@@ -48,6 +48,7 @@ SOURCES += \
         mainwindow.cpp \
         screener.cpp \
         screenerform.cpp \
+        screenertab.cpp \
         settingsform.cpp
 
 HEADERS += \
@@ -59,12 +60,14 @@ HEADERS += \
         mainwindow.h \
         screener.h \
         screenerform.h \
+        screenertab.h \
         settingsform.h
 
 FORMS += \
         filterform.ui \
         mainwindow.ui \
         screenerform.ui \
+        screenertab.ui \
         settingsform.ui
 
 # Default rules for deployment.

@@ -1,10 +1,11 @@
 #include "filterform.h"
 #include "ui_filterform.h"
 
-
 #include <QDebug>
 #include <QRegExp>
 #include <QRegExpValidator>
+#include <QMenu>
+#include <QColorDialog>
 
 FilterForm::FilterForm(QStringList params, QVector<sFILTER> list, QWidget *parent) :
     QDialog(parent),
@@ -24,7 +25,6 @@ FilterForm::FilterForm(QStringList params, QVector<sFILTER> list, QWidget *paren
 
     ui->scrollAreaWidgetContents->setLayout(gl);
 
-
     QHBoxLayout *hb = new QHBoxLayout();
     QLabel *lbParam = new QLabel("Parameter", this);
     lbParam->setAlignment(Qt::AlignCenter);
@@ -32,6 +32,8 @@ FilterForm::FilterForm(QStringList params, QVector<sFILTER> list, QWidget *paren
     lbFilter->setAlignment(Qt::AlignCenter);
     QLabel *lbColor = new QLabel("Color", this);
     lbColor->setAlignment(Qt::AlignCenter);
+    lbColor->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(lbColor, &QWidget::customContextMenuRequested, this, &FilterForm::colorContextMenuSlot);
     QLabel *lbShow = new QLabel("Show", this);
     lbShow->setAlignment(Qt::AlignCenter);
     QLabel *lbDelete = new QLabel("Delete", this);
@@ -93,6 +95,8 @@ void FilterForm::setFilterList()
         leColor->setMaxLength(6);
         leColor->setToolTip("HEX color");
         connect(leColor, SIGNAL(textChanged(const QString)), this, SLOT(colorChanged(const QString)));
+        leColor->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(leColor, &QWidget::customContextMenuRequested, this, &FilterForm::colorContextMenuSlot);
 
         QLabel *lbColor = new QLabel(this);
         lbColor->setMinimumSize(20, 20);
@@ -119,6 +123,30 @@ void FilterForm::setFilterList()
     }
 }
 
+void FilterForm::colorContextMenuSlot(const QPoint &pos)
+{
+    Q_UNUSED(pos)
+
+    QObject *obj = sender();
+
+    if(!obj) return;
+
+    QLineEdit *le = qobject_cast<QLineEdit*>(obj);
+
+    QMenu *menu = new QMenu(this);
+
+    QAction *color = new QAction("HEX colors", this);
+    connect(color,&QAction::triggered,
+            this,[le](){
+                       QString clr = QColorDialog::getColor().name(QColor::HexRgb).mid(1);      // skip #
+                       le->setText(clr);
+                     }
+            );
+
+    menu->addAction(color);
+    menu->popup(QCursor::pos());
+}
+
 void FilterForm::on_pbAddRow_clicked()
 {
     QHBoxLayout *hb = new QHBoxLayout();
@@ -134,6 +162,8 @@ void FilterForm::on_pbAddRow_clicked()
     leColor->setMaxLength(6);
     leColor->setToolTip("HEX color");
     connect(leColor, SIGNAL(textChanged(const QString)), this, SLOT(colorChanged(const QString)));
+    leColor->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(leColor, &QWidget::customContextMenuRequested, this, &FilterForm::colorContextMenuSlot);
 
     QLabel *lbColor = new QLabel(this);
     lbColor->setMinimumSize(20, 20);
