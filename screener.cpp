@@ -115,7 +115,7 @@ sTABLE Screener::finvizParse(QString data)
 
     QStringList TRvalues = body.mid(startInnerTable, endInnderTable-startInnerTable).split("<tr");
 
-    foreach (QString TR, TRvalues)
+    for(const QString &TR : TRvalues)
     {
         if(!TR.startsWith(" class")) continue;
 
@@ -190,7 +190,7 @@ sTABLE Screener::yahooParse(QString data)
         QStringList TRvalues = body.mid(startTB, endTB-startTB).split("<tr");
 
         sTABLE table;
-        foreach (QString TR, TRvalues)
+        for(const QString &TR : TRvalues)
         {
             if(!TR.startsWith(" class")) continue;
 

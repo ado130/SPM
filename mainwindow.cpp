@@ -418,7 +418,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             QStringList infoData;
             infoData << "Ticker" << "Stock name" << "Sector" << "Industry" << "Country";
 
-            foreach (QString par, infoData)
+            for(const QString &par : infoData)
             {
                 param.name = par;
                 param.enabled = true;
@@ -441,7 +441,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
         param.enabled = false;
         screenerParams.append(param);
 
-        foreach (QString key, table.row.keys())
+        for(const QString &key : table.row.keys())
         {
             param.name = key;
             param.enabled = false;
@@ -568,7 +568,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         }
 
 
-        foreach (QString key, table.row.keys())
+        for(const QString &key : table.row.keys())
         {
             temporaryLoadedTable.row.insert(key, table.row.value(key));
         }
@@ -764,7 +764,7 @@ void MainWindow::dataLoaded()
                             tab->getScreenerTable()->setItem(currentRowInTable, param, item);
                             tab->getScreenerTable()->setSortingEnabled(false);
 
-                            Q_FOREACH(sFILTER filter, filterList)
+                            for(const sFILTER &filter : filterList)
                             {
                                 if(filter.param == screenerParams.at(param))
                                 {
@@ -780,7 +780,7 @@ void MainWindow::dataLoaded()
                             {
                                 item->setText(text);
 
-                                Q_FOREACH(sFILTER filter, filterList)
+                                for(const sFILTER &filter : filterList)
                                 {
                                     if(filter.param == screenerParams.at(param))
                                     {
@@ -858,7 +858,7 @@ void MainWindow::insertScreenerRow(tickerDataType tickerData)
                 st->getScreenerTable()->setItem(row, param, item);
                 st->getScreenerTable()->setSortingEnabled(true);
 
-                Q_FOREACH(sFILTER filter, filterList)
+                for(const sFILTER &filter : filterList)
                 {
                     if(filter.param == screenerParams.at(param))
                     {
@@ -914,7 +914,7 @@ void MainWindow::fillScreener(ScreenerTab *st)
 
                     if(ui->cbFilter->isChecked())
                     {
-                        Q_FOREACH(sFILTER filter, filterList)
+                        for(const sFILTER &filter : filterList)
                         {
                             if(filter.param == screenerParams.at(param))
                             {
@@ -1046,7 +1046,7 @@ void MainWindow::applyFilter(ScreenerTab *st)
         {
             for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
             {
-                Q_FOREACH(sFILTER filter, filterList)
+                for(const sFILTER &filter : filterList)
                 {
                     if(filter.param == screenerParams.at(param) &&
                             currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
@@ -1278,7 +1278,7 @@ void MainWindow::on_pbRefresh_clicked()
 
     sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
 
-    Q_FOREACH(tickerDataType scr, currentScreenerData.screenerData)
+    for(const tickerDataType &scr : currentScreenerData.screenerData)
     {
         for(int a = 0; a<scr.count(); ++a)
         {

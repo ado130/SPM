@@ -57,7 +57,7 @@ FilterForm::~FilterForm()
 
 void FilterForm::setFilterList()
 {
-    Q_FOREACH(sFILTER item, filterList)
+    for(const sFILTER &item : filterList)
     {
         QHBoxLayout *hb = new QHBoxLayout();
 

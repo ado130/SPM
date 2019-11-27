@@ -163,7 +163,7 @@ void Database::setEnabledScreenerParams()
 {
     enabledScreenerParams.clear();
 
-    Q_FOREACH(sSCREENERPARAM param, setting.screenerParams)
+    for(const sSCREENERPARAM &param : setting.screenerParams)
     {
         if(param.enabled)
         {

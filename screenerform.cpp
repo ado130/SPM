@@ -21,7 +21,7 @@ ScreenerForm::~ScreenerForm()
 
 void ScreenerForm::fillList()
 {
-    foreach (sSCREENERPARAM row, screenerParams)
+    for(const sSCREENERPARAM &row : screenerParams)
     {
         if(row.name.isEmpty() || row.name.isNull() || row.name == "FINVIZ" || row.name == "YAHOO") continue;
 
