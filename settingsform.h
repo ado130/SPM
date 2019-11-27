@@ -21,8 +21,8 @@ public:
 
 
 public slots:
-    void getScreenerParamsSlot(QList<sSCREENERPARAM> params);
-    void updateScreenerParamsSlot(QList<sSCREENERPARAM> params);
+    void getScreenerParamsSlot(QVector<sSCREENERPARAM> params);
+    void updateScreenerParamsSlot(QVector<sSCREENERPARAM> params);
 
 private slots:
     void on_pbDegiroPath_clicked();
@@ -39,7 +39,7 @@ private slots:
 
 signals:
     void setSetting(sSETTINGS);
-    void setScreenerParams(QList<sSCREENERPARAM> params);
+    void setScreenerParams(QVector<sSCREENERPARAM> params);
     void loadOnlineParameters();
     void loadDegiroCSV();
 

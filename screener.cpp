@@ -2,6 +2,8 @@
 
 #include <QCoreApplication>
 #include <QStandardPaths>
+#include <QFile>
+#include <QDataStream>
 
 Screener::Screener(QObject *parent) : QObject(parent)
 {

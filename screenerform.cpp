@@ -3,7 +3,7 @@
 
 
 
-ScreenerForm::ScreenerForm(QList<sSCREENERPARAM> params, QWidget *parent) :
+ScreenerForm::ScreenerForm(QVector<sSCREENERPARAM> params, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ScreenerForm)
 {
@@ -46,7 +46,7 @@ void ScreenerForm::on_buttonBox_accepted()
         param.name = ui->listWidget->item(a)->text();
         param.enabled = ui->listWidget->item(a)->checkState() == Qt::Checked ? true : false;
 
-        screenerParams.append(param);
+        screenerParams.push_back(param);
     }
 
     emit setScreenerParams(screenerParams);

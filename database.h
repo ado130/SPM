@@ -24,13 +24,10 @@ public:
 
     sSETTINGS getSetting() const;
 
-    QList<sDEGIRORAW> getDegiroData() const;
-    void setDegiroData(const QList<sDEGIRORAW> &value);
-
     QString getCurrencyText(eCURRENCY currency);
 
-    QList<sSCREENERPARAM> getScreenerParams() const;
-    void setScreenerParams(const QList<sSCREENERPARAM> &value);
+    QVector<sSCREENERPARAM> getScreenerParams() const;
+    void setScreenerParams(const QVector<sSCREENERPARAM> &value);
 
     QStringList getEnabledScreenerParams() const;
 

@@ -2,13 +2,13 @@
 #define VARIABLES_H
 
 #include <QString>
-#include <QList>
+#include <QVector>
 #include <QDateTime>
 #include <QMap>
 
 // x lines of y values of pair key-value
-typedef QList<QPair<QString, QString> > tickerDataType;
-typedef QList<tickerDataType> screenerDataType;
+typedef QVector<QPair<QString, QString> > tickerDataType;
+typedef QVector<tickerDataType> screenerDataType;
 
 #define DEGIRORAWFILE       "/degiroRAW.bin"
 #define SCREENERPARAMSFILE  "/screenParams.bin"
@@ -59,7 +59,7 @@ struct sSETTINGS
     int lastOpenedTab;
 
     // Screener
-    QList<sSCREENERPARAM> screenerParams;
+    QVector<sSCREENERPARAM> screenerParams;
     int lastScreenerIndex;
     bool filterON;
 };

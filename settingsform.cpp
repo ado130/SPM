@@ -81,18 +81,18 @@ void SettingsForm::on_pbLoadParameters_clicked()
 void SettingsForm::on_pbShowParameters_clicked()
 {
     ScreenerForm *dlg = new ScreenerForm(setting.screenerParams, this);
-    connect(dlg, SIGNAL(setScreenerParams(QList<sSCREENERPARAM>)), this, SLOT(getScreenerParamsSlot(QList<sSCREENERPARAM>)));
+    connect(dlg, SIGNAL(setScreenerParams(QVector<sSCREENERPARAM>)), this, SLOT(getScreenerParamsSlot(QVector<sSCREENERPARAM>)));
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
 
-void SettingsForm::getScreenerParamsSlot(QList<sSCREENERPARAM> params)
+void SettingsForm::getScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 {
     setting.screenerParams = params;
     emit setScreenerParams(params);
 }
 
-void SettingsForm::updateScreenerParamsSlot(QList<sSCREENERPARAM> params)
+void SettingsForm::updateScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 {
     setting.screenerParams = params;
 }

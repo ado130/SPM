@@ -15,11 +15,11 @@ class ScreenerForm : public QDialog
     Q_OBJECT
 
 public:
-    explicit ScreenerForm(QList<sSCREENERPARAM> params, QWidget *parent = nullptr);
+    explicit ScreenerForm(QVector<sSCREENERPARAM> params, QWidget *parent = nullptr);
     ~ScreenerForm();
 
 signals:
-    void setScreenerParams(QList<sSCREENERPARAM>);
+    void setScreenerParams(QVector<sSCREENERPARAM>);
 
 private slots:
     void on_buttonBox_accepted();
@@ -29,7 +29,7 @@ private slots:
 private:
     Ui::ScreenerForm *ui;
 
-    QList<sSCREENERPARAM> screenerParams;
+    QVector<sSCREENERPARAM> screenerParams;
     void fillList();
 };
 

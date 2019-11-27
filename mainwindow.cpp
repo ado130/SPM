@@ -108,7 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
             {
                 ScreenerTab *st = new ScreenerTab(this);
                 st->setScreenerData(allData.at(a));
-                screenerTabs.append(st);
+                screenerTabs.push_back(st);
 
                 ui->tabScreener->addTab(st, allData.at(a).screenerName);
 
@@ -389,7 +389,7 @@ void MainWindow::loadOnlineParametersSlot()
     lastRequestSource = FINVIZ;
 
     // Clean and save screener params
-    QList<sSCREENERPARAM> screenerParams = database->getScreenerParams();
+    QVector<sSCREENERPARAM> screenerParams = database->getScreenerParams();
     screenerParams.clear();
     database->setScreenerParams(screenerParams);
 
@@ -409,7 +409,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
     else
     {
         sTABLE table;
-        QList<sSCREENERPARAM> screenerParams = database->getScreenerParams();
+        QVector<sSCREENERPARAM> screenerParams = database->getScreenerParams();
 
         sSCREENERPARAM param;
 
@@ -422,7 +422,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             {
                 param.name = par;
                 param.enabled = true;
-                screenerParams.append(param);
+                screenerParams.push_back(param);
             }
         }
 
@@ -439,13 +439,13 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
         }
 
         param.enabled = false;
-        screenerParams.append(param);
+        screenerParams.push_back(param);
 
         for(const QString &key : table.row.keys())
         {
             param.name = key;
             param.enabled = false;
-            screenerParams.append(param);
+            screenerParams.push_back(param);
         }
 
         database->setScreenerParams(screenerParams);
@@ -473,7 +473,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
     }
 }
 
-void MainWindow::setScreenerParamsSlot(QList<sSCREENERPARAM> params)
+void MainWindow::setScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 {
     database->setScreenerParams(params);
 
@@ -614,23 +614,23 @@ void MainWindow::dataLoaded()
                 {
                     if(infoData.at(info) == "Industry")
                     {
-                        tickerLine.append(qMakePair(infoData.at(info), temporaryLoadedTable.info.industry));
+                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.industry));
                     }
                     else if(infoData.at(info) == "Ticker")
                     {
-                        tickerLine.append(qMakePair(infoData.at(info), temporaryLoadedTable.info.ticker));
+                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.ticker));
                     }
                     else if(infoData.at(info) == "Stock name")
                     {
-                        tickerLine.append(qMakePair(infoData.at(info), temporaryLoadedTable.info.stockName));
+                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.stockName));
                     }
                     else if(infoData.at(info) == "Sector")
                     {
-                        tickerLine.append(qMakePair(infoData.at(info), temporaryLoadedTable.info.sector));
+                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.sector));
                     }
                     else if(infoData.at(info) == "Country")
                     {
-                        tickerLine.append(qMakePair(infoData.at(info), temporaryLoadedTable.info.country));
+                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.country));
                     }
 
                     bParamFound = true;
@@ -650,7 +650,7 @@ void MainWindow::dataLoaded()
         {
             if(temporaryLoadedTable.row.contains(screenerParams.at(param)))
             {
-                tickerLine.append(qMakePair(screenerParams.at(param), temporaryLoadedTable.row.value(screenerParams.at(param))));
+                tickerLine.push_back(qMakePair(screenerParams.at(param), temporaryLoadedTable.row.value(screenerParams.at(param))));
 
                 bParamFound = true;
             }
@@ -671,7 +671,7 @@ void MainWindow::dataLoaded()
     }
     else if(tickerOrder == -1)       // Ticker does not exist, so add it
     {
-        currentScreenerData.screenerData.append(tickerLine);
+        currentScreenerData.screenerData.push_back(tickerLine);
 
         QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
@@ -1181,7 +1181,7 @@ void MainWindow::on_pbNewScreener_clicked()
         screener->setAllScreenerData(allData);
 
         ScreenerTab *st = new ScreenerTab(this);
-        screenerTabs.append(st);
+        screenerTabs.push_back(st);
         st->setScreenerData(currentScreenerData);
 
         ui->tabScreener->addTab(st, currentScreenerData.screenerName);

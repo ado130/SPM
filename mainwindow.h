@@ -30,7 +30,7 @@ public Q_SLOTS:
     void getData(const QByteArray data, QString statusCode);
     void parseOnlineParameters(const QByteArray data, QString statusCode);
     void loadOnlineParametersSlot();
-    void setScreenerParamsSlot(QList<sSCREENERPARAM> params);
+    void setScreenerParamsSlot(QVector<sSCREENERPARAM> params);
     void loadDegiroCSVslot();
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
@@ -59,7 +59,7 @@ private slots:
     void on_actionAbout_Qt_triggered();
 
 signals:
-    void updateScreenerParams(QList<sSCREENERPARAM> params);
+    void updateScreenerParams(QVector<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);
 
 protected:

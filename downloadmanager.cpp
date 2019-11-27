@@ -17,7 +17,7 @@ void DownloadManager::doDownload(const QUrl &url)
             SLOT(sslErrors(QList<QSslError>)));
 #endif
 
-    currentDownloads.append(reply);
+    currentDownloads.push_back(reply);
 }
 
 QString DownloadManager::saveFileName(const QUrl &url)

@@ -147,12 +147,12 @@ void Database::setLastScreenerIndex(const int &value)
     saveConfig();
 }
 
-QList<sSCREENERPARAM> Database::getScreenerParams() const
+QVector<sSCREENERPARAM> Database::getScreenerParams() const
 {
     return setting.screenerParams;
 }
 
-void Database::setScreenerParams(const QList<sSCREENERPARAM> &value)
+void Database::setScreenerParams(const QVector<sSCREENERPARAM> &value)
 {
     setting.screenerParams = value;
     saveScreenerParams();

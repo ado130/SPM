@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QCoreApplication>
 #include <QStandardPaths>
+#include <QFile>
+#include <QDataStream>
 
 DeGiro::DeGiro(QObject *parent) : QObject(parent)
 {
@@ -31,13 +33,13 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
             chDelimeter = '.'; break;
     }
 
-    QList<QStringList> wordList;
+    QVector<QStringList> wordList;
 
     while (!file.atEnd())
     {
         QString line = file.readLine();
         QStringList list = parseLine(line, chDelimeter);
-        wordList.append(list);
+        wordList.push_back(list);
 
         if(wordList.count() == 1) continue;  // first line
 
@@ -141,7 +143,7 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         deg.data = degData;
         deg.ticker = degData.product;
 
-        degiroRawData.append(tmp);
+        degiroRawData.push_back(tmp);
     }
 
     saveDegiroRaw();
