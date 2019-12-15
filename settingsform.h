@@ -34,8 +34,8 @@ private slots:
     void on_pbLoadParameters_clicked();
     void on_pbShowParameters_clicked();
     void on_pbLoadDegiroCSV_clicked();
-
     void on_cbFilterON_clicked(bool checked);
+    void on_cbStartReload_clicked(bool checked);
 
 signals:
     void setSetting(sSETTINGS);

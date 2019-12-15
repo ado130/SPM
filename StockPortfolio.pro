@@ -41,6 +41,9 @@ DEFINES += QT_NO_FOREACH
 CONFIG += c++17
 /std:c++17
 
+# CMAKE
+# -Wall -Wextra -Wno-c++98-compat -Wno-c++98-compat-pedantic
+
 SOURCES += \
         database.cpp \
         degiro.cpp \

@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ********************************/
     setDegiroHeader();
 
-    if(database->getSetting().autoload && degiro->getIsRAWFile())
+    if(database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
     {
         fillDegiro();
     }
@@ -131,6 +131,11 @@ MainWindow::MainWindow(QWidget *parent) :
     if(database->getEnabledScreenerParams().count() == 0 || screenerTabs.count() == 0)
     {
         ui->pbAddTicker->setEnabled(false);
+    }
+
+    if(database->getSetting().screenerAutoLoad)
+    {
+        ui->pbRefresh->click();
     }
 }
 

@@ -19,7 +19,7 @@
      <property name="title">
       <string>General</string>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -398,6 +398,13 @@ QPushButton:default {
          <widget class="QCheckBox" name="cbFilterON">
           <property name="text">
            <string>Filter always ON</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cbStartReload">
+          <property name="text">
+           <string>Auto start reload</string>
           </property>
          </widget>
         </item>

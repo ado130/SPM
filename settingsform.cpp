@@ -24,8 +24,9 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->lePosY->setText(QString::number(setting.yPos));
     ui->leDegiroCSV->setText(setting.degiroCSV);
     ui->cmCSV->setCurrentIndex(setting.CSVdelimeter);
-    ui->cbAutoLoad->setChecked(setting.autoload);
+    ui->cbAutoLoad->setChecked(setting.degiroAutoLoad);
     ui->cbFilterON->setChecked(setting.filterON);
+    ui->cbStartReload->setChecked(setting.screenerAutoLoad);
 }
 
 SettingsForm::~SettingsForm()
@@ -62,7 +63,7 @@ void SettingsForm::on_cmCSV_currentIndexChanged(int index)
 
 void SettingsForm::on_cbAutoLoad_clicked(bool checked)
 {
-    setting.autoload = checked;
+    setting.degiroAutoLoad = checked;
 }
 
 void SettingsForm::on_pbLoadParameters_clicked()
@@ -102,8 +103,12 @@ void SettingsForm::on_pbLoadDegiroCSV_clicked()
     emit loadDegiroCSV();
 }
 
-
 void SettingsForm::on_cbFilterON_clicked(bool checked)
 {
     setting.filterON = checked;
+}
+
+void SettingsForm::on_cbStartReload_clicked(bool checked)
+{
+    setting.screenerAutoLoad = checked;
 }

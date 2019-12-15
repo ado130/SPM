@@ -49,7 +49,7 @@ struct sSETTINGS
     // DeGiro
     QString degiroCSV;
     eDELIMETER CSVdelimeter;
-    bool autoload;
+    bool degiroAutoLoad;
 
     // Window
     int width;
@@ -62,6 +62,7 @@ struct sSETTINGS
     QVector<sSCREENERPARAM> screenerParams;
     int lastScreenerIndex;
     bool filterON;
+    bool screenerAutoLoad;
 };
 
 enum eSCREENSOURCE
