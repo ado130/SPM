@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui network
+QT += core gui network charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,7 +13,7 @@ TEMPLATE = app
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
-VERSION_BUILD = 1
+VERSION_BUILD = 3
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
            "VERSION_MINOR=$$VERSION_MINOR"\

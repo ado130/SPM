@@ -41,6 +41,16 @@ void Database::loadConfig()
     setting.xPos = settings.value("General/xPos", 0).toInt();
     setting.yPos = settings.value("General/yPos", 0).toInt();
     setting.lastOpenedTab = settings.value("General/lastOpenedTab", 0).toInt();
+    setting.currency = static_cast<eCURRENCY>(settings.value("General/currency", 0).toInt());
+
+    QDate currentDate = QDate::currentDate();
+    currentDate = currentDate.addDays(-1);
+    qDebug() << currentDate.toString("dd.MM.yyyy");
+    setting.lastExchangeRatesUpdate = QDate::fromString(settings.value("Exchange/lastExchangeRatesUpdate", currentDate.toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
+    setting.EUR2USD = settings.value("Exchange/EUR2USD", 1.12).toDouble();
+    setting.CZK2USD = settings.value("Exchange/CZK2USD", 0.044).toDouble();
+    setting.USD2CZK = settings.value("Exchange/USD2CZK", 22.68).toDouble();
+    setting.USD2EUR = settings.value("Exchange/USD2EUR", 0.89).toDouble();
 }
 
 void Database::saveConfig()
@@ -49,14 +59,23 @@ void Database::saveConfig()
     settings.setValue("DeGiro/path", setting.degiroCSV);
     settings.setValue("DeGiro/delimeter", setting.CSVdelimeter);
     settings.setValue("DeGiro/Dautoload", setting.degiroAutoLoad);
+
     settings.setValue("Screener/lastScreenerIndex", setting.lastScreenerIndex);
     settings.setValue("Screener/filterON", setting.filterON);
     settings.setValue("Screener/Sautoload", setting.screenerAutoLoad);
+
     settings.setValue("General/width", setting.width);
     settings.setValue("General/height", setting.height);
     settings.setValue("General/xPos", setting.xPos);
     settings.setValue("General/yPos", setting.yPos);
     settings.setValue("General/lastOpenedTab", setting.lastOpenedTab);
+    settings.setValue("General/currency", setting.currency);
+
+    settings.setValue("Exchange/lastExchangeRatesUpdate", setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
+    settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
+    settings.setValue("Exchange/CZK2USD", setting.CZK2USD);
+    settings.setValue("Exchange/USD2CZK", setting.USD2CZK);
+    settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
 }
 
 void Database::loadScreenParams()

@@ -37,6 +37,8 @@ private slots:
     void on_cbFilterON_clicked(bool checked);
     void on_cbStartReload_clicked(bool checked);
 
+    void on_cmCurrency_currentIndexChanged(int index);
+
 signals:
     void setSetting(sSETTINGS);
     void setScreenerParams(QVector<sSCREENERPARAM> params);

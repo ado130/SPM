@@ -17,6 +17,7 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->leHeight->setValidator(new QIntValidator(0, 2160, this));
     ui->lePosX->setValidator(new QIntValidator(0, 4096, this));
     ui->lePosY->setValidator(new QIntValidator(0, 2160, this));
+    ui->cmCurrency->setCurrentIndex(static_cast<int>(setting.currency));
 
     ui->leWidth->setText(QString::number(setting.width));
     ui->leHeight->setText(QString::number(setting.height));
@@ -27,6 +28,12 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->cbAutoLoad->setChecked(setting.degiroAutoLoad);
     ui->cbFilterON->setChecked(setting.filterON);
     ui->cbStartReload->setChecked(setting.screenerAutoLoad);
+
+    ui->leLastUpdate->setText(setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
+    ui->leCZK2USD->setText(QString::number(setting.CZK2USD, 'f', 4));
+    ui->leEUR2USD->setText(QString::number(setting.EUR2USD, 'f', 4));
+    ui->leUSD2CZK->setText(QString::number(setting.USD2CZK, 'f', 4));
+    ui->leUSD2EUR->setText(QString::number(setting.USD2EUR, 'f', 4));
 }
 
 SettingsForm::~SettingsForm()
@@ -42,7 +49,6 @@ void SettingsForm::on_pbDegiroPath_clicked()
 
     ui->leDegiroCSV->setText(fileName);
     setting.degiroCSV = fileName;
-    emit setSetting(setting);
 }
 
 void SettingsForm::on_buttonBox_accepted()
@@ -58,7 +64,6 @@ void SettingsForm::on_buttonBox_accepted()
 void SettingsForm::on_cmCSV_currentIndexChanged(int index)
 {
     setting.CSVdelimeter = static_cast<eDELIMETER>(index);
-    emit setSetting(setting);
 }
 
 void SettingsForm::on_cbAutoLoad_clicked(bool checked)
@@ -111,4 +116,11 @@ void SettingsForm::on_cbFilterON_clicked(bool checked)
 void SettingsForm::on_cbStartReload_clicked(bool checked)
 {
     setting.screenerAutoLoad = checked;
+}
+
+void SettingsForm::on_cmCurrency_currentIndexChanged(int index)
+{
+    setting.currency = static_cast<eCURRENCY>(index);
+    emit setSetting(setting);
+    emit loadDegiroCSV();
 }

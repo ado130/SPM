@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QtCharts>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -68,14 +69,29 @@ MainWindow::MainWindow(QWidget *parent) :
         //this->mapFromGlobal(QPoint(database->getSetting().xPos, database->getSetting().yPos));
     }
 
-    ui->mainTab->setCurrentIndex(database->getSetting().lastOpenedTab);
+    // set status bar text
+    QLabel *autor = new QLabel("Autor: Andrej Copyright © 2019-2020");
+    QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR));
+    ui->statusBar->addPermanentWidget(autor, 1);
+    ui->statusBar->addPermanentWidget(version, 0);
 
-    QString status = QString("Autor: Andrej Copyright © 2019; Version: %1").arg(VERSION_STR);
-    ui->statusBar->showMessage(status);
-
+    // default graph date time values
+    ui->deGraphTo->setDate(QDate::currentDate());
+    ui->deGraphFrom->setDate(QDate(QDate::currentDate().year(), 1, 1));
 
     installEventFilter(this);
 
+    ui->mainTab->setCurrentIndex(database->getSetting().lastOpenedTab);
+
+    // Update the exchange rates
+    if(database->getSetting().lastExchangeRatesUpdate < QDate::currentDate())
+    {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+
+        connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
+
+        manager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK");
+    }
 
     /********************************
      * DeGiro table
@@ -85,6 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
     {
         fillDegiro();
+        fillDegiroCSV();
     }
 
 
@@ -182,13 +199,16 @@ void MainWindow::on_mainTab_currentChanged(int index)
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
-    text =  "========================================\n";
-    text += "Stock Portfolio Manager (SPM)\n\n";
-    text += "Copyright © 2019 Stock Portfolio Manager\n\n";
-    text += "Author: Andrej\n";
-    text += "E-mail: vlasaty.andrej@gmail.com\n";
-    text += "Website: https://www.investicnigramotnost.cz\n";
-    text += "========================================\n";
+    text = "<html><body>";
+    text +=  "========================================<br>";
+    text += "<h2>Stock Portfolio Manager (SPM)</h2><br><br>";
+    text += "<b>Copyright © 2019 Stock Portfolio Manager</b><br><br>";
+    text += "<b>Author:</b> Andrej<br>";
+    text += "<b>E-mail:</b> <a href=\"mailto:vlasaty.andrej@gmail.com?subject=SPM\">vlasaty.andrej@gmail.com</a><br>";
+    text += "<b>Website:</b> <a href=\"https://www.investicnigramotnost.cz\">https://www.investicnigramotnost.cz</a><br>";
+    text += "========================================<br>";
+    text += "<b>Exchange rates source:</b> <a href=\"https://exchangeratesapi.io\">https://exchangeratesapi.io</a><br>";
+    text += "</body></html>";
 
     QMessageBox::about(this,
                        "About",
@@ -198,19 +218,23 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionHelp_triggered()
 {
     QString text;
-    text = "Set the CSV path to the DeGiro file and delimeter in the Settings.\n";
-    text += "Please load the parameters under the Settings window and select the order and the visibility.\n\n";
-    text += "The filter windows allows to set one of the predefined filter:\n";
-    text += "   1) f<\n";
-    text += "   2) f>\n";
-    text += "   3) <f;f>\n";
-    text += "where the \"f\" means float number.\n\n";
-    text += "The color column has to be either HEX color number or \"HIDE\".\n";
-    text += "The color HEX palette as available under the context menu (right click).\n";
+    text = "<html><body>";
+    text += "Set the CSV path to the DeGiro file and delimeter in the Settings.<br>";
+    text += "Please load the parameters under the Settings window and select the order and the visibility.<br><br>";
+    text += "The filter windows allows to set one of the predefined filter:";
+    text += "<ul>";
+    text += "<li> f&lt; </li>";
+    text += "<li> f&gt; </li>";
+    text += "<li> &lt;f;f&gt; </li>";
+    text += "</ul>";
+    text += "where the \"f\" means float number.<br><br>";
+    text += "The color column has to be either HEX color number or \"HIDE\".<br>";
+    text += "The color HEX palette as available under the context menu (right click).<br>";
+    text += "</body></html>";
 
 
     QMessageBox::about(this,
-                       "About",
+                       "Help",
                        text);
 }
 
@@ -291,6 +315,74 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
     }
 }
 
+void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
+{
+    if(!statusCode.contains("200"))
+    {
+        qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
+        setStatus(QString("There is something wrong with the request! %1").arg(statusCode));
+        QApplication::restoreOverrideCursor();
+    }
+    else
+    {
+        QJsonParseError error;
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(data, &error);
+
+        if(error.error == QJsonParseError::NoError)
+        {
+            QJsonObject jsonObject = jsonDoc.object();
+
+            if(jsonObject["base"].toString() == "USD")
+            {
+                QJsonObject rates = jsonObject["rates"].toObject();
+
+                sSETTINGS set = database->getSetting();
+                set.USD2CZK = rates["CZK"].toDouble();
+                set.USD2EUR = rates["EUR"].toDouble();
+                database->setSetting(set);
+
+
+                QApplication::setOverrideCursor(Qt::WaitCursor);
+
+                connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
+
+                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD");
+            }
+            else if(jsonObject["base"].toString() == "EUR")
+            {
+                QJsonObject rates = jsonObject["rates"].toObject();
+
+                sSETTINGS set = database->getSetting();
+                set.EUR2USD = rates["USD"].toDouble();
+                database->setSetting(set);
+
+
+                QApplication::setOverrideCursor(Qt::WaitCursor);
+
+                connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
+
+                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD");
+            }
+            else if(jsonObject["base"].toString() == "CZK")
+            {
+                QJsonObject rates = jsonObject["rates"].toObject();
+
+                sSETTINGS set = database->getSetting();
+                set.CZK2USD = rates["USD"].toDouble();
+                set.lastExchangeRatesUpdate = QDate::currentDate();
+                database->setSetting(set);
+
+                setStatus("The exchange rates have been updated!");
+                QApplication::restoreOverrideCursor();
+            }
+        }
+        else
+        {
+            QApplication::restoreOverrideCursor();
+            setStatus(QString("The exchange rates have not been updated because of the following error: %1: %2").arg(error.error).arg(error.errorString()));
+        }
+    }
+}
 
 /********************************
 *
@@ -306,6 +398,7 @@ void MainWindow::loadDegiroCSVslot()
     if(degiro->getIsRAWFile())
     {
         fillDegiro();
+        fillDegiroCSV();
     }
     else
     {
@@ -320,6 +413,7 @@ void MainWindow::on_pbDegiroLoad_clicked()
     if(degiro->getIsRAWFile())
     {
         fillDegiro();
+        fillDegiroCSV();
     }
     else
     {
@@ -345,7 +439,7 @@ void MainWindow::setDegiroHeader()
     ui->tableDegiro->setHorizontalHeaderLabels(header);
 }
 
-void MainWindow::fillDegiro()
+void MainWindow::fillDegiroCSV()
 {
     QVector<sDEGIRORAW> data = degiro->getDegiroRawData();
 
@@ -360,12 +454,19 @@ void MainWindow::fillDegiro()
     for(int a = 0; a<data.count(); ++a)
     {
         ui->tableDegiro->insertRow(a);
-        ui->tableDegiro->setItem(a, 0, new QTableWidgetItem(data.at(a).dateTime.toString("dd.MM.yyyy hh:mm")));
+
+        QTableWidgetItem *item1 = new QTableWidgetItem;
+        item1->setData(Qt::EditRole, data.at(a).dateTime); // data.at(a).dateTime.toString("dd.MM.yyyy")
+        ui->tableDegiro->setItem(a, 0, item1);
+
         ui->tableDegiro->setItem(a, 1, new QTableWidgetItem(data.at(a).product));
         ui->tableDegiro->setItem(a, 2, new QTableWidgetItem(data.at(a).ISIN));
         ui->tableDegiro->setItem(a, 3, new QTableWidgetItem(data.at(a).description));
         ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(data.at(a).currency)));
-        ui->tableDegiro->setItem(a, 5, new QTableWidgetItem(QString::number(data.at(a).money, 'f', 2)));
+
+        QTableWidgetItem *item2 = new QTableWidgetItem;
+        item2->setData(Qt::EditRole, data.at(a).money);
+        ui->tableDegiro->setItem(a, 5, item2);
     }
     ui->tableDegiro->setSortingEnabled(true);
 
@@ -380,6 +481,328 @@ void MainWindow::fillDegiro()
     }
 }
 
+void MainWindow::fillDegiro()
+{
+    QVector<sDEGIRO> data = degiro->getDegiroData();
+
+    if(data.isEmpty())
+    {
+        return;
+    }
+
+    double deposit = 0.0;
+    double invested = 0.0;
+    double dividends = 0.0;
+    double divTax = 0.0;
+
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+
+    for(const sDEGIRO &key : data)
+    {
+        if(key.ticker.toLower().contains("fundshare")) continue;
+
+        double moneyInUSD = 0.0;
+
+        switch(key.data.currency)
+        {
+            case USD: moneyInUSD = key.data.money;
+                break;
+            case CZK: moneyInUSD = (key.data.money * database->getSetting().CZK2USD);
+                break;
+            case EUR: moneyInUSD = (key.data.money * database->getSetting().EUR2USD);
+                break;
+        }
+
+        if(key.data.type == DEPOSIT)
+        {
+            switch(selectedCurrency)
+            {
+                case USD: deposit += moneyInUSD;
+                    break;
+                case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+        }
+        else if(key.data.type == BUY || key.data.type == SELL)
+        {
+            if(key.data.type == BUY)
+            {
+                moneyInUSD *= -1.0;
+            }
+
+            switch(selectedCurrency)
+            {
+                case USD: invested += moneyInUSD;
+                    break;
+                case CZK: invested += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: invested += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+        }
+        else if(key.data.type == DIVIDEND)
+        {            
+            switch(selectedCurrency)
+            {
+                case USD: dividends += moneyInUSD;
+                    break;
+                case CZK: dividends += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: dividends += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+        }
+        else if(key.data.type == TAX)
+        {
+            switch(selectedCurrency)
+            {
+            case USD: divTax += moneyInUSD;
+                break;
+            case CZK: divTax += (moneyInUSD * database->getSetting().USD2CZK);
+                break;
+            case EUR: divTax += (moneyInUSD * database->getSetting().USD2EUR);
+                break;
+            }
+        }
+    }
+
+    QString currency;
+    switch(selectedCurrency)
+    {
+        case USD:
+            currency = "$";
+            break;
+        case CZK:
+            currency = "Kč";
+            break;
+        case EUR:
+            currency = "€";
+            break;
+    }
+
+    divTax = abs(divTax);
+
+    ui->leDeposit->setText(QString::number(deposit, 'f', 2) + " " + currency);
+    ui->leInvested->setText(QString::number(invested, 'f', 2) + " " + currency);
+    ui->leDividends->setText(QString::number(dividends, 'f', 2) + " " + currency);
+    ui->leDivTax->setText(QString::number(divTax, 'f', 2) + " " + currency);
+}
+
+void MainWindow::on_pbShowGraph_clicked()
+{
+    QVector<sDEGIRO> data = degiro->getDegiroData();
+
+    if(data.isEmpty())
+    {
+        return;
+    }
+
+    double deposit = 0.0;
+    QLineSeries *depositSeries = new QLineSeries();
+
+    double invested = 0.0;
+    QLineSeries *investedSeries = new QLineSeries();
+
+    double dividends = 0.0;
+    QVector<QBarSet*> dividendsSets;
+
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+
+    QDate from = ui->deGraphFrom->date();
+    QDate to = ui->deGraphTo->date();
+
+    for(const sDEGIRO &key : data)
+    {
+        if(key.ticker.toLower().contains("fundshare")) continue;
+
+        if( !(key.data.dateTime.date() >= from && key.data.dateTime.date() <= to) ) continue;
+
+        double moneyInUSD = 0.0;
+
+        switch(key.data.currency)
+        {
+            case USD: moneyInUSD = key.data.money;
+                break;
+            case CZK: moneyInUSD = (key.data.money * database->getSetting().CZK2USD);
+                break;
+            case EUR: moneyInUSD = (key.data.money * database->getSetting().EUR2USD);
+                break;
+        }
+
+        if(key.data.type == DEPOSIT)
+        {
+            switch(selectedCurrency)
+            {
+                case USD: deposit += moneyInUSD;
+                    break;
+                case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+
+            depositSeries->append(key.data.dateTime.toMSecsSinceEpoch(), deposit);
+        }
+        else if(key.data.type == BUY || key.data.type == SELL)
+        {
+            if(key.data.type == BUY)
+            {
+                moneyInUSD *= -1.0;
+            }
+
+            switch(selectedCurrency)
+            {
+                case USD: invested += moneyInUSD;
+                    break;
+                case CZK: invested += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: invested += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+
+            investedSeries->append(key.data.dateTime.toMSecsSinceEpoch(), invested);
+        }
+        else if(key.data.type == DIVIDEND)
+        {
+            switch(selectedCurrency)
+            {
+                case USD: dividends += moneyInUSD;
+                    break;
+                case CZK: dividends += (moneyInUSD * database->getSetting().USD2CZK);
+                    break;
+                case EUR: dividends += (moneyInUSD * database->getSetting().USD2EUR);
+                    break;
+            }
+        }
+    }
+
+    QString currency;
+    switch(selectedCurrency)
+    {
+    case USD:
+        currency = "$";
+        break;
+    case CZK:
+        currency = "Kč";
+        break;
+    case EUR:
+        currency = "€";
+        break;
+    }
+
+    // Deposit
+    QChart *depositChart = new QChart();
+    depositChart->addSeries(depositSeries);
+    depositChart->legend()->hide();
+    depositChart->setTitle("Deposit");
+    depositChart->setTheme(QChart::ChartThemeQt);
+
+    QDateTimeAxis *depositAxisX = new QDateTimeAxis;
+    depositAxisX->setTickCount(10);
+    depositAxisX->setFormat("MMM yyyy");
+    depositAxisX->setTitleText("Date");
+    depositChart->addAxis(depositAxisX, Qt::AlignBottom);
+    depositSeries->attachAxis(depositAxisX);
+
+    QValueAxis *depositAxisY = new QValueAxis;
+    depositAxisY->setLabelFormat("%i");
+    depositAxisY->setTitleText("Deposit " + currency);
+    depositChart->addAxis(depositAxisY, Qt::AlignLeft);
+    depositSeries->attachAxis(depositAxisY);
+
+    QChartView *depositChartView = new QChartView(depositChart);
+    depositChartView->setRenderHint(QPainter::Antialiasing);
+    depositChartView->setMinimumSize(512, 512);
+    depositChartView->setRubberBand(QChartView::HorizontalRubberBand);
+
+    // Invested
+    QChart *investedChart = new QChart();
+    investedChart->addSeries(investedSeries);
+    investedChart->legend()->hide();
+    investedChart->setTitle("Invested");
+    investedChart->setTheme(QChart::ChartThemeQt);
+
+    QDateTimeAxis *investedAxisX = new QDateTimeAxis;
+    investedAxisX->setTickCount(10);
+    investedAxisX->setFormat("MMM yyyy");
+    investedAxisX->setTitleText("Date");
+    investedChart->addAxis(investedAxisX, Qt::AlignBottom);
+    investedSeries->attachAxis(investedAxisX);
+
+    QValueAxis *investedAxisY = new QValueAxis;
+    investedAxisY->setLabelFormat("%i");
+    investedAxisY->setTitleText("Invested " + currency);
+    investedChart->addAxis(investedAxisY, Qt::AlignLeft);
+    investedSeries->attachAxis(investedAxisY);
+
+    QChartView *investedChartView = new QChartView(investedChart);
+    investedChartView->setRenderHint(QPainter::Antialiasing);
+    investedChartView->setMinimumSize(512, 512);
+    investedChartView->setRubberBand(QChartView::HorizontalRubberBand);
+
+    // Dividends
+    QBarSeries *dividendSeries = new QBarSeries();
+
+    for(QBarSet *set : dividendsSets)
+    {
+        dividendSeries->append(set);
+    }
+
+    // Display the chart
+    QWidget *chartWidget = new QWidget(this, Qt::Tool);
+
+    QVBoxLayout *VB = new QVBoxLayout(chartWidget);
+
+    if(ui->cmGraphType->currentText() == "Deposit")
+    {
+        VB->addWidget(depositChartView);
+    }
+    else if(ui->cmGraphType->currentText() == "Invested")
+    {
+        VB->addWidget(investedChartView);
+    }
+
+    QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
+    QPushButton *zoomOut = new QPushButton("Zoom out", chartWidget);
+    QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
+
+    QHBoxLayout *HB = new QHBoxLayout(chartWidget);
+    HB->addWidget(zoomIn);
+    HB->addWidget(zoomOut);
+    HB->addWidget(zoomReset);
+
+    VB->addLayout(HB);
+
+    connect(
+        zoomIn, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomIn(); investedChart->zoomIn(); }
+        );
+
+    connect(
+        zoomOut, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomOut(); investedChart->zoomOut(); }
+        );
+
+    connect(
+        zoomReset, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomReset(); investedChart->zoomReset(); }
+        );
+
+
+    chartWidget->setLayout(VB);
+    chartWidget->activateWindow();
+    chartWidget->setParent(this);
+    chartWidget->setAttribute(Qt::WA_DeleteOnClose);
+    chartWidget->resize(1024, 512);
+    chartWidget->setVisible(true);
+}
+
+void MainWindow::on_pbPDFExport_clicked()
+{
+
+}
 
 /********************************
 *
@@ -767,7 +1190,7 @@ void MainWindow::dataLoaded()
                             item->setTextAlignment(Qt::AlignCenter);                           
                             tab->getScreenerTable()->setSortingEnabled(false);
                             tab->getScreenerTable()->setItem(currentRowInTable, param, item);
-                            tab->getScreenerTable()->setSortingEnabled(false);
+                            tab->getScreenerTable()->setSortingEnabled(true);
 
                             for(const sFILTER &filter : filterList)
                             {
@@ -1403,4 +1826,9 @@ void MainWindow::on_pbDeleteTickers_clicked()
             tableRow--;
         }
     }
+}
+
+void MainWindow::on_pbAlert_clicked()
+{
+
 }

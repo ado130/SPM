@@ -34,6 +34,7 @@ public Q_SLOTS:
     void loadDegiroCSVslot();
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
+    void updateExchangeRates(const QByteArray data, QString statusCode);
 
 private slots:
     void on_actionAbout_triggered();
@@ -57,6 +58,10 @@ private slots:
     void on_mainTab_currentChanged(int index);
 
     void on_actionAbout_Qt_triggered();
+    void on_pbAlert_clicked();
+    void on_pbShowGraph_clicked();
+
+    void on_pbPDFExport_clicked();
 
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
@@ -94,7 +99,7 @@ private:
     void centerAndResize();
 
     void setDegiroHeader();
-    void fillDegiro();
+    void fillDegiroCSV();
 
     void setScreenerHeader(ScreenerTab *st);
     void dataLoaded();
@@ -103,6 +108,7 @@ private:
     void fillScreener(ScreenerTab *st);
     void applyFilter(ScreenerTab *st);
     int applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter);
+    void fillDegiro();
 };
 
 #endif // MAINWINDOW_H

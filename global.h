@@ -10,6 +10,7 @@
 typedef QVector<QPair<QString, QString> > tickerDataType;
 typedef QVector<tickerDataType> screenerDataType;
 
+#define DEGIROFILE          "/degiro.bin"
 #define DEGIRORAWFILE       "/degiroRAW.bin"
 #define SCREENERPARAMSFILE  "/screenParams.bin"
 #define SCREENERALLDATA     "/screenerAllData.bin"
@@ -44,19 +45,34 @@ struct sSCREENERPARAM
     bool enabled;
 };
 
+enum eCURRENCY
+{
+    CZK = 0,
+    EUR = 1,
+    USD = 2
+};
+
 struct sSETTINGS
 {
-    // DeGiro
-    QString degiroCSV;
-    eDELIMETER CSVdelimeter;
-    bool degiroAutoLoad;
-
     // Window
     int width;
     int height;
     int xPos;
     int yPos;
+    eCURRENCY currency;
     int lastOpenedTab;
+
+    // Exchange
+    QDate lastExchangeRatesUpdate;
+    double USD2EUR;
+    double USD2CZK;
+    double CZK2USD;
+    double EUR2USD;
+
+    // DeGiro
+    QString degiroCSV;
+    eDELIMETER CSVdelimeter;
+    bool degiroAutoLoad;
 
     // Screener
     QVector<sSCREENERPARAM> screenerParams;
@@ -69,13 +85,6 @@ enum eSCREENSOURCE
 {
     FINVIZ = 0,
     YAHOO
-};
-
-enum eCURRENCY
-{
-    CZK = 0,
-    EUR = 1,
-    USD = 2
 };
 
 struct sSCREENER
@@ -97,12 +106,12 @@ struct sDEGIRORAW
 enum eDEGIROTYPE
 {
     DIVIDEND,
+    TAX,
     FEE,
     DEPOSIT,
     WITHDRAWAL,
     BUY,
     SELL
-
 };
 
 struct sDEGIRODATA
