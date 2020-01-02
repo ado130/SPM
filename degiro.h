@@ -14,15 +14,16 @@ public:
     void loadDegiroCSV(QString path, eDELIMETER delimeter);
 
     QVector<sDEGIRORAW> getDegiroRawData() const;
-    QVector<sDEGIRO> getDegiroData() const;
+    DegiroDataType getDegiroData() const;
 
     bool getIsRAWFile() const;
 
+    double getTax(QString ticker, QDateTime date, eDEGIROTYPE type);
 public slots:
 
 private:
     QVector<sDEGIRORAW> degiroRawData;
-    QVector<sDEGIRO> degiroData;
+    DegiroDataType degiroData;
     bool isRAWFile;
 
     bool loadDegiroRaw();
@@ -36,7 +37,7 @@ private:
 QDataStream& operator<<(QDataStream& out, const sDEGIRORAW& param);
 QDataStream& operator>>(QDataStream& in, sDEGIRORAW& param);
 
-QDataStream& operator<<(QDataStream& out, const sDEGIRO& param);
-QDataStream& operator>>(QDataStream& in, sDEGIRO& param);
+QDataStream& operator<<(QDataStream& out, const sDEGIRODATA& param);
+QDataStream& operator>>(QDataStream& in, sDEGIRODATA& param);
 
 #endif // DEGIRO_H

@@ -7,8 +7,8 @@
 #include <QMap>
 
 // x lines of y values of pair key-value
-typedef QVector<QPair<QString, QString> > tickerDataType;
-typedef QVector<tickerDataType> screenerDataType;
+typedef QVector<QPair<QString, QString> > TickerDataType;
+typedef QVector<TickerDataType> ScreenerDataType;
 
 #define DEGIROFILE          "/degiro.bin"
 #define DEGIRORAWFILE       "/degiroRAW.bin"
@@ -62,10 +62,15 @@ struct sSETTINGS
     eCURRENCY currency;
     int lastOpenedTab;
 
+    // Overview
+    QDate lastOverviewFrom;
+    QDate lastOverviewTo;
+
     // Exchange
     QDate lastExchangeRatesUpdate;
     double USD2EUR;
     double USD2CZK;
+    double EUR2CZK;
     double CZK2USD;
     double EUR2USD;
 
@@ -81,6 +86,15 @@ struct sSETTINGS
     bool screenerAutoLoad;
 };
 
+struct sPDFEXPORT
+{
+    QString currency;
+    QDateTime date;
+    double price;
+    double tax;
+    QString name;
+};
+
 enum eSCREENSOURCE
 {
     FINVIZ = 0,
@@ -89,7 +103,7 @@ enum eSCREENSOURCE
 
 struct sSCREENER
 {
-    screenerDataType screenerData;
+    ScreenerDataType screenerData;
     QString screenerName;
 };
 
@@ -107,6 +121,7 @@ enum eDEGIROTYPE
 {
     DIVIDEND,
     TAX,
+    TRANSACTIONFEE,
     FEE,
     DEPOSIT,
     WITHDRAWAL,
@@ -117,18 +132,13 @@ enum eDEGIROTYPE
 struct sDEGIRODATA
 {
     QDateTime dateTime;
-    QString product;
     QString ISIN;
     eDEGIROTYPE type;
     eCURRENCY currency;
     double money;
 };
 
-struct sDEGIRO
-{
-    QString ticker;
-    sDEGIRODATA data;
-};
+typedef QHash<QString, QVector<sDEGIRODATA>> DegiroDataType;
 
 enum eFILTER
 {

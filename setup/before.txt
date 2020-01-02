@@ -1,6 +1,6 @@
 =======================================================
                 Stock Portfolio Manager
-         Copyright Stock Portfolio Manager 2019
+       Copyright Stock Portfolio Manager 2019 - 2020
           https://www.investicnigramotnost.cz
                         Andrej
                 vlasaty.andrej@gmail.com
@@ -10,6 +10,9 @@
    * Changed or Information
    ! Important - Take note!
 =======================================================
+
+=== Client Release 1.0.4.0 2 Jan 2020
++ Added PDF export
 
 === Client Release 1.0.3.0 31 Dec 2019
 + Added plots for Deposit and Invested

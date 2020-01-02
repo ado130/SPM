@@ -35,8 +35,9 @@ public Q_SLOTS:
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
     void updateExchangeRates(const QByteArray data, QString statusCode);
+    void fillOverview();
 
-private slots:
+private slots:   
     void on_actionAbout_triggered();
     void on_actionHelp_triggered();
     void on_actionSettings_triggered();
@@ -60,8 +61,11 @@ private slots:
     void on_actionAbout_Qt_triggered();
     void on_pbAlert_clicked();
     void on_pbShowGraph_clicked();
-
     void on_pbPDFExport_clicked();
+    void on_deGraphYear_userDateChanged(const QDate &date);
+    void deOverviewYearChanged(const QDate &date);
+
+    void on_dePDFYear_userDateChanged(const QDate &date);
 
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
@@ -104,11 +108,11 @@ private:
     void setScreenerHeader(ScreenerTab *st);
     void dataLoaded();
     int findScreenerTicker(QString ticker);
-    void insertScreenerRow(tickerDataType tickerData);
+    void insertScreenerRow(TickerDataType tickerData);
     void fillScreener(ScreenerTab *st);
     void applyFilter(ScreenerTab *st);
     int applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter);
-    void fillDegiro();
+    QVector<sPDFEXPORT> prepareDataToExport();
 };
 
 #endif // MAINWINDOW_H

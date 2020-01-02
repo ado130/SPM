@@ -43,14 +43,17 @@ void Database::loadConfig()
     setting.lastOpenedTab = settings.value("General/lastOpenedTab", 0).toInt();
     setting.currency = static_cast<eCURRENCY>(settings.value("General/currency", 0).toInt());
 
+    setting.lastOverviewFrom = QDate::fromString(settings.value("Overview/lastOverviewFrom", QDate(QDate::currentDate().year(), 1, 1).toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
+    setting.lastOverviewTo = QDate::fromString(settings.value("Overview/lastOverviewTo", QDate(QDate::currentDate().year(), 12, 31).toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
+
     QDate currentDate = QDate::currentDate();
     currentDate = currentDate.addDays(-1);
-    qDebug() << currentDate.toString("dd.MM.yyyy");
     setting.lastExchangeRatesUpdate = QDate::fromString(settings.value("Exchange/lastExchangeRatesUpdate", currentDate.toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
     setting.EUR2USD = settings.value("Exchange/EUR2USD", 1.12).toDouble();
     setting.CZK2USD = settings.value("Exchange/CZK2USD", 0.044).toDouble();
     setting.USD2CZK = settings.value("Exchange/USD2CZK", 22.68).toDouble();
     setting.USD2EUR = settings.value("Exchange/USD2EUR", 0.89).toDouble();
+    setting.EUR2CZK = settings.value("Exchange/EUR2CZK", 25.42).toDouble();
 }
 
 void Database::saveConfig()
@@ -71,9 +74,13 @@ void Database::saveConfig()
     settings.setValue("General/lastOpenedTab", setting.lastOpenedTab);
     settings.setValue("General/currency", setting.currency);
 
+    settings.setValue("Overview/lastOverviewFrom", setting.lastOverviewFrom.toString("dd.MM.yyyy"));
+    settings.setValue("Overview/lastOverviewTo", setting.lastOverviewTo.toString("dd.MM.yyyy"));
+
     settings.setValue("Exchange/lastExchangeRatesUpdate", setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
     settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
     settings.setValue("Exchange/CZK2USD", setting.CZK2USD);
+    settings.setValue("Exchange/EUR2CZK", setting.EUR2CZK);
     settings.setValue("Exchange/USD2CZK", setting.USD2CZK);
     settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
 }

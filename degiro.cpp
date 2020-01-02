@@ -100,6 +100,10 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
             }
         }
 
+
+        degiroRawData.push_back(tmp);
+
+
         sDEGIRODATA degData;
         bool found = true;
 
@@ -110,6 +114,10 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         else if(tmp.description.toLower().contains("výběr") || tmp.description.toLower().contains("withdrawal"))
         {
             degData.type = WITHDRAWAL;
+        }
+        else if(tmp.description.toLower().contains("transakční poplatek") || tmp.description.toLower().contains("transaction fee"))
+        {
+            degData.type = TRANSACTIONFEE;
         }
         else if(tmp.description.toLower().contains("poplatek") || tmp.description.toLower().contains("fee"))
         {
@@ -139,17 +147,13 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         if(found)
         {
             degData.dateTime = tmp.dateTime;
-            degData.product = tmp.product;
             degData.ISIN = tmp.ISIN;
             degData.money = tmp.money;
             degData.currency = tmp.currency;
 
-            sDEGIRO deg;
-            deg.data = degData;
-            deg.ticker = degData.product;
-
-            degiroRawData.push_back(tmp);
-            degiroData.push_front(deg);
+            QVector<sDEGIRODATA> vector = degiroData[tmp.product];
+            vector.append(degData);
+            degiroData[tmp.product] = vector;
         }
     }
 
@@ -186,9 +190,22 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
         }
     }while(list.count() != 12);
 
-
-
     return list;
+}
+
+double DeGiro::getTax(QString ticker, QDateTime date, eDEGIROTYPE type)
+{
+    QVector<sDEGIRODATA> vector = degiroData.value(ticker);
+
+    for(const sDEGIRODATA &data : vector)
+    {
+        if(data.dateTime == date && data.type == type)
+        {
+            return data.money;
+        }
+    }
+
+    return 0.0;
 }
 
 QVector<sDEGIRORAW> DeGiro::getDegiroRawData() const
@@ -231,7 +248,7 @@ bool DeGiro::getIsRAWFile() const
     return isRAWFile;
 }
 
-QVector<sDEGIRO> DeGiro::getDegiroData() const
+DegiroDataType DeGiro::getDegiroData() const
 {
     return degiroData;
 }
@@ -294,35 +311,31 @@ QDataStream &operator>>(QDataStream &in, sDEGIRORAW &param)
     return in;
 }
 
-QDataStream &operator<<(QDataStream &out, const sDEGIRO &param)
+QDataStream &operator<<(QDataStream &out, const sDEGIRODATA &param)
 {
-    out << param.ticker;
-    out << param.data.dateTime;
-    out << param.data.product;
-    out << param.data.ISIN;
-    out << static_cast<int>(param.data.type);
-    out << static_cast<int>(param.data.currency);
-    out << param.data.money;
+    out << param.dateTime;
+    out << param.ISIN;
+    out << static_cast<int>(param.type);
+    out << static_cast<int>(param.currency);
+    out << param.money;
 
     return out;
 }
 
-QDataStream &operator>>(QDataStream &in, sDEGIRO &param)
+QDataStream &operator>>(QDataStream &in, sDEGIRODATA &param)
 {
-    in >> param.ticker;
-    in >> param.data.dateTime;
-    in >> param.data.product;
-    in >> param.data.ISIN;
+    in >> param.dateTime;
+    in >> param.ISIN;
 
     int buffer1;
     in >> buffer1;
-    param.data.type = static_cast<eDEGIROTYPE>(buffer1);
+    param.type = static_cast<eDEGIROTYPE>(buffer1);
 
     int buffer2;
     in >> buffer2;
-    param.data.currency = static_cast<eCURRENCY>(buffer2);
+    param.currency = static_cast<eCURRENCY>(buffer2);
 
-    in >> param.data.money;
+    in >> param.money;
 
     return in;
 }
