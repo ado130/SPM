@@ -10,6 +10,7 @@
 #include "degiro.h"
 #include "screener.h"
 #include "screenertab.h"
+#include "stockdata.h"
 
 
 namespace Ui {
@@ -35,9 +36,10 @@ public Q_SLOTS:
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
     void updateExchangeRates(const QByteArray data, QString statusCode);
-    void setDegiroDataSlot(StockDataType data);
+    void setDegiroDataSlot(StockDataType newStockData);
     void fillOverviewSlot();
     void addRecord(const QByteArray data, QString statusCode);
+    void fillOverviewTable();
 
 private slots:
     void on_actionAbout_triggered();
@@ -68,11 +70,16 @@ private slots:
     void deOverviewYearChanged(const QDate &date);
     void on_dePDFYear_userDateChanged(const QDate &date);
     void on_pbAddRecord_clicked();
-    void on_deTableYear_userDateChanged(const QDate &date);
 
     void on_pbISINAdd_clicked();
 
     void on_tableISIN_cellDoubleClicked(int row, int column);
+
+    void on_deOverviewFrom_userDateChanged(const QDate &date);
+
+    void on_deOverviewTo_userDateChanged(const QDate &date);
+
+    void on_tableOverview_cellDoubleClicked(int row, int column);
 
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
@@ -88,6 +95,7 @@ private:
     std::shared_ptr<Database> database;
     std::shared_ptr<DeGiro> degiro;
     std::shared_ptr<Screener> screener;
+    std::shared_ptr<StockData> stockData;
 
     QVector<ScreenerTab*> screenerTabs;
 
@@ -116,7 +124,6 @@ private:
      */
     QVector<sPDFEXPORT> prepareDataToExport();
     void setOverviewHeader();
-    void fillOverviewTable();
 
     /*
      *  DeGiro tab

@@ -54,7 +54,8 @@ SOURCES += \
         screener.cpp \
         screenerform.cpp \
         screenertab.cpp \
-        settingsform.cpp
+        settingsform.cpp \
+        stockdata.cpp
 
 HEADERS += \
         database.h \
@@ -66,7 +67,8 @@ HEADERS += \
         screener.h \
         screenerform.h \
         screenertab.h \
-        settingsform.h
+        settingsform.h \
+        stockdata.h
 
 FORMS += \
         filterform.ui \

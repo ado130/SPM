@@ -86,17 +86,17 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         bool ok;
         QString val = list.at(8);
         val.replace(",", ".");
-        tmp.money = val.toDouble(&ok);
+        tmp.price = val.toDouble(&ok);
 
         if(!ok)
         {
             val = list.at(10);
             val.replace(",", ".");
-            tmp.money = val.toDouble(&ok);
+            tmp.price = val.toDouble(&ok);
 
             if(!ok)
             {
-                tmp.money = 0.0;
+                tmp.price = 0.0;
             }
         }
 
@@ -105,6 +105,8 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
 
 
         sSTOCKDATA degData;
+        degData.count = 0;
+
         bool found = true;
 
         if(tmp.description.toLower().contains("vklad") || tmp.description.toLower().contains("deposit"))
@@ -134,10 +136,20 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         else if(tmp.description.toLower().contains("nákup") || tmp.description.toLower().contains("buy"))
         {
             degData.type = BUY;
+
+            int start = tmp.description.indexOf(" ");
+            int end = tmp.description.indexOf(" ", start+1);
+
+            degData.count = tmp.description.mid(start + 1, end-start-1).toInt();
         }
         else if(tmp.description.toLower().contains("prodej") || tmp.description.toLower().contains("sell"))
         {
             degData.type = SELL;
+
+            int start = tmp.description.indexOf(" ");
+            int end = tmp.description.indexOf(" ", start + 1);
+
+            degData.count = tmp.description.mid(start + 1, end-start-1).toInt();
         }
         else
         {
@@ -148,13 +160,23 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         {
             degData.dateTime = tmp.dateTime;
             degData.ISIN = tmp.ISIN;
-            degData.price = tmp.money;
+            degData.stockName = tmp.product;
+
+            if(degData.count != 0)
+            {
+                degData.price = tmp.price/degData.count;
+            }
+            else
+            {
+                degData.price = tmp.price;
+            }
+
             degData.currency = tmp.currency;
             degData.isDegiroSource = true;
 
-            QVector<sSTOCKDATA> vector = stockData[tmp.product];
+            QVector<sSTOCKDATA> vector = stockData[tmp.ISIN];
             vector.append(degData);
-            stockData[tmp.product] = vector;
+            stockData[tmp.ISIN] = vector;
         }
     }
 
@@ -243,7 +265,7 @@ QDataStream &operator<<(QDataStream &out, const sDEGIRORAW &param)
     out << param.ISIN;
     out << param.description;
     out << static_cast<int>(param.currency);
-    out << param.money;
+    out << param.price;
 
     return out;
 }
@@ -259,7 +281,7 @@ QDataStream &operator>>(QDataStream &in, sDEGIRORAW &param)
     in >> buffer;
     param.currency = static_cast<eCURRENCY>(buffer);
 
-    in >> param.money;
+    in >> param.price;
 
     return in;
 }

@@ -85,14 +85,14 @@ struct sPDFEXPORT
 
 enum eSTOCKTYPE
 {
-    DIVIDEND,
-    TAX,
-    TRANSACTIONFEE,
-    FEE,
-    DEPOSIT,
-    WITHDRAWAL,
-    BUY,
-    SELL
+    DIVIDEND = 0,
+    TAX = 1,
+    TRANSACTIONFEE = 2,
+    FEE = 3,
+    DEPOSIT = 4,
+    WITHDRAWAL = 5,
+    BUY = 6,
+    SELL = 7
 };
 
 struct sSTOCKDATA
@@ -101,6 +101,7 @@ struct sSTOCKDATA
     eSTOCKTYPE type;
     QString ticker;
     QString ISIN;
+    QString stockName;
     eCURRENCY currency;
     int count;
     double price;
@@ -120,6 +121,10 @@ struct sNEWRECORD
     double fee;
 };
 
+/**
+ * @brief StockDataType
+ * ISIN, sSTOCKDATA
+ */
 typedef QHash<QString, QVector<sSTOCKDATA>> StockDataType;
 
 
@@ -130,7 +135,7 @@ struct sDEGIRORAW
     QString ISIN;
     QString description;
     eCURRENCY currency;
-    double money;
+    double price;
 };
 
 
@@ -153,7 +158,7 @@ struct sTABLE
 enum eSCREENSOURCE
 {
     FINVIZ = 0,
-    YAHOO
+    YAHOO = 1
 };
 
 struct sSCREENER

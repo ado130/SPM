@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     database = std::make_shared<Database> (this);
     degiro = std::make_shared<DeGiro> (this);
     screener = std::make_shared<Screener> (this);
+    stockData = std::make_shared<StockData> (this);
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
 
@@ -88,6 +89,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->deGraphFrom->setDate(QDate(QDate::currentDate().year(), 1, 1));
     ui->deGraphYear->setDate(QDate::currentDate());
 
+    ui->dePDFTo->setDate(QDate::currentDate());
+    ui->dePDFFrom->setDate(QDate(QDate::currentDate().year(), 1, 1));
+    ui->dePDFYear->setDate(QDate::currentDate());
+
     ui->deOverviewTo->setDate(database->getSetting().lastOverviewTo);
     ui->deOverviewFrom->setDate(database->getSetting().lastOverviewFrom);
     ui->deOverviewYear->setDate(QDate::currentDate());
@@ -97,18 +102,14 @@ MainWindow::MainWindow(QWidget *parent) :
         [=]( ) { deOverviewYearChanged(ui->deOverviewYear->date()); }
         );
 
-    ui->dePDFTo->setDate(QDate::currentDate());
-    ui->dePDFFrom->setDate(QDate(QDate::currentDate().year(), 1, 1));
-    ui->dePDFYear->setDate(QDate::currentDate());
-
     connect(
         ui->deOverviewTo, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); }
+        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
         );
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); }
+        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
         );
 
 
@@ -125,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     /********************************
-     * Overview table
+     * Overview
     ********************************/
     fillOverviewSlot();
 
@@ -285,6 +286,8 @@ void MainWindow::on_actionHelp_triggered()
     text += "where the \"f\" means float number.<br><br>";
     text += "The color column has to be either HEX color number or \"HIDE\".<br>";
     text += "The color HEX palette is available under the context menu (right click).<br>";
+    text += "<br>";
+    text += "Double click on the row in the Overview table opens details about the selected stock.";
     text += "</body></html>";
 
     QMessageBox::about(this,
@@ -301,6 +304,7 @@ void MainWindow::on_actionSettings_triggered()
     connect(dlg, &SettingsForm::loadOnlineParameters, this, &MainWindow::loadOnlineParametersSlot);
     connect(dlg, &SettingsForm::loadDegiroCSV, this, &MainWindow::loadDegiroCSVslot);
     connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewSlot);
+    connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewTable);
     connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
     dlg->open();
 }
@@ -448,7 +452,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 void MainWindow::setOverviewHeader()
 {
     QStringList header;
-    header << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price";
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price" << "Received dividend";
     ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->setRowCount(0);
@@ -457,7 +461,7 @@ void MainWindow::setOverviewHeader()
     ui->tableOverview->horizontalHeader()->setVisible(true);
     ui->tableOverview->verticalHeader()->setVisible(true);
 
-    ui->tableOverview->setSelectionBehavior(QAbstractItemView::SelectItems);
+    ui->tableOverview->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableOverview->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableOverview->setShowGrid(true);
@@ -467,21 +471,68 @@ void MainWindow::setOverviewHeader()
 
 void MainWindow::fillOverviewTable()
 {
-    StockDataType stockData = database->getStockData();
+    StockDataType stockList = stockData->getStockData();
 
-    if(stockData.isEmpty())
+    if(stockList.isEmpty())
     {
         return;
     }
 
     ui->tableOverview->setRowCount(0);
 
-    ui->tableOverview->setSortingEnabled(false);
-    for(int a = 0; a<stockData.count(); ++a)
-    {
-        //ui->tableOverview->insertRow(a);
 
-        //ui->tableOverview->setItem(a, 0, new QTableWidgetItem(data.at(a).ISIN));
+    QList<QString> keys = stockList.keys();
+
+
+    QString currency;
+
+    switch(database->getSetting().currency)
+    {
+        case USD:
+            currency = "$";
+            break;
+        case CZK:
+            currency = "Kč";
+            break;
+        case EUR:
+            currency = "€";
+            break;
+    }
+
+    QDate from = ui->deOverviewFrom->date();
+    QDate to = ui->deOverviewTo->date();
+
+    int pos = 0;
+    ui->tableOverview->setSortingEnabled(false);
+
+    for(const QString &key : keys)
+    {
+        if( key.isEmpty() || stockList.value(key).at(0).stockName.toLower().contains("fundshare") ) continue;
+
+        sSTOCKDATA stock = stockList.value(key).first();
+
+        if(stock.stockName.toLower().contains("fundshare") ) continue;
+
+        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+
+        ui->tableOverview->insertRow(pos);
+
+        //for(const sSTOCKDATA &deg : stockList.value(key))
+        //{
+            ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
+            ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
+            ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
+            ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
+            ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
+            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(stockData->getCurrentCount(stock.ISIN)));
+            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
+            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
+            ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
+            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
+        //}
+
+        pos++;
 
     }
     ui->tableOverview->setSortingEnabled(true);
@@ -498,11 +549,152 @@ void MainWindow::fillOverviewTable()
     ui->tableOverview->resizeColumnsToContents();
 }
 
+void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
+{
+    Q_UNUSED(column)
+
+    QTableWidgetItem *rowItem = ui->tableOverview->item(row, 0);
+
+    if(!rowItem) return;
+
+    QString ISIN = rowItem->text();
+
+    QVector<sSTOCKDATA> vector = stockData->getStockData().value(ISIN);
+
+    QDialog *stockDlg = new QDialog(this);
+    stockDlg->setAttribute(Qt::WA_DeleteOnClose);
+    stockDlg->setWindowTitle("SPM " + vector.at(0).ticker);
+
+    QGridLayout *grid = new QGridLayout(stockDlg);
+
+    QTableWidget *table = new QTableWidget(stockDlg);
+
+    grid->addWidget(table);
+    stockDlg->setLayout(grid);
+
+    QStringList header;
+    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price";
+    table->setColumnCount(header.count());
+
+    table->setRowCount(0);
+    table->setColumnCount(header.count());
+
+    table->horizontalHeader()->setVisible(true);
+    table->verticalHeader()->setVisible(true);
+
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setSelectionMode(QAbstractItemView::SingleSelection);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->setShowGrid(true);
+
+    table->setHorizontalHeaderLabels(header);
+
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+    double price;
+
+    int pos = 0;
+    table->setSortingEnabled(false);
+
+    for(const sSTOCKDATA &stock : vector)
+    {
+        table->insertRow(pos);
+
+        table->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
+        table->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
+        table->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
+
+        QTableWidgetItem *item = new QTableWidgetItem;
+        item->setData(Qt::EditRole, stock.dateTime.date());
+        table->setItem(pos, 3, item);
+
+
+
+        double moneyInUSD = 0.0;
+
+        switch(stock.currency)
+        {
+            case USD: moneyInUSD = stock.price;
+                break;
+            case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
+                break;
+            case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
+                break;
+        }
+
+        switch(selectedCurrency)
+        {
+            case USD: price = moneyInUSD;
+                break;
+            case CZK: price = (moneyInUSD * database->getSetting().USD2CZK);
+                break;
+            case EUR: price = (moneyInUSD * database->getSetting().USD2EUR);
+                break;
+        }
+
+        switch(stock.type)
+        {
+            case DEPOSIT: table->setItem(pos, 4, new QTableWidgetItem("Deposit"));
+                break;
+            case BUY: table->setItem(pos, 4, new QTableWidgetItem("Buy"));
+                break;
+            case SELL: table->setItem(pos, 4, new QTableWidgetItem("Sell"));
+                break;
+            case DIVIDEND: table->setItem(pos, 4, new QTableWidgetItem("Dividend"));
+                break;
+            case TAX: table->setItem(pos, 4, new QTableWidgetItem("Tax"));
+                break;
+            case FEE: table->setItem(pos, 4, new QTableWidgetItem("Fee"));
+                break;
+            case TRANSACTIONFEE: table->setItem(pos, 4, new QTableWidgetItem("Transaction fee"));
+                break;
+            case WITHDRAWAL: table->setItem(pos, 4, new QTableWidgetItem("Withdrawal"));
+                break;
+        }
+
+
+        QString currency;
+
+        switch(database->getSetting().currency)
+        {
+            case USD:
+                currency = "$";
+                break;
+            case CZK:
+                currency = "Kč";
+                break;
+            case EUR:
+                currency = "€";
+                break;
+        }
+
+        table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
+        table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currency));
+
+        pos++;
+    }
+    table->setSortingEnabled(true);
+
+    for (int rowTable = 0; rowTable<table->rowCount(); ++rowTable)
+    {
+        for(int colTable = 0; colTable<table->columnCount(); ++colTable)
+        {
+            table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
+        }
+    }
+
+    table->resizeColumnsToContents();
+    stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(), table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height()+10);
+
+    stockDlg->open();
+}
+
+
+
 void MainWindow::fillOverviewSlot()
 {
-    StockDataType data = database->getStockData();
+    StockDataType stockList = stockData->getStockData();
 
-    if(data.isEmpty())
+    if(stockList.isEmpty())
     {
         return;
     }
@@ -519,30 +711,30 @@ void MainWindow::fillOverviewSlot()
     QDate from = ui->deOverviewFrom->date();
     QDate to = ui->deOverviewTo->date();
 
-    QList<QString> keys = data.keys();
+    QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
     {
-        if(key.toLower().contains("fundshare")) continue;
-
-        for(const sSTOCKDATA &deg : data.value(key))
+        for(const sSTOCKDATA &stock : stockList.value(key))
         {
-            if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if( stock.stockName.toLower().contains("fundshare") ) continue;
 
 
             double moneyInUSD = 0.0;
 
-            switch(deg.currency)
+            switch(stock.currency)
             {
-                case USD: moneyInUSD = deg.price;
+                case USD: moneyInUSD = stock.price;
                     break;
-                case CZK: moneyInUSD = (deg.price * database->getSetting().CZK2USD);
+                case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
                     break;
-                case EUR: moneyInUSD = (deg.price * database->getSetting().EUR2USD);
+                case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
                     break;
             }
 
-            if(deg.type == DEPOSIT)
+            if(stock.type == DEPOSIT)
             {
                 switch(selectedCurrency)
                 {
@@ -554,24 +746,24 @@ void MainWindow::fillOverviewSlot()
                         break;
                 }
             }
-            else if(deg.type == BUY || deg.type == SELL)
+            else if(stock.type == BUY || stock.type == SELL)
             {
-                if(deg.type == BUY)
+                if(stock.type == BUY)
                 {
                     moneyInUSD *= -1.0;
                 }
 
                 switch(selectedCurrency)
                 {
-                    case USD: invested += moneyInUSD;
+                    case USD: invested += moneyInUSD * stock.count;
                         break;
-                    case CZK: invested += (moneyInUSD * database->getSetting().USD2CZK);
+                    case CZK: invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
                         break;
-                    case EUR: invested += (moneyInUSD * database->getSetting().USD2EUR);
+                    case EUR: invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
                         break;
                 }
             }
-            else if(deg.type == DIVIDEND)
+            else if(stock.type == DIVIDEND)
             {
                 switch(selectedCurrency)
                 {
@@ -583,7 +775,7 @@ void MainWindow::fillOverviewSlot()
                         break;
                 }
             }
-            else if(deg.type == TAX)
+            else if(stock.type == TAX)
             {
                 switch(selectedCurrency)
                 {
@@ -595,7 +787,7 @@ void MainWindow::fillOverviewSlot()
                         break;
                 }
             }
-            else if(deg.type == FEE)
+            else if(stock.type == FEE)
             {
                 switch(selectedCurrency)
                 {
@@ -607,7 +799,7 @@ void MainWindow::fillOverviewSlot()
                         break;
                 }
             }
-            else if(deg.type == TRANSACTIONFEE)
+            else if(stock.type == TRANSACTIONFEE)
             {
                 switch(selectedCurrency)
                 {
@@ -655,9 +847,9 @@ void MainWindow::fillOverviewSlot()
 
 void MainWindow::on_pbShowGraph_clicked()
 {
-    StockDataType data = database->getStockData();
+    StockDataType stockList = stockData->getStockData();
 
-    if(data.isEmpty())
+    if(stockList.isEmpty())
     {
         return;
     }
@@ -678,30 +870,30 @@ void MainWindow::on_pbShowGraph_clicked()
     QDate from = ui->deGraphFrom->date();
     QDate to = ui->deGraphTo->date();
 
-    QList<QString> keys = data.keys();
+    QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
     {
-        if(key.toLower().contains("fundshare")) continue;
-
-        for(const sSTOCKDATA &deg : data.value(key))
+        for(const sSTOCKDATA &stock : stockList.value(key))
         {
-            if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if( stock.stockName.toLower().contains("fundshare") ) continue;
 
 
             double moneyInUSD = 0.0;
 
-            switch(deg.currency)
+            switch(stock.currency)
             {
-                case USD: moneyInUSD = deg.price;
+                case USD: moneyInUSD = stock.price;
                     break;
-                case CZK: moneyInUSD = (deg.price * database->getSetting().CZK2USD);
+                case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
                     break;
-                case EUR: moneyInUSD = (deg.price * database->getSetting().EUR2USD);
+                case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
                     break;
             }
 
-            if(deg.type == DEPOSIT)
+            if(stock.type == DEPOSIT)
             {
                 switch(selectedCurrency)
                 {
@@ -713,30 +905,30 @@ void MainWindow::on_pbShowGraph_clicked()
                         break;
                 }
 
-                graphData.append(qMakePair(deg.dateTime.toMSecsSinceEpoch(), deposit));
+                graphData.append(qMakePair(stock.dateTime.toMSecsSinceEpoch(), deposit));
 
-                depositSeries->append(deg.dateTime.toMSecsSinceEpoch(), deposit);
+                depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
             }
-            else if(deg.type == BUY || deg.type == SELL)
+            else if(stock.type == BUY || stock.type == SELL)
             {
-                if(deg.type == BUY)
+                if(stock.type == BUY)
                 {
                     moneyInUSD *= -1.0;
                 }
 
                 switch(selectedCurrency)
                 {
-                    case USD: invested += moneyInUSD;
+                    case USD: invested += moneyInUSD * stock.count;
                         break;
-                    case CZK: invested += (moneyInUSD * database->getSetting().USD2CZK);
+                    case CZK: invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
                         break;
-                    case EUR: invested += (moneyInUSD * database->getSetting().USD2EUR);
+                    case EUR: invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
                         break;
                 }
 
-                investedSeries->append(deg.dateTime.toMSecsSinceEpoch(), invested);
+                investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
             }
-            else if(deg.type == DIVIDEND)
+            else if(stock.type == DIVIDEND)
             {
                 switch(selectedCurrency)
                 {
@@ -814,7 +1006,7 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QDateTimeAxis *depositAxisX = new QDateTimeAxis;
     depositAxisX->setTickCount(10);
-    depositAxisX->setFormat("dd MM yyyy");
+    depositAxisX->setFormat("MMM yyyy");
     depositAxisX->setTitleText("Date");
     depositChart->addAxis(depositAxisX, Qt::AlignBottom);
     depositSeries->attachAxis(depositAxisX);
@@ -1007,9 +1199,9 @@ void MainWindow::on_pbPDFExport_clicked()
 
 QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
 {
-    StockDataType stockData = database->getStockData();
+    StockDataType stockList = stockData->getStockData();
 
-    if(stockData.isEmpty())
+    if(stockList.isEmpty())
     {
         return QVector<sPDFEXPORT>();
     }
@@ -1022,15 +1214,15 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
     double USD2CZK = ui->lePDFUSD2CZK->text().toDouble();
     double EUR2CZK = ui->lePDFEUR2CZK->text().toDouble();
 
-    QList<QString> keys = stockData.keys();
+    QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
     {
-        if(key.toLower().contains("fundshare")) continue;
-
-        for(const sSTOCKDATA &deg : stockData.value(key))
+        for(const sSTOCKDATA &deg : stockList.value(key))
         {
             if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
+
+            if( deg.stockName.toLower().contains("fundshare") ) continue;
 
 
             /*if(deg.type == BUY || deg.type == SELL)
@@ -1042,11 +1234,11 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
 
                 switch(selectedCurrency)
                 {
-                    case USD: invested += moneyInUSD;
+                    case USD: invested += moneyInUSD * deg.count;
                         break;
-                    case CZK: invested += (moneyInUSD * database->getSetting().USD2CZK);
+                    case CZK: invested += (moneyInUSD * deg.count * database->getSetting().USD2CZK);
                         break;
-                    case EUR: invested += (moneyInUSD * database->getSetting().USD2EUR);
+                    case EUR: invested += (moneyInUSD * deg.count * database->getSetting().USD2EUR);
                         break;
                 }
             }*/
@@ -1058,15 +1250,15 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
                 {
                     case USD:
                         pdfRow.price = deg.price * USD2CZK;
-                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX) * USD2CZK;
+                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX) * USD2CZK;
                         break;
                     case CZK:
                         pdfRow.price = deg.price;
-                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX);
+                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX);
                         break;
                     case EUR:
                         pdfRow.price = deg.price * EUR2CZK;
-                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX) * EUR2CZK;
+                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX) * EUR2CZK;
                         break;
                 }
 
@@ -1117,9 +1309,22 @@ void MainWindow::deOverviewYearChanged(const QDate &date)
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); }
+        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
         );
+}
 
+void MainWindow::on_deOverviewFrom_userDateChanged(const QDate &date)
+{
+    sSETTINGS set = database->getSetting();
+    set.lastOverviewFrom = date;
+    database->setSetting(set);
+}
+
+void MainWindow::on_deOverviewTo_userDateChanged(const QDate &date)
+{
+    sSETTINGS set = database->getSetting();
+    set.lastOverviewTo = date;
+    database->setSetting(set);
 }
 
 void MainWindow::on_deGraphYear_userDateChanged(const QDate &date)
@@ -1136,14 +1341,6 @@ void MainWindow::on_dePDFYear_userDateChanged(const QDate &date)
 
     ui->dePDFFrom->setDate(QDate(year, 1, 1));
     ui->dePDFTo->setDate(QDate(year, 12, 31));
-}
-
-void MainWindow::on_deTableYear_userDateChanged(const QDate &date)
-{
-    int year = date.year();
-
-    ui->deTableFrom->setDate(QDate(year, 1, 1));
-    ui->deTableTo->setDate(QDate(year, 12, 31));
 }
 
 
@@ -1175,9 +1372,12 @@ void MainWindow::on_pbAddRecord_clicked()
 
     QHBoxLayout *HB2 = new QHBoxLayout();
     QLabel *label2 = new QLabel("Type", inputDlg);
+
     QComboBox *type = new QComboBox(inputDlg);
-    type->addItem("Buy");
-    type->addItem("Sell");
+    QStringList typeList;
+    typeList << "Dividend" << "Tax" << "Transaction fee" << "Fee" << "Deposit" << "Withdrawal" << "Buy" << "Sell";
+    type->addItems(typeList);
+
     HB2->addWidget(label2);
     HB2->addWidget(type);
 
@@ -1202,6 +1402,47 @@ void MainWindow::on_pbAddRecord_clicked()
 
     HB4->addWidget(label4);
     HB4->addWidget(leISIN);
+
+    // Autocomplete ticker or isin if exists
+    connect(leTicker, &QLineEdit::editingFinished, [leISIN, leTicker, this]()
+            {
+                if(leISIN->text().isEmpty())
+                {
+                    QVector<sISINLIST> isin = database->getIsinList();
+
+                    auto it = std::find_if(isin.begin(), isin.end(), [leTicker](sISINLIST a)
+                                           {
+                                               return a.ticker == leTicker->text();
+                                           }
+                                           );
+
+                    if(it != isin.end())
+                    {
+                        leISIN->setText(it->ISIN);
+                    }
+                }
+            });
+
+
+    connect(leISIN, &QLineEdit::editingFinished, [leISIN, leTicker, this]()
+            {
+                if(leTicker->text().isEmpty())
+                {
+                    QVector<sISINLIST> isin = database->getIsinList();
+
+                    auto it = std::find_if(isin.begin(), isin.end(), [leISIN](sISINLIST a)
+                                           {
+                                               return a.ISIN == leISIN->text();
+                                           }
+                                           );
+
+                    if(it != isin.end())
+                    {
+                        leTicker->setText(it->ticker);
+                    }
+                }
+            });
+
 
     QHBoxLayout *HB5 = new QHBoxLayout();
     QLabel *label5 = new QLabel("Currency", inputDlg);
@@ -1233,7 +1474,7 @@ void MainWindow::on_pbAddRecord_clicked()
     HB8->addWidget(label8);
     HB8->addWidget(leFee);
 
-    QPushButton *pbSave = new QPushButton("Add && Close", inputDlg);
+    QPushButton *pbSave = new QPushButton("Add", inputDlg);
     connect(pbSave, &QPushButton::clicked,
             [=]()
             {
@@ -1247,7 +1488,7 @@ void MainWindow::on_pbAddRecord_clicked()
                 else
                 {
                     lastRecord.dateTime = date->dateTime();
-                    lastRecord.type = type->currentText() == "Buy" ? BUY : SELL;
+                    lastRecord.type = static_cast<eSTOCKTYPE>(type->currentIndex());
                     lastRecord.ticker = leTicker->text();
                     lastRecord.ISIN = leISIN->text();
                     lastRecord.currency = static_cast<eCURRENCY>(cmCurrency->currentIndex());
@@ -1327,41 +1568,45 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
         }
 
         sTABLE table = screener->finvizParse(QString(data));
+        row1.stockName = table.info.stockName;
+        row2.stockName = table.info.stockName;
 
-        StockDataType stockData = database->getStockData();
 
-        QMutableHashIterator it(stockData);
+        StockDataType stockList = stockData->getStockData();
 
-        while(it.hasNext())
+        QVector<sSTOCKDATA> vector = stockList[lastRecord.ISIN];
+        vector.append(row1);
+
+        if(!qFuzzyIsNull(lastRecord.fee))
         {
-            it.next();
-
-            QMutableVectorIterator i(it.value());
-
-            while(i.hasNext())
-            {
-                i.next();
-
-                qDebug() << i.value().ISIN << lastRecord.ISIN;
-
-                if(i.value().ISIN == lastRecord.ISIN)
-                {
-                    i.insert(row1);
-
-                    if(!qFuzzyIsNull(lastRecord.fee))
-                    {
-                        i.insert(row2);
-                    }
-
-                    database->setStockData(stockData);
-                    return;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            vector.append(row2);
         }
+
+        // The is not in the ISIN list, so add it
+        auto it = stockList.find(lastRecord.ISIN);
+
+        if(it == stockList.end())
+        {
+            QVector<sISINLIST> isinList = database->getIsinList();
+
+            sISINLIST record;
+            record.ISIN = lastRecord.ISIN;
+            record.name = table.info.stockName;
+            record.sector = table.info.sector;
+            record.industry = table.info.industry;
+
+            isinList.push_back(record);
+            database->setIsinList(isinList);
+
+            fillISINTable();
+        }
+
+        stockList[lastRecord.ISIN] = vector;
+
+        stockData->setStockData(stockList);
+
+        fillOverviewSlot();
+        fillOverviewTable();
     }
 
     QApplication::restoreOverrideCursor();
@@ -1380,9 +1625,12 @@ void MainWindow::loadDegiroCSVslot()
     degiro->loadDegiroCSV(database->getSetting().degiroCSV, database->getSetting().CSVdelimeter);
 
     if(degiro->getIsRAWFile())
-    {              
-        fillOverviewSlot();
+    {
         fillDegiroCSV();
+        fillOverviewSlot();
+        fillOverviewTable();
+
+        setStatus("The DeGiro csv file has been loaded!");
     }
     else
     {
@@ -1394,23 +1642,15 @@ void MainWindow::loadDegiroCSVslot()
 
 void MainWindow::on_pbDegiroLoad_clicked()
 {
-    if(degiro->getIsRAWFile())
-    {
-        fillOverviewSlot();
-        fillDegiroCSV();
-    }
-    else
-    {
-        setStatus("The DeGiro data are corrupted or are not loaded!");
-    }
+    loadDegiroCSVslot();
 }
 
-void MainWindow::setDegiroDataSlot(StockDataType data)
+void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 {
-    StockDataType stock = database->getStockData();
+    StockDataType stockList = stockData->getStockData();
 
     // Delete old DeGiro data
-    QMutableHashIterator<QString, QVector<sSTOCKDATA>> it(stock);
+    QMutableHashIterator<QString, QVector<sSTOCKDATA>> it(stockList);
 
     while (it.hasNext())
     {
@@ -1428,16 +1668,16 @@ void MainWindow::setDegiroDataSlot(StockDataType data)
     }
 
     // Insert new DeGiro data
-    QMutableHashIterator<QString, QVector<sSTOCKDATA>> iter(data);
+    QMutableHashIterator<QString, QVector<sSTOCKDATA>> iter(newStockData);
 
     QVector<sISINLIST> isinList = database->getIsinList();
 
     while (iter.hasNext())
     {
         iter.next();
-        stock.insert(iter.key(), iter.value());
+        stockList.insert(iter.key(), iter.value());
 
-        // Check the ISIN, is does not exist add it to the table list
+        // Check the ISIN, if does not exist add it to the table list
         QMutableVectorIterator<sSTOCKDATA> i(iter.value());
 
         while (i.hasNext())
@@ -1455,7 +1695,7 @@ void MainWindow::setDegiroDataSlot(StockDataType data)
             {
                 sISINLIST record;
                 record.ISIN = ISIN;
-                record.name = iter.key();
+                record.name = i.next().stockName;
 
                 isinList.push_back(record);
             }
@@ -1464,7 +1704,7 @@ void MainWindow::setDegiroDataSlot(StockDataType data)
 
     database->setIsinList(isinList);
     fillISINTable();
-    database->setStockData(stock);
+    stockData->setStockData(stockList);
 }
 
 void MainWindow::setDegiroHeader()
@@ -1511,7 +1751,7 @@ void MainWindow::fillDegiroCSV()
         ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(data.at(a).currency)));
 
         QTableWidgetItem *item2 = new QTableWidgetItem;
-        item2->setData(Qt::EditRole, data.at(a).money);
+        item2->setData(Qt::EditRole, data.at(a).price);
         ui->tableDegiro->setItem(a, 5, item2);
     }
     ui->tableDegiro->setSortingEnabled(true);
@@ -2685,16 +2925,16 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
     {
         item->setText(text);
 
-        QVector<sISINLIST> list = database->getIsinList();
+        QVector<sISINLIST> isinList = database->getIsinList();
         QString ISIN = ui->tableISIN->item(row, 0)->text();
 
-        auto it = std::find_if(list.begin(), list.end(),
+        auto it = std::find_if(isinList.begin(), isinList.end(),
                                [ISIN](sISINLIST a)
                                {
                                    return a.ISIN == ISIN;
                                } );
 
-        if(it != list.end())
+        if(it != isinList.end())
         {
             switch(column)
             {
@@ -2705,7 +2945,29 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
                 case 4: it->industry = text; break;
             }
 
-            database->setIsinList(list);
+            database->setIsinList(isinList);
+        }
+
+
+        // The ticker has been updated, so check all stockData and assign ticker to the ISIN value
+        if(column == 1)
+        {
+            StockDataType stockList = stockData->getStockData();
+
+            QVector<sSTOCKDATA> vector = stockList.value(ISIN);
+
+            QMutableVectorIterator i(vector);
+
+            while(i.hasNext())
+            {
+                i.next();
+                i.value().ticker = text;
+            }
+
+            stockList[ISIN] = vector;
+            stockData->setStockData(stockList);
+
+            fillOverviewTable();
         }
     }
 }
