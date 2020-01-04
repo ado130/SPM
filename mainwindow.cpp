@@ -37,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
     degiro = std::make_shared<DeGiro> (this);
     screener = std::make_shared<Screener> (this);
 
+    connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
+
     /********************************
      * Geometry
     ********************************/
@@ -72,9 +74,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // set status bar text
-    QLabel *autor = new QLabel("Autor: Andrej Copyright © 2019-2020");
+    QLabel *author = new QLabel("Author: Andrej Copyright © 2019-2020");
     QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR));
-    ui->statusBar->addPermanentWidget(autor, 1);
+    ui->statusBar->addPermanentWidget(author, 1);
     ui->statusBar->addPermanentWidget(version, 0);
 
     // PDF export default data
@@ -101,12 +103,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(
         ui->deOverviewTo, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverview(); }
+        [=]( ) { fillOverviewSlot(); }
         );
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverview(); }
+        [=]( ) { fillOverviewSlot(); }
         );
 
 
@@ -123,15 +125,29 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     /********************************
+     * Overview table
+    ********************************/
+    fillOverviewSlot();
+
+    setOverviewHeader();
+    fillOverviewTable();
+
+    /********************************
      * DeGiro table
     ********************************/
     setDegiroHeader();
 
     if(database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
     {
-        fillOverview();
         fillDegiroCSV();
     }
+
+
+    /********************************
+     * ISIN table
+    ********************************/
+    setISINHeader();
+    fillISINTable();
 
 
     /********************************
@@ -159,7 +175,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 ui->tabScreener->addTab(st, allData.at(a).screenerName);
 
                 setScreenerHeader(st);
-                fillScreener(st);
+                fillScreenerTable(st);
             }
 
             ui->tabScreener->setCurrentIndex(currentScreenerIndex);
@@ -185,7 +201,8 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-    installEventFilter(this);
+    ui->leTicker->installEventFilter(this);
+    this->installEventFilter(this);
 }
 
 void MainWindow::centerAndResize()
@@ -198,8 +215,8 @@ void MainWindow::centerAndResize()
 
     qDebug() << "Available dimensions " << width << "x" << height;
 
-    width = static_cast<int>(width*0.75); // 90% of the screen size
-    height = static_cast<int>(height*0.75); // 90% of the screen size
+    width = static_cast<int>(width*0.75);
+    height = static_cast<int>(height*0.75);
 
     qDebug() << "Computed dimensions " << width << "x" << height;
 
@@ -231,20 +248,22 @@ void MainWindow::on_mainTab_currentChanged(int index)
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
-    text = "<html><body>";
+    text = "<html><body><center>";
     text += "<h2>Stock Portfolio Manager (SPM)</h2>";
     text += "<b>Author:</b> Andrej<br>";
     text += "<b>E-mail:</b> <a href=\"mailto:vlasaty.andrej@gmail.com?subject=SPM\">vlasaty.andrej@gmail.com</a><br>";
     text += "<b>Website:</b> <a href=\"https://www.investicnigramotnost.cz\">https://www.investicnigramotnost.cz</a><br>";
-    text += "<b>Donate:</b> <a href=\"https://www.paypal.me/vandrej\">https://www.paypal.me/vandrej</a><br>";
-    text += "You can donate me to support me and show me that the project is useful<br>";
-    text += "If you have any question or suggestion, feel free to contact me<br>";
-    text += "===============================================<br>";
+    text += "==================================<br>";
     text += "<b>Exchange rates source:</b> <a href=\"https://exchangeratesapi.io\">https://exchangeratesapi.io</a><br>";
     text += "Exchange rates are updated once per day<br>";
     text += "The PDF export file is valid only for Czech republic<br>";
-    text += "<br><b>Copyright © 2019 Stock Portfolio Manager</b>";
-    text += "</body></html>";
+    text += "<br><br>";
+    text += "<a href=\"https://www.paypal.me/vandrej\"> <img border=\"0\" alt=\"Donate\" src=\":/images/donate.gif\" width=\"147\" height=\"47\"> </a><br>";
+    text += "You can donate me to support me and show me that the project is useful.<br>";
+    text += "If you have any question or suggestion, feel free to contact me.<br>";
+    text += "<br><br>";
+    text += "<b>Copyright © 2019 Stock Portfolio Manager</b>";
+    text += "</center></body></html>";
 
     QMessageBox::about(this,
                        "About",
@@ -281,8 +300,9 @@ void MainWindow::on_actionSettings_triggered()
     connect(dlg, &SettingsForm::setScreenerParams, this, &MainWindow::setScreenerParamsSlot);
     connect(dlg, &SettingsForm::loadOnlineParameters, this, &MainWindow::loadOnlineParametersSlot);
     connect(dlg, &SettingsForm::loadDegiroCSV, this, &MainWindow::loadDegiroCSVslot);
+    connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewSlot);
     connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
-    dlg->show();
+    dlg->open();
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()
@@ -310,7 +330,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
         if ( (key->key()==Qt::Key_Enter) || (key->key()==Qt::Key_Return) )
         {
-            if(ui->mainTab->currentIndex() == 2 && !ui->leTicker->text().isEmpty())    // Screener
+            if(obj == ui->leTicker /*ui->mainTab->currentIndex() == 2 && !ui->leTicker->text().isEmpty()*/)    // Screener
             {
                 if(!ui->leTicker->text().isEmpty())
                 {
@@ -425,9 +445,62 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 *
 ********************************/
 
-void MainWindow::fillOverview()
+void MainWindow::setOverviewHeader()
 {
-    DegiroDataType data = degiro->getDegiroData();
+    QStringList header;
+    header << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price";
+    ui->tableOverview->setColumnCount(header.count());
+
+    ui->tableOverview->setRowCount(0);
+    ui->tableOverview->setColumnCount(header.count());
+
+    ui->tableOverview->horizontalHeader()->setVisible(true);
+    ui->tableOverview->verticalHeader()->setVisible(true);
+
+    ui->tableOverview->setSelectionBehavior(QAbstractItemView::SelectItems);
+    ui->tableOverview->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableOverview->setShowGrid(true);
+
+    ui->tableOverview->setHorizontalHeaderLabels(header);
+}
+
+void MainWindow::fillOverviewTable()
+{
+    StockDataType stockData = database->getStockData();
+
+    if(stockData.isEmpty())
+    {
+        return;
+    }
+
+    ui->tableOverview->setRowCount(0);
+
+    ui->tableOverview->setSortingEnabled(false);
+    for(int a = 0; a<stockData.count(); ++a)
+    {
+        //ui->tableOverview->insertRow(a);
+
+        //ui->tableOverview->setItem(a, 0, new QTableWidgetItem(data.at(a).ISIN));
+
+    }
+    ui->tableOverview->setSortingEnabled(true);
+
+
+    for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
+    {
+        for(int col = 0; col<ui->tableOverview->columnCount(); ++col)
+        {
+            ui->tableOverview->item(row, col)->setTextAlignment(Qt::AlignCenter);
+        }
+    }
+
+    ui->tableOverview->resizeColumnsToContents();
+}
+
+void MainWindow::fillOverviewSlot()
+{
+    StockDataType data = database->getStockData();
 
     if(data.isEmpty())
     {
@@ -452,7 +525,7 @@ void MainWindow::fillOverview()
     {
         if(key.toLower().contains("fundshare")) continue;
 
-        for(const sDEGIRODATA &deg : data.value(key))
+        for(const sSTOCKDATA &deg : data.value(key))
         {
             if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
 
@@ -461,11 +534,11 @@ void MainWindow::fillOverview()
 
             switch(deg.currency)
             {
-                case USD: moneyInUSD = deg.money;
+                case USD: moneyInUSD = deg.price;
                     break;
-                case CZK: moneyInUSD = (deg.money * database->getSetting().CZK2USD);
+                case CZK: moneyInUSD = (deg.price * database->getSetting().CZK2USD);
                     break;
-                case EUR: moneyInUSD = (deg.money * database->getSetting().EUR2USD);
+                case EUR: moneyInUSD = (deg.price * database->getSetting().EUR2USD);
                     break;
             }
 
@@ -538,12 +611,12 @@ void MainWindow::fillOverview()
             {
                 switch(selectedCurrency)
                 {
-                case USD: transFees += moneyInUSD;
-                    break;
-                case CZK: transFees += (moneyInUSD * database->getSetting().USD2CZK);
-                    break;
-                case EUR: transFees += (moneyInUSD * database->getSetting().USD2EUR);
-                    break;
+                    case USD: transFees += moneyInUSD;
+                        break;
+                    case CZK: transFees += (moneyInUSD * database->getSetting().USD2CZK);
+                        break;
+                    case EUR: transFees += (moneyInUSD * database->getSetting().USD2EUR);
+                        break;
                 }
             }
         }
@@ -567,17 +640,22 @@ void MainWindow::fillOverview()
     fees = abs(fees);
     transFees = abs(transFees);
 
-    ui->leDeposit->setText(QString::number(deposit, 'f', 2) + " " + currency);
-    ui->leInvested->setText(QString::number(invested, 'f', 2) + " " + currency);
-    ui->leDividends->setText(QString::number(dividends, 'f', 2) + " " + currency);
-    ui->leDivTax->setText(QString::number(divTax, 'f', 2) + " " + currency);
-    ui->leFees->setText(QString::number(fees, 'f', 2) + " " + currency);
-    ui->leTransactionFee->setText(QString::number(transFees, 'f', 2) + " " + currency);
+    if(!qFuzzyIsNull(invested))
+    {
+        ui->leDY->setText(QString("%L1").arg((dividends/invested)*100.0, 0, 'f', 2) + " %");
+    }
+
+    ui->leDeposit->setText(QString("%L1").arg(deposit, 0, 'f', 2) + " " + currency);
+    ui->leInvested->setText(QString("%L1").arg(invested, 0, 'f', 2) + " " + currency);
+    ui->leDividends->setText(QString("%L1").arg(dividends, 0, 'f', 2) + " " + currency);
+    ui->leDivTax->setText(QString("%L1").arg(divTax, 0, 'f', 2) + " " + currency);
+    ui->leFees->setText(QString("%L1").arg(fees, 0, 'f', 2) + " " + currency);
+    ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currency);
 }
 
 void MainWindow::on_pbShowGraph_clicked()
 {
-    DegiroDataType data = degiro->getDegiroData();
+    StockDataType data = database->getStockData();
 
     if(data.isEmpty())
     {
@@ -606,7 +684,7 @@ void MainWindow::on_pbShowGraph_clicked()
     {
         if(key.toLower().contains("fundshare")) continue;
 
-        for(const sDEGIRODATA &deg : data.value(key))
+        for(const sSTOCKDATA &deg : data.value(key))
         {
             if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
 
@@ -615,11 +693,11 @@ void MainWindow::on_pbShowGraph_clicked()
 
             switch(deg.currency)
             {
-                case USD: moneyInUSD = deg.money;
+                case USD: moneyInUSD = deg.price;
                     break;
-                case CZK: moneyInUSD = (deg.money * database->getSetting().CZK2USD);
+                case CZK: moneyInUSD = (deg.price * database->getSetting().CZK2USD);
                     break;
-                case EUR: moneyInUSD = (deg.money * database->getSetting().EUR2USD);
+                case EUR: moneyInUSD = (deg.price * database->getSetting().EUR2USD);
                     break;
             }
 
@@ -813,7 +891,7 @@ void MainWindow::on_pbShowGraph_clicked()
     QPushButton *zoomOut = new QPushButton("Zoom out", chartWidget);
     QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
 
-    QHBoxLayout *HB = new QHBoxLayout(chartWidget);
+    QHBoxLayout *HB = new QHBoxLayout();
     HB->addWidget(zoomIn);
     HB->addWidget(zoomOut);
     HB->addWidget(zoomReset);
@@ -929,9 +1007,9 @@ void MainWindow::on_pbPDFExport_clicked()
 
 QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
 {
-    DegiroDataType degiroData = degiro->getDegiroData();
+    StockDataType stockData = database->getStockData();
 
-    if(degiroData.isEmpty())
+    if(stockData.isEmpty())
     {
         return QVector<sPDFEXPORT>();
     }
@@ -944,13 +1022,13 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
     double USD2CZK = ui->lePDFUSD2CZK->text().toDouble();
     double EUR2CZK = ui->lePDFEUR2CZK->text().toDouble();
 
-    QList<QString> keys = degiroData.keys();
+    QList<QString> keys = stockData.keys();
 
     for(const QString &key : keys)
     {
         if(key.toLower().contains("fundshare")) continue;
 
-        for(const sDEGIRODATA &deg : degiroData.value(key))
+        for(const sSTOCKDATA &deg : stockData.value(key))
         {
             if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
 
@@ -979,16 +1057,16 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
                 switch(deg.currency)
                 {
                     case USD:
-                        pdfRow.price = deg.money * USD2CZK;
-                        pdfRow.tax = degiro->getTax(key, deg.dateTime, TAX) * USD2CZK;
+                        pdfRow.price = deg.price * USD2CZK;
+                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX) * USD2CZK;
                         break;
                     case CZK:
-                        pdfRow.price = deg.money;
-                        pdfRow.tax = degiro->getTax(key, deg.dateTime, TAX);
+                        pdfRow.price = deg.price;
+                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX);
                         break;
                     case EUR:
-                        pdfRow.price = deg.money * EUR2CZK;
-                        pdfRow.tax = degiro->getTax(key, deg.dateTime, TAX) * EUR2CZK;
+                        pdfRow.price = deg.price * EUR2CZK;
+                        pdfRow.tax = database->getTax(key, deg.dateTime, TAX) * EUR2CZK;
                         break;
                 }
 
@@ -1039,7 +1117,7 @@ void MainWindow::deOverviewYearChanged(const QDate &date)
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverview(); }
+        [=]( ) { fillOverviewSlot(); }
         );
 
 }
@@ -1060,6 +1138,235 @@ void MainWindow::on_dePDFYear_userDateChanged(const QDate &date)
     ui->dePDFTo->setDate(QDate(year, 12, 31));
 }
 
+void MainWindow::on_deTableYear_userDateChanged(const QDate &date)
+{
+    int year = date.year();
+
+    ui->deTableFrom->setDate(QDate(year, 1, 1));
+    ui->deTableTo->setDate(QDate(year, 12, 31));
+}
+
+
+void MainWindow::on_pbAddRecord_clicked()
+{
+    QDialog *inputDlg = new QDialog(this);
+    inputDlg->setAttribute(Qt::WA_DeleteOnClose);
+    inputDlg->setWindowTitle("Add record");
+
+
+    QStringList isinWords;
+    QStringList tickerWords;
+    QVector<sISINLIST> isinList = database->getIsinList();
+
+    for(const sISINLIST &key : isinList)
+    {
+        tickerWords << key.ticker;
+        isinWords << key.ISIN;
+    }
+
+
+    QVBoxLayout *VB = new QVBoxLayout(inputDlg);
+
+    QHBoxLayout *HB1 = new QHBoxLayout();
+    QLabel *label1 = new QLabel("Date", inputDlg);
+    QDateEdit *date = new QDateEdit(QDate::currentDate(), inputDlg);
+    HB1->addWidget(label1);
+    HB1->addWidget(date);
+
+    QHBoxLayout *HB2 = new QHBoxLayout();
+    QLabel *label2 = new QLabel("Type", inputDlg);
+    QComboBox *type = new QComboBox(inputDlg);
+    type->addItem("Buy");
+    type->addItem("Sell");
+    HB2->addWidget(label2);
+    HB2->addWidget(type);
+
+    QHBoxLayout *HB3 = new QHBoxLayout();
+    QLabel *label3 = new QLabel("Ticker", inputDlg);
+
+    QLineEdit *leTicker = new QLineEdit(inputDlg);
+    QCompleter *tickerCompleter = new QCompleter(tickerWords, this);
+    tickerCompleter->setCaseSensitivity(Qt::CaseInsensitive);
+    leTicker->setCompleter(tickerCompleter);
+
+    HB3->addWidget(label3);
+    HB3->addWidget(leTicker);
+
+    QHBoxLayout *HB4 = new QHBoxLayout();
+    QLabel *label4 = new QLabel("ISIN", inputDlg);
+
+    QLineEdit *leISIN = new QLineEdit(inputDlg);
+    QCompleter *isinCompleter = new QCompleter(isinWords, this);
+    isinCompleter->setCaseSensitivity(Qt::CaseInsensitive);
+    leISIN->setCompleter(isinCompleter);
+
+    HB4->addWidget(label4);
+    HB4->addWidget(leISIN);
+
+    QHBoxLayout *HB5 = new QHBoxLayout();
+    QLabel *label5 = new QLabel("Currency", inputDlg);
+    QComboBox *cmCurrency = new QComboBox(inputDlg);
+    cmCurrency->addItem("CZK");
+    cmCurrency->addItem("EUR");
+    cmCurrency->addItem("USD");
+    HB5->addWidget(label5);
+    HB5->addWidget(cmCurrency);
+
+    QHBoxLayout *HB6 = new QHBoxLayout();
+    QLabel *label6 = new QLabel("Count", inputDlg);
+    QLineEdit *leCount = new QLineEdit(inputDlg);
+    leCount->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
+    HB6->addWidget(label6);
+    HB6->addWidget(leCount);
+
+    QHBoxLayout *HB7 = new QHBoxLayout();
+    QLabel *label7 = new QLabel("Price per pcs", inputDlg);
+    QLineEdit *lePrice = new QLineEdit(inputDlg);
+    lePrice->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
+    HB7->addWidget(label7);
+    HB7->addWidget(lePrice);
+
+    QHBoxLayout *HB8 = new QHBoxLayout();
+    QLabel *label8 = new QLabel("Total Fee", inputDlg);
+    QLineEdit *leFee = new QLineEdit(inputDlg);
+    leFee->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
+    HB8->addWidget(label8);
+    HB8->addWidget(leFee);
+
+    QPushButton *pbSave = new QPushButton("Add && Close", inputDlg);
+    connect(pbSave, &QPushButton::clicked,
+            [=]()
+            {
+                if( leTicker->text().isEmpty() || leISIN->text().isEmpty() || leCount->text().isEmpty() || lePrice->text().isEmpty() || leFee->text().isEmpty() )
+                {
+                    QMessageBox::critical(inputDlg,
+                                          "Add record",
+                                          "All fields are required!",
+                                          QMessageBox::Ok);
+                }
+                else
+                {
+                    lastRecord.dateTime = date->dateTime();
+                    lastRecord.type = type->currentText() == "Buy" ? BUY : SELL;
+                    lastRecord.ticker = leTicker->text();
+                    lastRecord.ISIN = leISIN->text();
+                    lastRecord.currency = static_cast<eCURRENCY>(cmCurrency->currentIndex());
+                    lastRecord.count = leCount->text().toInt();
+                    lastRecord.price = lePrice->text().toDouble();
+                    lastRecord.fee = leFee->text().toDouble();
+
+
+                    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+                    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(addRecord(QByteArray, QString)));
+                    manager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
+
+                    /*if(addRecord(record))
+                    {
+                        inputDlg->close();
+                    }
+                    else
+                    {
+                        QMessageBox::critical(inputDlg,
+                                              "Add record",
+                                              "There is an error - please check the ticker",
+                                              QMessageBox::Ok);
+                    }*/
+                }
+            }
+            );
+
+
+    VB->addLayout(HB1);
+    VB->addLayout(HB2);
+    VB->addLayout(HB3);
+    VB->addLayout(HB4);
+    VB->addLayout(HB5);
+    VB->addLayout(HB6);
+    VB->addLayout(HB7);
+    VB->addLayout(HB8);
+    VB->addWidget(pbSave);
+
+    inputDlg->setLayout(VB);
+
+    inputDlg->open();
+}
+
+void MainWindow::addRecord(const QByteArray data, QString statusCode)
+{
+    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(addRecord(QByteArray, QString)));
+
+    if(!statusCode.contains("200"))
+    {
+        qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
+        setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode).arg(lastRecord.ticker));
+    }
+    else
+    {
+        sSTOCKDATA row1;
+        row1.dateTime = lastRecord.dateTime;
+        row1.type = lastRecord.type;
+        row1.ticker = lastRecord.ticker;
+        row1.ISIN = lastRecord.ISIN;
+        row1.currency = lastRecord.currency;
+        row1.count = lastRecord.count;
+        row1.price = lastRecord.price;
+        row1.isDegiroSource = false;
+
+        sSTOCKDATA row2;
+
+        if(!qFuzzyIsNull(lastRecord.fee))
+        {
+            row2.dateTime = lastRecord.dateTime;
+            row2.type = FEE;
+            row2.ticker = lastRecord.ticker;
+            row2.ISIN = lastRecord.ISIN;
+            row2.currency = lastRecord.currency;
+            row2.price = lastRecord.fee;
+            row2.isDegiroSource = false;
+        }
+
+        sTABLE table = screener->finvizParse(QString(data));
+
+        StockDataType stockData = database->getStockData();
+
+        QMutableHashIterator it(stockData);
+
+        while(it.hasNext())
+        {
+            it.next();
+
+            QMutableVectorIterator i(it.value());
+
+            while(i.hasNext())
+            {
+                i.next();
+
+                qDebug() << i.value().ISIN << lastRecord.ISIN;
+
+                if(i.value().ISIN == lastRecord.ISIN)
+                {
+                    i.insert(row1);
+
+                    if(!qFuzzyIsNull(lastRecord.fee))
+                    {
+                        i.insert(row2);
+                    }
+
+                    database->setStockData(stockData);
+                    return;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    QApplication::restoreOverrideCursor();
+}
+
 
 /********************************
 *
@@ -1073,13 +1380,13 @@ void MainWindow::loadDegiroCSVslot()
     degiro->loadDegiroCSV(database->getSetting().degiroCSV, database->getSetting().CSVdelimeter);
 
     if(degiro->getIsRAWFile())
-    {
-        fillOverview();
+    {              
+        fillOverviewSlot();
         fillDegiroCSV();
     }
     else
     {
-        setStatus("The CSV DeGiro path is not set!");
+        setStatus("The DeGiro data are corrupted or are not loaded!");
     }
 
     QApplication::restoreOverrideCursor();
@@ -1089,13 +1396,75 @@ void MainWindow::on_pbDegiroLoad_clicked()
 {
     if(degiro->getIsRAWFile())
     {
-        fillOverview();
+        fillOverviewSlot();
         fillDegiroCSV();
     }
     else
     {
-        setStatus("The CSV DeGiro path is not set!");
+        setStatus("The DeGiro data are corrupted or are not loaded!");
     }
+}
+
+void MainWindow::setDegiroDataSlot(StockDataType data)
+{
+    StockDataType stock = database->getStockData();
+
+    // Delete old DeGiro data
+    QMutableHashIterator<QString, QVector<sSTOCKDATA>> it(stock);
+
+    while (it.hasNext())
+    {
+        it.next();
+
+        QMutableVectorIterator<sSTOCKDATA> i(it.value());
+
+        while (i.hasNext())
+        {
+            if(i.next().isDegiroSource)
+            {
+                i.remove();
+            }
+        }
+    }
+
+    // Insert new DeGiro data
+    QMutableHashIterator<QString, QVector<sSTOCKDATA>> iter(data);
+
+    QVector<sISINLIST> isinList = database->getIsinList();
+
+    while (iter.hasNext())
+    {
+        iter.next();
+        stock.insert(iter.key(), iter.value());
+
+        // Check the ISIN, is does not exist add it to the table list
+        QMutableVectorIterator<sSTOCKDATA> i(iter.value());
+
+        while (i.hasNext())
+        {
+            QString ISIN = i.next().ISIN;
+
+            if(ISIN.isEmpty()) continue;
+
+            if(std::find_if(isinList.begin(), isinList.end(),
+                             [ISIN](sISINLIST a)
+                             {
+                                 return a.ISIN == ISIN;
+                             }
+                ) == isinList.end() )
+            {
+                sISINLIST record;
+                record.ISIN = ISIN;
+                record.name = iter.key();
+
+                isinList.push_back(record);
+            }
+        }
+    }
+
+    database->setIsinList(isinList);
+    fillISINTable();
+    database->setStockData(stock);
 }
 
 void MainWindow::setDegiroHeader()
@@ -1262,7 +1631,7 @@ void MainWindow::setScreenerParamsSlot(QVector<sSCREENERPARAM> params)
     for(int a = 0; a<screenerTabs.count(); ++a)
     {
         setScreenerHeader(screenerTabs.at(a));
-        fillScreener(screenerTabs.at(a));
+        fillScreenerTable(screenerTabs.at(a));
     }
 }
 
@@ -1607,6 +1976,7 @@ int MainWindow::findScreenerTicker(QString ticker)
 void MainWindow::insertScreenerRow(TickerDataType tickerData)
 {
     if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+
     ScreenerTab *st = screenerTabs.at(currentScreenerIndex);
 
     int row = st->getScreenerTable()->rowCount();
@@ -1663,7 +2033,7 @@ void MainWindow::insertScreenerRow(TickerDataType tickerData)
     st->getScreenerTable()->resizeColumnsToContents();
 }
 
-void MainWindow::fillScreener(ScreenerTab *st)
+void MainWindow::fillScreenerTable(ScreenerTab *st)
 {
     if(!st) return;
 
@@ -2026,7 +2396,7 @@ void MainWindow::on_pbFilter_clicked()
     connect(dlg, SIGNAL(setFilter(QVector<sFILTER>)), this, SLOT(setFilterSlot(QVector<sFILTER>)));
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setModal(false);
-    dlg->show();
+    dlg->open();
 }
 
 void MainWindow::on_cbFilter_clicked(bool checked)
@@ -2036,7 +2406,7 @@ void MainWindow::on_cbFilter_clicked(bool checked)
 
     for(int a = 0; a<screenerTabs.count(); ++a)
     {
-        fillScreener(screenerTabs.at(a));
+        fillScreenerTable(screenerTabs.at(a));
     }
 }
 
@@ -2185,4 +2555,157 @@ void MainWindow::on_pbDeleteTickers_clicked()
 void MainWindow::on_pbAlert_clicked()
 {
 
+}
+
+/********************************
+*
+*  ISIN list
+*
+********************************/
+void MainWindow::on_pbISINAdd_clicked()
+{
+    if( ui->leISINISIN->text().isEmpty() || ui->leISINName->text().isEmpty() || ui->leISINSector->text().isEmpty() || ui->leISINTicker->text().isEmpty() || ui->leISINIndustry->text().isEmpty() ) return;
+
+    sISINLIST record;
+    record.ISIN = ui->leISINISIN->text();
+    record.name = ui->leISINName->text();
+    record.sector = ui->leISINSector->text();
+    record.ticker = ui->leISINTicker->text();
+    record.industry = ui->leISINIndustry->text();
+
+    QVector<sISINLIST> isin = database->getIsinList();
+
+    auto it = std::find_if(isin.begin(), isin.end(),
+                           [record](sISINLIST a)
+                           {
+                               return a.ISIN == record.ISIN;
+                           }
+                           );
+
+    if(it != isin.end())
+    {
+        isin.push_back(record);
+        database->setIsinList(isin);
+    }
+    else
+    {
+        setStatus(QString("ISIN %1 already exists").arg(record.ISIN));
+    }
+}
+
+void MainWindow::setISINHeader()
+{
+    QStringList header;
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "Industry" << "Delete";
+    ui->tableISIN->setColumnCount(header.count());
+
+    ui->tableISIN->setRowCount(0);
+    ui->tableISIN->setColumnCount(header.count());
+
+    ui->tableISIN->horizontalHeader()->setVisible(true);
+    ui->tableISIN->verticalHeader()->setVisible(true);
+
+    ui->tableISIN->setSelectionBehavior(QAbstractItemView::SelectItems);
+    ui->tableISIN->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableISIN->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableISIN->setShowGrid(true);
+
+    ui->tableISIN->setHorizontalHeaderLabels(header);
+}
+
+void MainWindow::fillISINTable()
+{
+    QVector<sISINLIST> data = database->getIsinList();
+
+    if(data.isEmpty())
+    {
+        return;
+    }
+
+    ui->tableISIN->setRowCount(0);
+
+    ui->tableISIN->setSortingEnabled(false);
+    for(int a = 0; a<data.count(); ++a)
+    {
+        ui->tableISIN->insertRow(a);
+
+        ui->tableISIN->setItem(a, 0, new QTableWidgetItem(data.at(a).ISIN));
+        ui->tableISIN->setItem(a, 1, new QTableWidgetItem(data.at(a).ticker));
+        ui->tableISIN->setItem(a, 2, new QTableWidgetItem(data.at(a).name));
+        ui->tableISIN->setItem(a, 3, new QTableWidgetItem(data.at(a).sector));
+        ui->tableISIN->setItem(a, 4, new QTableWidgetItem(data.at(a).industry));
+
+        QTableWidgetItem *item = new QTableWidgetItem("Delete");
+        item->setCheckState(Qt::Unchecked);
+        item->setTextAlignment(Qt::AlignCenter);
+        ui->tableISIN->setItem(a, 5, item);
+    }
+    ui->tableISIN->setSortingEnabled(true);
+
+    for (int row = 0; row<ui->tableISIN->rowCount(); ++row)
+    {
+        for(int col = 0; col<ui->tableISIN->columnCount(); ++col)
+        {
+            ui->tableISIN->item(row, col)->setTextAlignment(Qt::AlignCenter);
+        }
+    }
+
+    ui->tableISIN->resizeColumnsToContents();
+}
+
+void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
+{
+    if(column == 5) return;
+
+    QTableWidgetItem *item = ui->tableISIN->item(row, column);
+
+    if(!item) return;
+
+    QString previous = item->text();
+
+    QString header = "Input";
+    switch(column)
+    {
+        case 0: header = "ISIN:"; break;
+        case 1: header = "Ticker:"; break;
+        case 2: header = "Name:"; break;
+        case 3: header = "Sector:"; break;
+        case 4: header = "Industry:"; break;
+    }
+
+    bool ok;
+    QString text = QInputDialog::getText(this,
+                                         "Add desc",
+                                         header,
+                                         QLineEdit::Normal,
+                                         previous,
+                                         &ok);
+
+    if (ok && !text.isEmpty())
+    {
+        item->setText(text);
+
+        QVector<sISINLIST> list = database->getIsinList();
+        QString ISIN = ui->tableISIN->item(row, 0)->text();
+
+        auto it = std::find_if(list.begin(), list.end(),
+                               [ISIN](sISINLIST a)
+                               {
+                                   return a.ISIN == ISIN;
+                               } );
+
+        if(it != list.end())
+        {
+            switch(column)
+            {
+                case 0: it->ISIN = text; break;
+                case 1: it->ticker = text; break;
+                case 2: it->name = text; break;
+                case 3: it->sector = text; break;
+                case 4: it->industry = text; break;
+            }
+
+            database->setIsinList(list);
+        }
+    }
 }

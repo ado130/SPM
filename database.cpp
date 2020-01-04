@@ -25,6 +25,8 @@ Database::Database(QObject *parent) : QObject(parent)
     loadConfig();
     loadScreenParams();
     loadFilterList();
+    loadStockData();
+    loadIsinData();
 }
 
 void Database::loadConfig()
@@ -153,6 +155,23 @@ void Database::setSetting(const sSETTINGS &value)
     saveConfig();
 }
 
+QVector<sISINLIST> Database::getIsinList() const
+{
+    return isinList;
+}
+
+void Database::setIsinList(const QVector<sISINLIST> &value)
+{
+    isinList = value;
+    saveIsinData();
+}
+
+void Database::setStockData(const StockDataType &value)
+{
+    stockData = value;
+    saveStockData();
+}
+
 QString Database::getDegiroCSV() const
 {
     return setting.degiroCSV;
@@ -265,6 +284,143 @@ QDataStream &operator>>(QDataStream &in, sFILTER &param)
     in >> param.color;
     in >> param.val1;
     in >> param.val2;
+
+    return in;
+}
+
+StockDataType Database::getStockData() const
+{
+    return stockData;
+}
+
+double Database::getTax(QString ticker, QDateTime date, eSTOCKTYPE type)
+{
+    QVector<sSTOCKDATA> vector = stockData.value(ticker);
+
+    for(const sSTOCKDATA &data : vector)
+    {
+        if(data.dateTime == date && data.type == type)
+        {
+            return data.price;
+        }
+    }
+
+    return 0.0;
+}
+
+bool Database::loadStockData()
+{
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + STOCKFILE);
+
+    if(qFile.exists())
+    {
+        if (qFile.open(QIODevice::ReadOnly))
+        {
+            QDataStream in(&qFile);
+            in >> stockData;
+            qFile.close();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Database::saveStockData()
+{
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + STOCKFILE);
+
+    if (qFile.open(QIODevice::WriteOnly))
+    {
+        QDataStream out(&qFile);
+        out << stockData;
+        qFile.close();
+    }
+}
+
+QDataStream &operator<<(QDataStream &out, const sSTOCKDATA &param)
+{
+    out << param.dateTime;
+    out << param.ticker;
+    out << param.ISIN;
+    out << static_cast<int>(param.type);
+    out << static_cast<int>(param.currency);
+    out << param.count;
+    out << param.price;
+    out << param.isDegiroSource;
+
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
+{
+    in >> param.dateTime;
+    in >> param.ticker;
+    in >> param.ISIN;
+
+    int buffer1;
+    in >> buffer1;
+    param.type = static_cast<eSTOCKTYPE>(buffer1);
+
+    int buffer2;
+    in >> buffer2;
+    param.currency = static_cast<eCURRENCY>(buffer2);
+
+    in >> param.count;
+    in >> param.price;
+    in >> param.isDegiroSource;
+
+    return in;
+}
+
+bool Database::loadIsinData()
+{
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + ISINFILE);
+
+    if(qFile.exists())
+    {
+        if (qFile.open(QIODevice::ReadOnly))
+        {
+            QDataStream in(&qFile);
+            in >> isinList;
+            qFile.close();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Database::saveIsinData()
+{
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + ISINFILE);
+
+    if (qFile.open(QIODevice::WriteOnly))
+    {
+        QDataStream out(&qFile);
+        out << isinList;
+        qFile.close();
+    }
+}
+
+QDataStream &operator<<(QDataStream &out, const sISINLIST &param)
+{
+    out << param.ISIN;
+    out << param.ticker;
+    out << param.name;
+    out << param.sector;
+    out << param.industry;
+
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, sISINLIST &param)
+{
+    in >> param.ISIN;
+    in >> param.ticker;
+    in >> param.name;
+    in >> param.sector;
+    in >> param.industry;
 
     return in;
 }

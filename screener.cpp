@@ -51,7 +51,7 @@ void Screener::setAllScreenerData(const QVector<sSCREENER> &value)
 sTABLE Screener::finvizParse(QString data)
 {
     sTABLE table;
-    sINFO info;
+    sTICKERINFO info;
 
     int startB = data.indexOf("<body");
     int endB = data.indexOf("</body");
@@ -86,7 +86,7 @@ sTABLE Screener::finvizParse(QString data)
     st = body.indexOf(">", st);
     int en = body.indexOf("</b>", st);
     QString tmp = body.mid( st+1, en-st-1);
-    info.stockName = tmp;
+    info.stockName = tmp.replace("&","&amp;");
 
     int start20TR = body.indexOf("<tr", start19TR+1);
 

@@ -44,6 +44,7 @@ signals:
     void setScreenerParams(QVector<sSCREENERPARAM> params);
     void loadOnlineParameters();
     void loadDegiroCSV();
+    void fillOverview();
 
 private:
     Ui::SettingsForm *ui;

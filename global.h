@@ -10,27 +10,14 @@
 typedef QVector<QPair<QString, QString> > TickerDataType;
 typedef QVector<TickerDataType> ScreenerDataType;
 
-#define DEGIROFILE          "/degiro.bin"
+#define STOCKFILE           "/stock.bin"
+#define ISINFILE            "/isin.bin"
 #define DEGIRORAWFILE       "/degiroRAW.bin"
 #define SCREENERPARAMSFILE  "/screenParams.bin"
 #define SCREENERALLDATA     "/screenerAllData.bin"
 #define FILTERLISTFILE      "/filterList.bin"
 #define CONFIGFILE          "/config.ini"
 
-struct sINFO
-{
-    QString stockName;
-    QString sector;
-    QString industry;
-    QString country;
-    QString ticker;
-};
-
-struct sTABLE
-{
-    QHash<QString, QString> row;    // name, value
-    sINFO info;
-};
 
 enum eDELIMETER
 {
@@ -95,29 +82,8 @@ struct sPDFEXPORT
     QString name;
 };
 
-enum eSCREENSOURCE
-{
-    FINVIZ = 0,
-    YAHOO
-};
 
-struct sSCREENER
-{
-    ScreenerDataType screenerData;
-    QString screenerName;
-};
-
-struct sDEGIRORAW
-{
-    QDateTime dateTime;
-    QString product;
-    QString ISIN;
-    QString description;
-    eCURRENCY currency;
-    double money;
-};
-
-enum eDEGIROTYPE
+enum eSTOCKTYPE
 {
     DIVIDEND,
     TAX,
@@ -129,16 +95,72 @@ enum eDEGIROTYPE
     SELL
 };
 
-struct sDEGIRODATA
+struct sSTOCKDATA
 {
     QDateTime dateTime;
+    eSTOCKTYPE type;
+    QString ticker;
     QString ISIN;
-    eDEGIROTYPE type;
+    eCURRENCY currency;
+    int count;
+    double price;
+
+    bool isDegiroSource;
+};
+
+struct sNEWRECORD
+{
+    QDateTime dateTime;
+    eSTOCKTYPE type;
+    QString ticker;
+    QString ISIN;
+    eCURRENCY currency;
+    int count;
+    double price;
+    double fee;
+};
+
+typedef QHash<QString, QVector<sSTOCKDATA>> StockDataType;
+
+
+struct sDEGIRORAW
+{
+    QDateTime dateTime;
+    QString product;
+    QString ISIN;
+    QString description;
     eCURRENCY currency;
     double money;
 };
 
-typedef QHash<QString, QVector<sDEGIRODATA>> DegiroDataType;
+
+struct sTICKERINFO
+{
+    QString stockName;
+    QString sector;
+    QString industry;
+    QString country;
+    QString ticker;
+};
+
+struct sTABLE
+{
+    QHash<QString, QString> row;    // name, value
+    sTICKERINFO info;
+};
+
+
+enum eSCREENSOURCE
+{
+    FINVIZ = 0,
+    YAHOO
+};
+
+struct sSCREENER
+{
+    ScreenerDataType screenerData;
+    QString screenerName;
+};
 
 enum eFILTER
 {
@@ -154,6 +176,15 @@ struct sFILTER
     QString color;
     double val1;
     double val2;
+};
+
+struct sISINLIST
+{
+    QString ISIN;
+    QString ticker;
+    QString name;
+    QString sector;
+    QString industry;
 };
 
 #endif // VARIABLES_H

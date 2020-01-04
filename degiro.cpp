@@ -8,7 +8,7 @@
 
 DeGiro::DeGiro(QObject *parent) : QObject(parent)
 {
-    isRAWFile = (loadDegiro() & loadDegiroRaw());
+    isRAWFile = loadDegiroRaw();
 }
 
 void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
@@ -20,8 +20,8 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         return;
     }
 
+    StockDataType stockData;
     degiroRawData.clear();
-    degiroData.clear();
 
     char chDelimeter = ',';
     switch (delimeter)
@@ -104,7 +104,7 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         degiroRawData.push_back(tmp);
 
 
-        sDEGIRODATA degData;
+        sSTOCKDATA degData;
         bool found = true;
 
         if(tmp.description.toLower().contains("vklad") || tmp.description.toLower().contains("deposit"))
@@ -148,18 +148,19 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
         {
             degData.dateTime = tmp.dateTime;
             degData.ISIN = tmp.ISIN;
-            degData.money = tmp.money;
+            degData.price = tmp.money;
             degData.currency = tmp.currency;
+            degData.isDegiroSource = true;
 
-            QVector<sDEGIRODATA> vector = degiroData[tmp.product];
+            QVector<sSTOCKDATA> vector = stockData[tmp.product];
             vector.append(degData);
-            degiroData[tmp.product] = vector;
+            stockData[tmp.product] = vector;
         }
     }
 
     if(degiroRawData.count() > 0)
     {
-        saveDegiro();
+        emit setDegiroData(stockData);
         saveDegiroRaw();
         isRAWFile = true;
     }
@@ -193,20 +194,6 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
     return list;
 }
 
-double DeGiro::getTax(QString ticker, QDateTime date, eDEGIROTYPE type)
-{
-    QVector<sDEGIRODATA> vector = degiroData.value(ticker);
-
-    for(const sDEGIRODATA &data : vector)
-    {
-        if(data.dateTime == date && data.type == type)
-        {
-            return data.money;
-        }
-    }
-
-    return 0.0;
-}
 
 QVector<sDEGIRORAW> DeGiro::getDegiroRawData() const
 {
@@ -248,40 +235,6 @@ bool DeGiro::getIsRAWFile() const
     return isRAWFile;
 }
 
-DegiroDataType DeGiro::getDegiroData() const
-{
-    return degiroData;
-}
-
-bool DeGiro::loadDegiro()
-{
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIROFILE);
-
-    if(qFile.exists())
-    {
-        if (qFile.open(QIODevice::ReadOnly))
-        {
-            QDataStream in(&qFile);
-            in >> degiroData;
-            qFile.close();
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void DeGiro::saveDegiro()
-{
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIROFILE);
-
-    if (qFile.open(QIODevice::WriteOnly))
-    {
-        QDataStream out(&qFile);
-        out << degiroData;
-        qFile.close();
-    }
-}
 
 QDataStream &operator<<(QDataStream &out, const sDEGIRORAW &param)
 {
@@ -310,33 +263,3 @@ QDataStream &operator>>(QDataStream &in, sDEGIRORAW &param)
 
     return in;
 }
-
-QDataStream &operator<<(QDataStream &out, const sDEGIRODATA &param)
-{
-    out << param.dateTime;
-    out << param.ISIN;
-    out << static_cast<int>(param.type);
-    out << static_cast<int>(param.currency);
-    out << param.money;
-
-    return out;
-}
-
-QDataStream &operator>>(QDataStream &in, sDEGIRODATA &param)
-{
-    in >> param.dateTime;
-    in >> param.ISIN;
-
-    int buffer1;
-    in >> buffer1;
-    param.type = static_cast<eDEGIROTYPE>(buffer1);
-
-    int buffer2;
-    in >> buffer2;
-    param.currency = static_cast<eCURRENCY>(buffer2);
-
-    in >> param.money;
-
-    return in;
-}
-

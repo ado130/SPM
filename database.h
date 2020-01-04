@@ -34,6 +34,17 @@ public:
     QVector<sFILTER> getFilterList() const;
     void setFilterList(const QVector<sFILTER> &value);
 
+    bool loadStockData();
+    void saveStockData();
+
+    StockDataType getStockData() const;
+    void setStockData(const StockDataType &value);
+
+    double getTax(QString ticker, QDateTime date, eSTOCKTYPE type);
+
+    QVector<sISINLIST> getIsinList() const;
+    void setIsinList(const QVector<sISINLIST> &value);
+
 signals:
 
 public slots:
@@ -43,6 +54,8 @@ private:
     sSETTINGS setting;
     QStringList enabledScreenerParams;
     QVector<sFILTER> filterList;
+    StockDataType stockData;
+    QVector<sISINLIST> isinList;
 
     void loadConfig();
     void saveConfig();
@@ -54,6 +67,9 @@ private:
 
     void loadFilterList();
     void saveFilterList();
+
+    bool loadIsinData();
+    void saveIsinData();
 };
 
 QDataStream& operator<<(QDataStream& out, const sSCREENERPARAM& param);
@@ -61,5 +77,11 @@ QDataStream& operator>>(QDataStream& in, sSCREENERPARAM& param);
 
 QDataStream& operator<<(QDataStream& out, const sFILTER& param);
 QDataStream& operator>>(QDataStream& in, sFILTER& param);
+
+QDataStream& operator<<(QDataStream& out, const sSTOCKDATA& param);
+QDataStream& operator>>(QDataStream& in, sSTOCKDATA& param);
+
+QDataStream& operator<<(QDataStream& out, const sISINLIST& param);
+QDataStream& operator>>(QDataStream& in, sISINLIST& param);
 
 #endif // DATABASE_H

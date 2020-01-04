@@ -13,7 +13,7 @@ TEMPLATE = app
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
-VERSION_BUILD = 4
+VERSION_BUILD = 5
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
            "VERSION_MINOR=$$VERSION_MINOR"\
@@ -79,3 +79,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resource.qrc

@@ -34,6 +34,7 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->leEUR2USD->setText(QString::number(setting.EUR2USD, 'f', 4));
     ui->leUSD2CZK->setText(QString::number(setting.USD2CZK, 'f', 4));
     ui->leUSD2EUR->setText(QString::number(setting.USD2EUR, 'f', 4));
+    ui->leEUR2CZK->setText(QString::number(setting.EUR2CZK, 'f', 4));
 }
 
 SettingsForm::~SettingsForm()
@@ -122,5 +123,5 @@ void SettingsForm::on_cmCurrency_currentIndexChanged(int index)
 {
     setting.currency = static_cast<eCURRENCY>(index);
     emit setSetting(setting);
-    emit loadDegiroCSV();
+    emit fillOverview();
 }

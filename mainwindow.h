@@ -35,9 +35,11 @@ public Q_SLOTS:
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
     void updateExchangeRates(const QByteArray data, QString statusCode);
-    void fillOverview();
+    void setDegiroDataSlot(StockDataType data);
+    void fillOverviewSlot();
+    void addRecord(const QByteArray data, QString statusCode);
 
-private slots:   
+private slots:
     void on_actionAbout_triggered();
     void on_actionHelp_triggered();
     void on_actionSettings_triggered();
@@ -64,8 +66,13 @@ private slots:
     void on_pbPDFExport_clicked();
     void on_deGraphYear_userDateChanged(const QDate &date);
     void deOverviewYearChanged(const QDate &date);
-
     void on_dePDFYear_userDateChanged(const QDate &date);
+    void on_pbAddRecord_clicked();
+    void on_deTableYear_userDateChanged(const QDate &date);
+
+    void on_pbISINAdd_clicked();
+
+    void on_tableISIN_cellDoubleClicked(int row, int column);
 
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
@@ -99,20 +106,40 @@ private:
 
     QVector<sFILTER> filterList;
 
+    sNEWRECORD lastRecord;
+
 
     void centerAndResize();
 
+    /*
+     *  Overview tab
+     */
+    QVector<sPDFEXPORT> prepareDataToExport();
+    void setOverviewHeader();
+    void fillOverviewTable();
+
+    /*
+     *  DeGiro tab
+     */
     void setDegiroHeader();
     void fillDegiroCSV();
 
+    /*
+     *  Screener tab
+     */
     void setScreenerHeader(ScreenerTab *st);
     void dataLoaded();
     int findScreenerTicker(QString ticker);
     void insertScreenerRow(TickerDataType tickerData);
-    void fillScreener(ScreenerTab *st);
+    void fillScreenerTable(ScreenerTab *st);
     void applyFilter(ScreenerTab *st);
     int applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter);
-    QVector<sPDFEXPORT> prepareDataToExport();
+
+    /*
+     *  ISIN tab
+     */
+    void setISINHeader();
+    void fillISINTable();
 };
 
 #endif // MAINWINDOW_H
