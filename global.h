@@ -183,7 +183,7 @@ struct sFILTER
     double val2;
 };
 
-struct sISINLIST
+struct sISINDATA
 {
     QString ISIN;
     QString ticker;

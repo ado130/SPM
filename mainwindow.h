@@ -99,8 +99,6 @@ private:
 
     QVector<ScreenerTab*> screenerTabs;
 
-    QProgressDialog *progressDialog;
-
     /**
      * @brief temporaryLoadedTable
      * @details sTABLE for last loaded ticker
@@ -114,23 +112,42 @@ private:
 
     QVector<sFILTER> filterList;
 
+    /**
+     * @brief lastRecord
+     * @details last manualy added record
+     */
     sNEWRECORD lastRecord;
 
+    QProgressDialog *progressDialog;
 
     void centerAndResize();
 
     /*
      *  Overview tab
      */
-    QVector<sPDFEXPORT> prepareDataToExport();
     void setOverviewHeader();
+    QVector<sPDFEXPORT> prepareDataToExport();
+
+    /**
+     * @brief updateStockDataVector - set new "vector" for the specified ISIN
+     * @param ISIN -
+     * @param vector - vector to be replaced
+     * @return true if ISIN exists or false
+     */
     bool updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector);
 
     /*
      *  DeGiro tab
      */
+    /**
+     * @brief setDegiroHeader - set the header label for the DeGiro table
+     */
     void setDegiroHeader();
-    void fillDegiroCSV();
+
+    /**
+     * @brief fillDegiroTable - fill the DeGiro table with the content (raw data)
+     */
+    void fillDegiroTable();
 
     /*
      *  Screener tab
@@ -146,8 +163,21 @@ private:
     /*
      *  ISIN tab
      */
+    /**
+     * @brief setISINHeader - set the header label for the ISIN table
+     */
     void setISINHeader();
+
+    /**
+     * @brief fillISINTable - fill the ISIN table with the content
+     */
     void fillISINTable();
+
+    /**
+     * @brief eraseISIN - erase record from the ISIN list
+     * @param ISIN - ISIN to be removed
+     */
+    void eraseISIN(QString ISIN);
 };
 
 #endif // MAINWINDOW_H

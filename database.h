@@ -25,6 +25,7 @@ public:
     sSETTINGS getSetting() const;
 
     QString getCurrencyText(eCURRENCY currency);
+    QString getCurrencySign(eCURRENCY currency);
 
     QVector<sSCREENERPARAM> getScreenerParams() const;
     void setScreenerParams(const QVector<sSCREENERPARAM> &value);
@@ -34,8 +35,8 @@ public:
     QVector<sFILTER> getFilterList() const;
     void setFilterList(const QVector<sFILTER> &value);
 
-    QVector<sISINLIST> getIsinList() const;
-    void setIsinList(const QVector<sISINLIST> &value);
+    QVector<sISINDATA> getIsinList() const;
+    void setIsinList(const QVector<sISINDATA> &value);
 
 signals:
 
@@ -46,7 +47,7 @@ private:
     sSETTINGS setting;
     QStringList enabledScreenerParams;
     QVector<sFILTER> filterList;
-    QVector<sISINLIST> isinList;
+    QVector<sISINDATA> isinList;
 
     void loadConfig();
     void saveConfig();
@@ -69,7 +70,7 @@ QDataStream& operator>>(QDataStream& in, sSCREENERPARAM& param);
 QDataStream& operator<<(QDataStream& out, const sFILTER& param);
 QDataStream& operator>>(QDataStream& in, sFILTER& param);
 
-QDataStream& operator<<(QDataStream& out, const sISINLIST& param);
-QDataStream& operator>>(QDataStream& in, sISINLIST& param);
+QDataStream& operator<<(QDataStream& out, const sISINDATA& param);
+QDataStream& operator>>(QDataStream& in, sISINDATA& param);
 
 #endif // DATABASE_H

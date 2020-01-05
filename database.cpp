@@ -142,6 +142,18 @@ QString Database::getCurrencyText(eCURRENCY currency)
     return "";
 }
 
+QString Database::getCurrencySign(eCURRENCY currency)
+{
+    switch (currency)
+    {
+        case CZK: return "Kč";
+        case EUR: return "€";
+        case USD: return "$";
+    }
+
+    return "";
+}
+
 // Getters and Setters
 sSETTINGS Database::getSetting() const
 {
@@ -154,12 +166,12 @@ void Database::setSetting(const sSETTINGS &value)
     saveConfig();
 }
 
-QVector<sISINLIST> Database::getIsinList() const
+QVector<sISINDATA> Database::getIsinList() const
 {
     return isinList;
 }
 
-void Database::setIsinList(const QVector<sISINLIST> &value)
+void Database::setIsinList(const QVector<sISINDATA> &value)
 {
     isinList = value;
     saveIsinData();
@@ -312,7 +324,7 @@ void Database::saveIsinData()
     }
 }
 
-QDataStream &operator<<(QDataStream &out, const sISINLIST &param)
+QDataStream &operator<<(QDataStream &out, const sISINDATA &param)
 {
     out << param.ISIN;
     out << param.ticker;
@@ -323,7 +335,7 @@ QDataStream &operator<<(QDataStream &out, const sISINLIST &param)
     return out;
 }
 
-QDataStream &operator>>(QDataStream &in, sISINLIST &param)
+QDataStream &operator>>(QDataStream &in, sISINDATA &param)
 {
     in >> param.ISIN;
     in >> param.ticker;

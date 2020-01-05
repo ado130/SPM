@@ -140,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     if(database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
     {
-        fillDegiroCSV();
+        fillDegiroTable();
     }
 
 
@@ -484,20 +484,7 @@ void MainWindow::fillOverviewTable()
     QList<QString> keys = stockList.keys();
 
 
-    QString currency;
-
-    switch(database->getSetting().currency)
-    {
-        case USD:
-            currency = "$";
-            break;
-        case CZK:
-            currency = "Kč";
-            break;
-        case EUR:
-            currency = "€";
-            break;
-    }
+    QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
     QDate from = ui->deOverviewFrom->date();
     QDate to = ui->deOverviewTo->date();
@@ -507,7 +494,7 @@ void MainWindow::fillOverviewTable()
 
     for(const QString &key : keys)
     {
-        if( key.isEmpty() || stockList.value(key).at(0).stockName.toLower().contains("fundshare") ) continue;
+        if( key.isEmpty() || stockList.value(key).count() == 0 || stockList.value(key).at(0).stockName.toLower().contains("fundshare") ) continue;
 
         sSTOCKDATA stock = stockList.value(key).first();
 
@@ -526,10 +513,10 @@ void MainWindow::fillOverviewTable()
             ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
             ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
             ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(stockData->getCurrentCount(stock.ISIN)));
-            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
-            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
+            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
-            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currency));
+            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
         //}
 
         pos++;
@@ -662,23 +649,11 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         }
 
 
-        QString currency;
+        QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
-        switch(database->getSetting().currency)
-        {
-            case USD:
-                currency = "$";
-                break;
-            case CZK:
-                currency = "Kč";
-                break;
-            case EUR:
-                currency = "€";
-                break;
-        }
 
         table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
-        table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currency));
+        table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
 
         QPushButton *pbDelete = new QPushButton("Delete", table);
 
@@ -871,19 +846,7 @@ void MainWindow::fillOverviewSlot()
         }
     }
 
-    QString currency;
-    switch(selectedCurrency)
-    {
-        case USD:
-            currency = "$";
-            break;
-        case CZK:
-            currency = "Kč";
-            break;
-        case EUR:
-            currency = "€";
-            break;
-    }
+    QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
     divTax = abs(divTax);
     fees = abs(fees);
@@ -894,12 +857,12 @@ void MainWindow::fillOverviewSlot()
         ui->leDY->setText(QString("%L1").arg((dividends/invested)*100.0, 0, 'f', 2) + " %");
     }
 
-    ui->leDeposit->setText(QString("%L1").arg(deposit, 0, 'f', 2) + " " + currency);
-    ui->leInvested->setText(QString("%L1").arg(invested, 0, 'f', 2) + " " + currency);
-    ui->leDividends->setText(QString("%L1").arg(dividends, 0, 'f', 2) + " " + currency);
-    ui->leDivTax->setText(QString("%L1").arg(divTax, 0, 'f', 2) + " " + currency);
-    ui->leFees->setText(QString("%L1").arg(fees, 0, 'f', 2) + " " + currency);
-    ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currency);
+    ui->leDeposit->setText(QString("%L1").arg(deposit, 0, 'f', 2) + " " + currencySign);
+    ui->leInvested->setText(QString("%L1").arg(invested, 0, 'f', 2) + " " + currencySign);
+    ui->leDividends->setText(QString("%L1").arg(dividends, 0, 'f', 2) + " " + currencySign);
+    ui->leDivTax->setText(QString("%L1").arg(divTax, 0, 'f', 2) + " " + currencySign);
+    ui->leFees->setText(QString("%L1").arg(fees, 0, 'f', 2) + " " + currencySign);
+    ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currencySign);
 }
 
 void MainWindow::on_pbShowGraph_clicked()
@@ -1035,19 +998,7 @@ void MainWindow::on_pbShowGraph_clicked()
     points = investedSeries->pointsVector();
 
 
-    QString currency;
-    switch(selectedCurrency)
-    {
-        case USD:
-            currency = "$";
-            break;
-        case CZK:
-            currency = "Kč";
-            break;
-        case EUR:
-            currency = "€";
-            break;
-    }
+    QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
     // Deposit
     if(depositSeries->pointsVector().count() == 1)
@@ -1070,7 +1021,7 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QValueAxis *depositAxisY = new QValueAxis;
     depositAxisY->setLabelFormat("%i");
-    depositAxisY->setTitleText("Deposit " + currency);
+    depositAxisY->setTitleText("Deposit " + currencySign);
     depositChart->addAxis(depositAxisY, Qt::AlignLeft);
     depositSeries->attachAxis(depositAxisY);
 
@@ -1100,7 +1051,7 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QValueAxis *investedAxisY = new QValueAxis;
     investedAxisY->setLabelFormat("%i");
-    investedAxisY->setTitleText("Invested " + currency);
+    investedAxisY->setTitleText("Invested " + currencySign);
     investedChart->addAxis(investedAxisY, Qt::AlignLeft);
     investedSeries->attachAxis(investedAxisY);
 
@@ -1410,9 +1361,9 @@ void MainWindow::on_pbAddRecord_clicked()
 
     QStringList isinWords;
     QStringList tickerWords;
-    QVector<sISINLIST> isinList = database->getIsinList();
+    QVector<sISINDATA> isinList = database->getIsinList();
 
-    for(const sISINLIST &key : isinList)
+    for(const sISINDATA &key : isinList)
     {
         tickerWords << key.ticker;
         isinWords << key.ISIN;
@@ -1465,9 +1416,9 @@ void MainWindow::on_pbAddRecord_clicked()
             {
                 if(leISIN->text().isEmpty())
                 {
-                    QVector<sISINLIST> isin = database->getIsinList();
+                    QVector<sISINDATA> isin = database->getIsinList();
 
-                    auto it = std::find_if(isin.begin(), isin.end(), [leTicker](sISINLIST a)
+                    auto it = std::find_if(isin.begin(), isin.end(), [leTicker](sISINDATA a)
                                            {
                                                return a.ticker == leTicker->text();
                                            }
@@ -1485,9 +1436,9 @@ void MainWindow::on_pbAddRecord_clicked()
             {
                 if(leTicker->text().isEmpty())
                 {
-                    QVector<sISINLIST> isin = database->getIsinList();
+                    QVector<sISINDATA> isin = database->getIsinList();
 
-                    auto it = std::find_if(isin.begin(), isin.end(), [leISIN](sISINLIST a)
+                    auto it = std::find_if(isin.begin(), isin.end(), [leISIN](sISINDATA a)
                                            {
                                                return a.ISIN == leISIN->text();
                                            }
@@ -1644,9 +1595,9 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 
         if(it == stockList.end())
         {
-            QVector<sISINLIST> isinList = database->getIsinList();
+            QVector<sISINDATA> isinList = database->getIsinList();
 
-            sISINLIST record;
+            sISINDATA record;
             record.ISIN = lastRecord.ISIN;
             record.name = table.info.stockName;
             record.sector = table.info.sector;
@@ -1683,7 +1634,7 @@ void MainWindow::loadDegiroCSVslot()
 
     if(degiro->getIsRAWFile())
     {
-        fillDegiroCSV();
+        fillDegiroTable();
         fillOverviewSlot();
         fillOverviewTable();
 
@@ -1731,7 +1682,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
 
     // Insert new DeGiro data
-    QVector<sISINLIST> isinList = database->getIsinList();
+    QVector<sISINDATA> isinList = database->getIsinList();
     QList<QString> keys = newStockData.keys();
 
     for(const QString &key : keys)
@@ -1748,7 +1699,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
             if(ISIN.isEmpty() || stockName.isEmpty()) continue;
 
-            auto iter = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINLIST a)
+            auto iter = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
                                   {
                                       return a.ISIN == ISIN;
                                   }
@@ -1756,7 +1707,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
             if(iter == isinList.end())
             {
-                sISINLIST record;
+                sISINDATA record;
                 record.ISIN = ISIN;
                 record.name = stockName;
 
@@ -1768,6 +1719,39 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
             i->append(newStockData.value(key));
         }
     }
+
+
+    // Assign tickers to ISIN
+    QList<QString> isinKeys = stockList.keys();
+
+    for(const QString &key : isinKeys)
+    {
+        auto isinIt = std::find_if(isinList.begin(), isinList.end(), [key](sISINDATA a)
+                                   {
+                                       return a.ISIN == key;
+                                   }
+                                   );
+
+        QString ticker;
+
+        if(isinIt != isinList.end())
+        {
+            ticker = isinIt->ticker;
+        }
+
+        QVector<sSTOCKDATA> vector = stockList.value(key);
+
+        QMutableVectorIterator i(vector);
+
+        while(i.hasNext())
+        {
+            i.next();
+            i.value().ticker = ticker;
+        }
+
+        stockList[key] = vector;
+    }
+
 
 
     database->setIsinList(isinList);
@@ -1793,7 +1777,7 @@ void MainWindow::setDegiroHeader()
     ui->tableDegiro->setHorizontalHeaderLabels(header);
 }
 
-void MainWindow::fillDegiroCSV()
+void MainWindow::fillDegiroTable()
 {
     QVector<sDEGIRORAW> data = degiro->getDegiroRawData();
 
@@ -2874,17 +2858,17 @@ void MainWindow::on_pbISINAdd_clicked()
 {
     if( ui->leISINISIN->text().isEmpty() || ui->leISINName->text().isEmpty() || ui->leISINSector->text().isEmpty() || ui->leISINTicker->text().isEmpty() || ui->leISINIndustry->text().isEmpty() ) return;
 
-    sISINLIST record;
+    sISINDATA record;
     record.ISIN = ui->leISINISIN->text();
     record.name = ui->leISINName->text();
     record.sector = ui->leISINSector->text();
     record.ticker = ui->leISINTicker->text();
     record.industry = ui->leISINIndustry->text();
 
-    QVector<sISINLIST> isin = database->getIsinList();
+    QVector<sISINDATA> isin = database->getIsinList();
 
     auto it = std::find_if(isin.begin(), isin.end(),
-                           [record](sISINLIST a)
+                           [record](sISINDATA a)
                            {
                                return a.ISIN == record.ISIN;
                            }
@@ -2923,9 +2907,9 @@ void MainWindow::setISINHeader()
 
 void MainWindow::fillISINTable()
 {
-    QVector<sISINLIST> data = database->getIsinList();
+    QVector<sISINDATA> isinList = database->getIsinList();
 
-    if(data.isEmpty())
+    if(isinList.isEmpty())
     {
         return;
     }
@@ -2933,20 +2917,46 @@ void MainWindow::fillISINTable()
     ui->tableISIN->setRowCount(0);
 
     ui->tableISIN->setSortingEnabled(false);
-    for(int a = 0; a<data.count(); ++a)
+    for(int a = 0; a<isinList.count(); ++a)
     {
         ui->tableISIN->insertRow(a);
 
-        ui->tableISIN->setItem(a, 0, new QTableWidgetItem(data.at(a).ISIN));
-        ui->tableISIN->setItem(a, 1, new QTableWidgetItem(data.at(a).ticker));
-        ui->tableISIN->setItem(a, 2, new QTableWidgetItem(data.at(a).name));
-        ui->tableISIN->setItem(a, 3, new QTableWidgetItem(data.at(a).sector));
-        ui->tableISIN->setItem(a, 4, new QTableWidgetItem(data.at(a).industry));
+        ui->tableISIN->setItem(a, 0, new QTableWidgetItem(isinList.at(a).ISIN));
+        ui->tableISIN->setItem(a, 1, new QTableWidgetItem(isinList.at(a).ticker));
+        ui->tableISIN->setItem(a, 2, new QTableWidgetItem(isinList.at(a).name));
+        ui->tableISIN->setItem(a, 3, new QTableWidgetItem(isinList.at(a).sector));
+        ui->tableISIN->setItem(a, 4, new QTableWidgetItem(isinList.at(a).industry));
 
         QTableWidgetItem *item = new QTableWidgetItem("Delete");
-        item->setCheckState(Qt::Unchecked);
-        item->setTextAlignment(Qt::AlignCenter);
+        QPushButton *pbDelete = new QPushButton("Delete", ui->tableISIN);
+
+        connect(pbDelete, &QPushButton::clicked, [this, pbDelete, isinList]()
+                {
+                    int ret = QMessageBox::warning(pbDelete,
+                                                   "Delete record",
+                                                   "Do you really want to delete selected record?",
+                                                   QMessageBox::Yes, QMessageBox::No);
+
+                    if(ret == QMessageBox::Yes)
+                    {
+                        int rowToDelete = ui->tableISIN->currentRow();
+
+                        QTableWidgetItem *isinItem = ui->tableISIN->item(rowToDelete, 0);
+
+                        if(isinItem)
+                        {
+                            QString ISIN = isinItem->text();
+                            eraseISIN(ISIN);
+                            ui->tableISIN->removeRow(rowToDelete);
+                        }
+                    }
+                }
+
+                );
+
+
         ui->tableISIN->setItem(a, 5, item);
+        ui->tableISIN->setCellWidget(a, 5, pbDelete);
     }
     ui->tableISIN->setSortingEnabled(true);
 
@@ -2959,6 +2969,20 @@ void MainWindow::fillISINTable()
     }
 
     ui->tableISIN->resizeColumnsToContents();
+}
+
+void MainWindow::eraseISIN(QString ISIN)
+{
+    QVector<sISINDATA> isinList = database->getIsinList();
+
+    isinList.erase(std::remove_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA x)
+                                  {
+                                      return x.ISIN == ISIN;
+                                  }
+                                  )
+                       );
+
+    database->setIsinList(isinList);
 }
 
 void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
@@ -2993,11 +3017,11 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
     {
         item->setText(text);
 
-        QVector<sISINLIST> isinList = database->getIsinList();
+        QVector<sISINDATA> isinList = database->getIsinList();
         QString ISIN = ui->tableISIN->item(row, 0)->text();
 
         auto it = std::find_if(isinList.begin(), isinList.end(),
-                               [ISIN](sISINLIST a)
+                               [ISIN](sISINDATA a)
                                {
                                    return a.ISIN == ISIN;
                                } );
