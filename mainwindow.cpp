@@ -40,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
 
+
+    // Check version
+    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
+    manager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
+
     /********************************
      * Geometry
     ********************************/
@@ -249,10 +254,11 @@ void MainWindow::on_mainTab_currentChanged(int index)
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
-    text = "<html><body><center>";
+    text =  "<html><body><center>";
     text += "<h2>Stock Portfolio Manager (SPM)</h2>";
     text += "<b>Author:</b> Andrej<br>";
     text += "<b>E-mail:</b> <a href=\"mailto:vlasaty.andrej@gmail.com?subject=SPM\">vlasaty.andrej@gmail.com</a><br>";
+    text += "<b>Website:</b> <a href=\"http://ado.4fan.cz/SPM/web/\">http://ado.4fan.cz/SPM/web/</a><br>";
     text += "<b>Website:</b> <a href=\"https://www.investicnigramotnost.cz\">https://www.investicnigramotnost.cz</a><br>";
     text += "==================================<br>";
     text += "<b>Exchange rates source:</b> <a href=\"https://exchangeratesapi.io\">https://exchangeratesapi.io</a><br>";
@@ -260,7 +266,8 @@ void MainWindow::on_actionAbout_triggered()
     text += "The PDF export file is valid only for Czech republic<br>";
     text += "<br><br>";
     text += "<a href=\"https://www.paypal.me/vandrej\"> <img border=\"0\" alt=\"Donate\" src=\":/images/donate.gif\" width=\"147\" height=\"47\"> </a><br>";
-    text += "You can donate me to support me and show me that the project is useful.<br>";
+    text += "If you like this tool you can donate me and together we can make this tool better.<br>";
+    text += "Any amount is greatly appreciated.<br>";
     text += "If you have any question or suggestion, feel free to contact me.<br>";
     text += "<br><br>";
     text += "<b>Copyright © 2019 Stock Portfolio Manager</b>";
@@ -274,7 +281,7 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionHelp_triggered()
 {
     QString text;
-    text = "<html><body>";
+    text =  "<html><body>";
     text += "Set the CSV path to the DeGiro file and delimeter in the Settings.<br>";
     text += "Please load the parameters under the Settings window and select the order and the visibility.<br><br>";
     text += "The filter windows allows to set one of the predefined filter:";
@@ -332,9 +339,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
     {
         QKeyEvent* key = static_cast<QKeyEvent*>(event);
 
-        if ( (key->key()==Qt::Key_Enter) || (key->key()==Qt::Key_Return) )
+        if ( (key->key() == Qt::Key_Enter) || (key->key() == Qt::Key_Return) )
         {
-            if(obj == ui->leTicker /*ui->mainTab->currentIndex() == 2 && !ui->leTicker->text().isEmpty()*/)    // Screener
+            if(obj == ui->leTicker)
             {
                 if(!ui->leTicker->text().isEmpty())
                 {
@@ -379,10 +386,12 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 {
+    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
+
     if(!statusCode.contains("200"))
     {
-        qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
-        setStatus(QString("There is something wrong with the request! %1").arg(statusCode));
+        qDebug() << QString("There is something wrong with the update exchange rates request! %1").arg(statusCode);
+        setStatus(QString("There is something wrong with the update exchange rates request! %1").arg(statusCode));
         QApplication::restoreOverrideCursor();
     }
     else
@@ -443,6 +452,32 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
     }
 }
 
+void MainWindow::checkVersion(const QByteArray data, QString statusCode)
+{
+    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
+
+    if(!statusCode.contains("200"))
+    {
+        qDebug() << QString("There is something wrong with the check version request! %1").arg(statusCode);
+        setStatus(QString("There is something wrong with the check version request! %1").arg(statusCode));
+    }
+    else
+    {
+        QString input = QString(data);
+
+        if(input.startsWith("Version:"))
+        {
+            int start = input.indexOf(":");
+            QString version = input.mid(start+1);
+
+            if(version != VERSION_STR)
+            {
+                setStatus(QString("Installed version is: %1; Latest version is: %2").arg(VERSION_STR).arg(version));
+            }
+        }
+    }
+}
+
 /********************************
 *
 *  OVERVIEW
@@ -482,6 +517,7 @@ void MainWindow::fillOverviewTable()
 
 
     QList<QString> keys = stockList.keys();
+    std::sort(keys.begin(), keys.end(), [](QString a, QString b) {return a < b; });
 
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
@@ -512,7 +548,7 @@ void MainWindow::fillOverviewTable()
             ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
             ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
             ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
-            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(stockData->getCurrentCount(stock.ISIN)));
+            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(stockData->getCurrentCount(stock.ISIN))));
             ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));

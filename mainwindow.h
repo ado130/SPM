@@ -28,6 +28,7 @@ public:
 
 
 public Q_SLOTS:
+    void checkVersion(const QByteArray data, QString statusCode);
     void getData(const QByteArray data, QString statusCode);
     void parseOnlineParameters(const QByteArray data, QString statusCode);
     void loadOnlineParametersSlot();
