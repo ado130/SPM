@@ -563,7 +563,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     QDialog *stockDlg = new QDialog(this);
     stockDlg->setAttribute(Qt::WA_DeleteOnClose);
-    stockDlg->setWindowTitle("SPM " + vector.at(0).ticker);
+    stockDlg->setWindowTitle("SPM " + vector.at(0).stockName);
 
     QGridLayout *grid = new QGridLayout(stockDlg);
 
@@ -1582,7 +1582,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             vector.append(row2);
         }
 
-        // The is not in the ISIN list, so add it
+        // The record is not in the ISIN list, so add it
         auto it = stockList.find(lastRecord.ISIN);
 
         if(it == stockList.end())
@@ -1665,42 +1665,53 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
                 i.remove();
             }
         }
+
+        if(it.value().count() == 0)
+        {
+            it.remove();
+        }
     }
 
+
     // Insert new DeGiro data
-    QMutableHashIterator<QString, QVector<sSTOCKDATA>> iter(newStockData);
-
     QVector<sISINLIST> isinList = database->getIsinList();
+    QList<QString> keys = newStockData.keys();
 
-    while (iter.hasNext())
+    for(const QString &key : keys)
     {
-        iter.next();
-        stockList.insert(iter.key(), iter.value());
+        auto i = stockList.find(key);
 
-        // Check the ISIN, if does not exist add it to the table list
-        QMutableVectorIterator<sSTOCKDATA> i(iter.value());
-
-        while (i.hasNext())
+        if(i == stockList.end())
         {
-            QString ISIN = i.next().ISIN;
+            stockList.insert(key, newStockData.value(key));
 
-            if(ISIN.isEmpty()) continue;
+            // Find ISIN, if does not exist add it
+            QString ISIN = newStockData.value(key).first().ISIN;
+            QString stockName = newStockData.value(key).first().stockName;
 
-            if(std::find_if(isinList.begin(), isinList.end(),
-                             [ISIN](sISINLIST a)
-                             {
-                                 return a.ISIN == ISIN;
-                             }
-                ) == isinList.end() )
+            if(ISIN.isEmpty() || stockName.isEmpty()) continue;
+
+            auto iter = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINLIST a)
+                                  {
+                                      return a.ISIN == ISIN;
+                                  }
+                                  );
+
+            if(iter == isinList.end())
             {
                 sISINLIST record;
                 record.ISIN = ISIN;
-                record.name = i.next().stockName;
+                record.name = stockName;
 
                 isinList.push_back(record);
             }
         }
+        else
+        {
+            i->append(newStockData.value(key));
+        }
     }
+
 
     database->setIsinList(isinList);
     fillISINTable();
