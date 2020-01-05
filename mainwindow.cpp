@@ -559,7 +559,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     QString ISIN = rowItem->text();
 
-    QVector<sSTOCKDATA> vector = stockData->getStockData().value(ISIN);
+    StockDataType stockList = stockData->getStockData();
+    QVector<sSTOCKDATA> vector = stockList.value(ISIN);
 
     QDialog *stockDlg = new QDialog(this);
     stockDlg->setAttribute(Qt::WA_DeleteOnClose);
@@ -568,12 +569,21 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     QGridLayout *grid = new QGridLayout(stockDlg);
 
     QTableWidget *table = new QTableWidget(stockDlg);
+    table->setStyleSheet(""
+                         "QTableWidget {"
+                         "  border: 2px solid #8f8f91;"
+                         "  border-radius: 6px;"
+                         "  background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f6f7fa, stop: 1 #dadbde);"
+                         "  selection-background-color: gray;"
+                         "  alternate-background-color: #dadbde;\n"
+                         "}"
+                         "");
 
     grid->addWidget(table);
     stockDlg->setLayout(grid);
 
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price";
+    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price" << "Delete";
     table->setColumnCount(header.count());
 
     table->setRowCount(0);
@@ -670,6 +680,37 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
         table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currency));
 
+        QPushButton *pbDelete = new QPushButton("Delete", table);
+
+        connect(pbDelete, &QPushButton::clicked, [pbDelete, table, ISIN, stockList, this]()
+                {
+                    int ret = QMessageBox::warning(pbDelete,
+                                                   "Delete record",
+                                                   "Do you really want to delete selected record?",
+                                                   QMessageBox::Yes, QMessageBox::No);
+
+                    if(ret == QMessageBox::Yes)
+                    {
+                        int rowToDelete = table->currentRow();
+
+                        auto it = stockList.find(ISIN);
+
+                        if(it != stockList.end())
+                        {
+                            QVector<sSTOCKDATA> vec = it.value();
+                            vec.remove(rowToDelete);
+
+                            if(updateStockDataVector(ISIN, vec))
+                            {
+                                table->removeRow(rowToDelete);
+                            }
+                        }
+                    }
+                } );
+
+        table->setItem(pos, 7, new QTableWidgetItem("Delete"));
+        table->setCellWidget(pos, 7, pbDelete);
+
         pos++;
     }
     table->setSortingEnabled(true);
@@ -688,7 +729,23 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     stockDlg->open();
 }
 
+bool MainWindow::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
+{
+    StockDataType stockList = stockData->getStockData();
 
+    auto it = stockList.find(ISIN);
+
+    if(it != stockList.end())
+    {
+        stockList[ISIN] = vector;
+
+        stockData->setStockData(stockList);
+
+        return true;
+    }
+
+    return false;
+}
 
 void MainWindow::fillOverviewSlot()
 {

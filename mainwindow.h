@@ -124,6 +124,7 @@ private:
      */
     QVector<sPDFEXPORT> prepareDataToExport();
     void setOverviewHeader();
+    bool updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector);
 
     /*
      *  DeGiro tab
