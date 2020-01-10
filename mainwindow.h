@@ -11,6 +11,7 @@
 #include "screener.h"
 #include "screenertab.h"
 #include "stockdata.h"
+#include "tastyworks.h"
 
 
 namespace Ui {
@@ -34,6 +35,7 @@ public Q_SLOTS:
     void loadOnlineParametersSlot();
     void setScreenerParamsSlot(QVector<sSCREENERPARAM> params);
     void loadDegiroCSVslot();
+    void loadTastyworksCSVslot();
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);
     void updateExchangeRates(const QByteArray data, QString statusCode);
@@ -95,6 +97,7 @@ private:
     std::shared_ptr<DownloadManager> manager;
     std::shared_ptr<Database> database;
     std::shared_ptr<DeGiro> degiro;
+    std::shared_ptr<Tastyworks> tastyworks;
     std::shared_ptr<Screener> screener;
     std::shared_ptr<StockData> stockData;
 

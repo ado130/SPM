@@ -13,6 +13,7 @@ typedef QVector<TickerDataType> ScreenerDataType;
 #define STOCKFILE           "/stock.bin"
 #define ISINFILE            "/isin.bin"
 #define DEGIRORAWFILE       "/degiroRAW.bin"
+#define TASTYWORKSRAWFILE   "/tastyworksRAW.bin"
 #define SCREENERPARAMSFILE  "/screenParams.bin"
 #define SCREENERALLDATA     "/screenerAllData.bin"
 #define FILTERLISTFILE      "/filterList.bin"
@@ -63,8 +64,13 @@ struct sSETTINGS
 
     // DeGiro
     QString degiroCSV;
-    eDELIMETER CSVdelimeter;
+    eDELIMETER degiroCSVdelimeter;
     bool degiroAutoLoad;
+
+    // Tastyworks
+    QString tastyworksCSV;
+    eDELIMETER tastyworksCSVdelimeter;
+    bool tastyworksAutoLoad;
 
     // Screener
     QVector<sSCREENERPARAM> screenerParams;
@@ -83,7 +89,7 @@ struct sPDFEXPORT
 };
 
 
-enum eSTOCKTYPE
+enum eSTOCKEVENTTYPE
 {
     DIVIDEND = 0,
     TAX = 1,
@@ -98,7 +104,7 @@ enum eSTOCKTYPE
 struct sSTOCKDATA
 {
     QDateTime dateTime;
-    eSTOCKTYPE type;
+    eSTOCKEVENTTYPE type;
     QString ticker;
     QString ISIN;
     QString stockName;
@@ -112,7 +118,7 @@ struct sSTOCKDATA
 struct sNEWRECORD
 {
     QDateTime dateTime;
-    eSTOCKTYPE type;
+    eSTOCKEVENTTYPE type;
     QString ticker;
     QString ISIN;
     eCURRENCY currency;
@@ -138,6 +144,16 @@ struct sDEGIRORAW
     double price;
 };
 
+struct sTASTYWORKSRAW
+{
+    QDateTime dateTime;
+    eSTOCKEVENTTYPE type;
+    QString ticker;
+    QString description;
+    double price;
+    int cout;
+    double fee;
+};
 
 struct sTICKERINFO
 {

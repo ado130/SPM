@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>503</height>
+    <height>628</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Settings</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_6">
+  <layout class="QVBoxLayout" name="verticalLayout_11">
    <item>
     <widget class="QGroupBox" name="gbGeneral">
      <property name="title">
@@ -268,7 +268,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="cmCSV">
+         <widget class="QComboBox" name="cmDegiroCSV">
           <item>
            <property name="text">
             <string>Comma (,)</string>
@@ -300,7 +300,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QCheckBox" name="cbAutoLoad">
+         <widget class="QCheckBox" name="cbDegiroAutoLoad">
           <property name="text">
            <string>Autoload</string>
           </property>
@@ -363,7 +363,154 @@ QPushButton:default {
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="pbLoadDegiroCSV">
+           <widget class="QPushButton" name="pbDegiroLoadCSV">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+    border: 2px solid #8f8f91;
+    border-radius: 6px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
+    min-width: 80px;
+	min-height: 19px;
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+}
+
+QPushButton:flat {
+    border: none; /* no border for a flat push button */
+}
+
+QPushButton:default {
+    border-color: navy; /* make the default button prominent */
+}</string>
+            </property>
+            <property name="text">
+             <string>Load CSV</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbDegiro_2">
+     <property name="title">
+      <string>Tastyworks</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_9">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_22">
+        <item>
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>Delimeter</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="cmTastyworksCSV">
+          <item>
+           <property name="text">
+            <string>Comma (,)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Semicolon (;)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Point (.)</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cbTastyworksAutoLoad">
+          <property name="text">
+           <string>Autoload</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_23">
+          <item>
+           <widget class="QLineEdit" name="leTastyworksCSV"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbTastyworksPath">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+    border: 2px solid #8f8f91;
+    border-radius: 6px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
+    min-width: 80px;
+	min-height: 19px;
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+}
+
+QPushButton:flat {
+    border: none; /* no border for a flat push button */
+}
+
+QPushButton:default {
+    border-color: navy; /* make the default button prominent */
+}</string>
+            </property>
+            <property name="text">
+             <string>Set Path</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_24">
+          <item>
+           <spacer name="horizontalSpacer_9">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pbTastyworksLoadCSV">
             <property name="styleSheet">
              <string notr="true">QPushButton {
     border: 2px solid #8f8f91;

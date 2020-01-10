@@ -11,10 +11,9 @@ class DeGiro : public QObject
 public:
     explicit DeGiro(QObject *parent = nullptr);
 
-    void loadDegiroCSV(QString path, eDELIMETER delimeter);
+    void loadCSV(QString path, eDELIMETER delimeter);
 
-    QVector<sDEGIRORAW> getDegiroRawData() const;
-    StockDataType getStockData() const;
+    QVector<sDEGIRORAW> getRawData() const;
 
     bool getIsRAWFile() const;
 
@@ -25,8 +24,8 @@ private:
     QVector<sDEGIRORAW> degiroRawData;
     bool isRAWFile;
 
-    bool loadDegiroRaw();
-    void saveDegiroRaw();
+    bool loadRawData();
+    void saveRawData();
     QStringList parseLine(QString line, char delimeter);
 
 };

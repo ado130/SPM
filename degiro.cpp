@@ -8,10 +8,10 @@
 
 DeGiro::DeGiro(QObject *parent) : QObject(parent)
 {
-    isRAWFile = loadDegiroRaw();
+    isRAWFile = loadRawData();
 }
 
-void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
+void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
@@ -52,56 +52,56 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
 
         QDateTime dt(d, t);
 
-        sDEGIRORAW tmp;
-        tmp.dateTime = dt;
-        tmp.product = list.at(3);
-        tmp.ISIN = list.at(4);
-        tmp.description = list.at(5);
+        sDEGIRORAW degiroRaw;
+        degiroRaw.dateTime = dt;
+        degiroRaw.product = list.at(3);
+        degiroRaw.ISIN = list.at(4);
+        degiroRaw.description = list.at(5);
 
         if(list.at(7).contains("CZK"))
         {
-            tmp.currency = CZK;
+            degiroRaw.currency = CZK;
         }
         else if(list.at(7).contains("USD"))
         {
-            tmp.currency = USD;
+            degiroRaw.currency = USD;
         }
         else if(list.at(7).contains("EUR"))
         {
-            tmp.currency = EUR;
+            degiroRaw.currency = EUR;
         }
         else if(list.at(9).contains("CZK"))
         {
-            tmp.currency = CZK;
+            degiroRaw.currency = CZK;
         }
         else if(list.at(9).contains("USD"))
         {
-            tmp.currency = USD;
+            degiroRaw.currency = USD;
         }
         else if(list.at(9).contains("EUR"))
         {
-            tmp.currency = EUR;
+            degiroRaw.currency = EUR;
         }
 
         bool ok;
         QString val = list.at(8);
         val.replace(",", ".");
-        tmp.price = val.toDouble(&ok);
+        degiroRaw.price = val.toDouble(&ok);
 
         if(!ok)
         {
             val = list.at(10);
             val.replace(",", ".");
-            tmp.price = val.toDouble(&ok);
+            degiroRaw.price = val.toDouble(&ok);
 
             if(!ok)
             {
-                tmp.price = 0.0;
+                degiroRaw.price = 0.0;
             }
         }
 
 
-        degiroRawData.push_back(tmp);
+        degiroRawData.push_back(degiroRaw);
 
 
         sSTOCKDATA degData;
@@ -109,47 +109,47 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
 
         bool found = true;
 
-        if(tmp.description.toLower().contains("vklad") || tmp.description.toLower().contains("deposit"))
+        if(degiroRaw.description.toLower().contains("vklad") || degiroRaw.description.toLower().contains("deposit"))
         {
             degData.type = DEPOSIT;
         }
-        else if(tmp.description.toLower().contains("výběr") || tmp.description.toLower().contains("withdrawal"))
+        else if(degiroRaw.description.toLower().contains("výběr") || degiroRaw.description.toLower().contains("withdrawal"))
         {
             degData.type = WITHDRAWAL;
         }
-        else if(tmp.description.toLower().contains("transakční poplatek") || tmp.description.toLower().contains("transaction fee"))
+        else if(degiroRaw.description.toLower().contains("transakční poplatek") || degiroRaw.description.toLower().contains("transaction fee"))
         {
             degData.type = TRANSACTIONFEE;
         }
-        else if(tmp.description.toLower().contains("poplatek") || tmp.description.toLower().contains("fee"))
+        else if(degiroRaw.description.toLower().contains("poplatek") || degiroRaw.description.toLower().contains("fee"))
         {
             degData.type = FEE;
         }
-        else if(tmp.description.toLower().contains("daň") || tmp.description.toLower().contains("tax"))
+        else if(degiroRaw.description.toLower().contains("daň") || degiroRaw.description.toLower().contains("tax"))
         {
             degData.type = TAX;
         }
-        else if(tmp.description.toLower().contains("dividend"))
+        else if(degiroRaw.description.toLower().contains("dividend"))
         {
             degData.type = DIVIDEND;
         }
-        else if(tmp.description.toLower().contains("nákup") || tmp.description.toLower().contains("buy"))
+        else if(degiroRaw.description.toLower().contains("nákup") || degiroRaw.description.toLower().contains("buy"))
         {
             degData.type = BUY;
 
-            int start = tmp.description.indexOf(" ");
-            int end = tmp.description.indexOf(" ", start+1);
+            int start = degiroRaw.description.indexOf(" ");
+            int end = degiroRaw.description.indexOf(" ", start+1);
 
-            degData.count = tmp.description.mid(start + 1, end-start-1).toInt();
+            degData.count = degiroRaw.description.mid(start + 1, end-start-1).toInt();
         }
-        else if(tmp.description.toLower().contains("prodej") || tmp.description.toLower().contains("sell"))
+        else if(degiroRaw.description.toLower().contains("prodej") || degiroRaw.description.toLower().contains("sell"))
         {
             degData.type = SELL;
 
-            int start = tmp.description.indexOf(" ");
-            int end = tmp.description.indexOf(" ", start + 1);
+            int start = degiroRaw.description.indexOf(" ");
+            int end = degiroRaw.description.indexOf(" ", start + 1);
 
-            degData.count = tmp.description.mid(start + 1, end-start-1).toInt();
+            degData.count = degiroRaw.description.mid(start + 1, end-start-1).toInt();
         }
         else
         {
@@ -158,32 +158,57 @@ void DeGiro::loadDegiroCSV(QString path, eDELIMETER delimeter)
 
         if(found)
         {
-            degData.dateTime = tmp.dateTime;
-            degData.ISIN = tmp.ISIN;
-            degData.stockName = tmp.product;
+            degData.dateTime = degiroRaw.dateTime;
+            degData.ISIN = degiroRaw.ISIN;
+            degData.stockName = degiroRaw.product;
 
             if(degData.count != 0)
             {
-                degData.price = tmp.price/degData.count;
+                degData.price = degiroRaw.price/degData.count;
             }
             else
             {
-                degData.price = tmp.price;
+                degData.price = degiroRaw.price;
             }
 
-            degData.currency = tmp.currency;
+            degData.currency = degiroRaw.currency;
             degData.isDegiroSource = true;
 
-            QVector<sSTOCKDATA> vector = stockData[tmp.ISIN];
-            vector.append(degData);
-            stockData[tmp.ISIN] = vector;
+            QVector<sSTOCKDATA> vector = stockData[degiroRaw.ISIN];
+
+            // check for multiple dividends/fees for the ISIN at the same time and sum them
+            // it might happen that degiro add and sub the dividend/fee
+            if(degData.type == DIVIDEND || degData.type == TAX)
+            {
+                auto exists = std::find_if(vector.begin(), vector.end(), [degData] (sSTOCKDATA &s)
+                                           {
+                                               return ( (s.dateTime.date() == degData.dateTime.date()) && (s.type == degData.type) );
+                                           }
+                                           );
+
+                if(exists != vector.end())
+                {
+                    exists->price += degData.price;
+                    exists->count += degData.count;
+                }
+                else
+                {
+                    vector.append(degData);
+                }
+            }
+            else
+            {
+                vector.append(degData);
+            }
+
+            stockData[degiroRaw.ISIN] = vector;
         }
     }
 
     if(degiroRawData.count() > 0)
     {
         emit setDegiroData(stockData);
-        saveDegiroRaw();
+        saveRawData();
         isRAWFile = true;
     }
 }
@@ -217,12 +242,12 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
 }
 
 
-QVector<sDEGIRORAW> DeGiro::getDegiroRawData() const
+QVector<sDEGIRORAW> DeGiro::getRawData() const
 {
     return degiroRawData;
 }
 
-bool DeGiro::loadDegiroRaw()
+bool DeGiro::loadRawData()
 {
     QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIRORAWFILE);
 
@@ -240,7 +265,7 @@ bool DeGiro::loadDegiroRaw()
     return false;
 }
 
-void DeGiro::saveDegiroRaw()
+void DeGiro::saveRawData()
 {
     QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIRORAWFILE);
 

@@ -32,11 +32,17 @@ void Database::loadConfig()
 {
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE, QSettings::IniFormat);
     setting.degiroCSV = settings.value("DeGiro/path", "").toString();
-    setting.CSVdelimeter = static_cast<eDELIMETER>(settings.value("DeGiro/delimeter", 0).toInt());
+    setting.degiroCSVdelimeter = static_cast<eDELIMETER>(settings.value("DeGiro/delimeter", 0).toInt());
     setting.degiroAutoLoad = settings.value("DeGiro/Dautoload", false).toBool();
+
+    setting.tastyworksCSV = settings.value("Tastyworks/path", "").toString();
+    setting.tastyworksCSVdelimeter = static_cast<eDELIMETER>(settings.value("Tastyworks/delimeter", 0).toInt());
+    setting.tastyworksAutoLoad = settings.value("Tastyworks/Dautoload", false).toBool();
+
     setting.lastScreenerIndex = settings.value("Screener/lastScreenerIndex", -1).toInt();
     setting.filterON = settings.value("Screener/filterON", false).toBool();
     setting.screenerAutoLoad = settings.value("Screener/Sautoload", false).toBool();
+
     setting.width = settings.value("General/width", 0).toInt();
     setting.height = settings.value("General/height", 0).toInt();
     setting.xPos = settings.value("General/xPos", 0).toInt();
@@ -61,8 +67,12 @@ void Database::saveConfig()
 {
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE, QSettings::IniFormat);
     settings.setValue("DeGiro/path", setting.degiroCSV);
-    settings.setValue("DeGiro/delimeter", setting.CSVdelimeter);
+    settings.setValue("DeGiro/delimeter", setting.degiroCSVdelimeter);
     settings.setValue("DeGiro/Dautoload", setting.degiroAutoLoad);
+
+    settings.setValue("Tastyworks/path", setting.tastyworksCSV);
+    settings.setValue("Tastyworks/delimeter", setting.tastyworksCSVdelimeter);
+    settings.setValue("Tastyworks/Dautoload", setting.tastyworksAutoLoad);
 
     settings.setValue("Screener/lastScreenerIndex", setting.lastScreenerIndex);
     settings.setValue("Screener/filterON", setting.filterON);

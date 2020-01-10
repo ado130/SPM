@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     manager = std::make_shared<DownloadManager> (this);
     database = std::make_shared<Database> (this);
     degiro = std::make_shared<DeGiro> (this);
+    tastyworks = std::make_shared<Tastyworks> (this);
     screener = std::make_shared<Screener> (this);
     stockData = std::make_shared<StockData> (this);
 
@@ -310,6 +311,7 @@ void MainWindow::on_actionSettings_triggered()
     connect(dlg, &SettingsForm::setScreenerParams, this, &MainWindow::setScreenerParamsSlot);
     connect(dlg, &SettingsForm::loadOnlineParameters, this, &MainWindow::loadOnlineParametersSlot);
     connect(dlg, &SettingsForm::loadDegiroCSV, this, &MainWindow::loadDegiroCSVslot);
+    connect(dlg, &SettingsForm::loadTastyworksCSV, this, &MainWindow::loadTastyworksCSVslot);
     connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewSlot);
     connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewTable);
     connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
@@ -517,7 +519,12 @@ void MainWindow::fillOverviewTable()
 
 
     QList<QString> keys = stockList.keys();
-    std::sort(keys.begin(), keys.end(), [](QString a, QString b) {return a < b; });
+    std::sort(keys.begin(), keys.end(),
+              [](QString a, QString b)
+              {
+                  return a < b;
+              }
+              );
 
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
@@ -584,6 +591,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     StockDataType stockList = stockData->getStockData();
     QVector<sSTOCKDATA> vector = stockList.value(ISIN);
+
+    if(vector.count() == 0) return;
 
     QDialog *stockDlg = new QDialog(this);
     stockDlg->setAttribute(Qt::WA_DeleteOnClose);
@@ -916,8 +925,8 @@ void MainWindow::on_pbShowGraph_clicked()
     double invested = 0.0;
     QLineSeries *investedSeries = new QLineSeries();
 
-    double dividends = 0.0;
-    QVector<QBarSet*> dividendsSets;
+    QHash<QString, QVector<QPair<QDate, double>> > dividends;
+    double maxDividendAxis = 0.0;
 
     QVector<QPair<qint64, double> > graphData;
 
@@ -986,15 +995,26 @@ void MainWindow::on_pbShowGraph_clicked()
             }
             else if(stock.type == DIVIDEND)
             {
+                double price = 0.0;
+
                 switch(selectedCurrency)
                 {
-                    case USD: dividends += moneyInUSD;
+                    case USD: price = moneyInUSD;
                         break;
-                    case CZK: dividends += (moneyInUSD * database->getSetting().USD2CZK);
+                    case CZK: price = (moneyInUSD * database->getSetting().USD2CZK);
                         break;
-                    case EUR: dividends += (moneyInUSD * database->getSetting().USD2EUR);
+                    case EUR: price = (moneyInUSD * database->getSetting().USD2EUR);
                         break;
                 }
+
+                if(price > maxDividendAxis) maxDividendAxis = price;
+
+                QString ticker = stock.ticker;
+                QDate date = stock.dateTime.date();
+
+                auto vector = dividends.value(ticker);
+                vector.push_back(qMakePair(date, price));
+                dividends.insert(ticker, vector);
             }
         }
     }
@@ -1036,6 +1056,7 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
+
     // Deposit
     if(depositSeries->pointsVector().count() == 1)
     {
@@ -1065,6 +1086,7 @@ void MainWindow::on_pbShowGraph_clicked()
     depositChartView->setRenderHint(QPainter::Antialiasing);
     depositChartView->setMinimumSize(512, 512);
     depositChartView->setRubberBand(QChartView::HorizontalRubberBand);
+
 
     // Invested
     if(investedSeries->pointsVector().count() == 1)
@@ -1096,13 +1118,129 @@ void MainWindow::on_pbShowGraph_clicked()
     investedChartView->setMinimumSize(512, 512);
     investedChartView->setRubberBand(QChartView::HorizontalRubberBand);
 
+
     // Dividends
+    // Sort from min to max and find the min and max
+    QDate min;
+    QDate max;
+
+    QList<QString> divKeys = dividends.keys();
+
+    min = dividends.value(divKeys.first()).first().first;
+    max = dividends.value(divKeys.first()).first().first;
+
+    for (const QString &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<QDate, double> &a, QPair<QDate, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+
+        QDate localMin = vector.first().first;
+        QDate localMax = vector.last().first;
+
+        if(localMin < min) min = localMin;
+        if(localMax > max) max = localMax;
+    }
+
+    // Save categories - find all months between min and max date
+    QStringList categories;
+    QDate tmpMin = min;
+    QVector<QDate> dates;
+
+    while(tmpMin < max)
+    {
+        QString month = tmpMin.toString("MMM");
+        month = month.left(1).toUpper() + month.mid(1);     // first char to upper
+
+        categories << month;
+        dates.push_back(tmpMin);
+
+        tmpMin = tmpMin.addMonths(1);
+    }
+
+    // Fill empty places between dates
+    QMutableHashIterator it(dividends);
+
+    while(it.hasNext())
+    {
+        it.next();
+
+        tmpMin = min;
+
+        auto vector = it.value();
+
+        for(const QDate &d : dates)
+        {
+            auto found = std::find_if(vector.begin(), vector.end(), [d] (QPair<QDate, double> &a)
+                                  {
+                                          return d.month() == a.first.month();
+                                  }
+                                  );
+
+            if(found == vector.end())
+            {
+                int index = dates.indexOf(d);
+                vector.insert(index, qMakePair(d, 0.0));
+            }
+        }
+
+        it.value() = vector;
+    }
+
+    // set all sets, ticker and date
+    QVector<QBarSet*> dividendsSets;
+    divKeys = dividends.keys();
+
+    for (const QString &key : divKeys)
+    {
+        QBarSet *bar = new QBarSet(key);
+
+        auto vector = dividends.value(key);
+
+        for (const QPair<QDate, double> &v : vector)
+        {
+            bar->append(v.second);
+        }
+
+        dividendsSets.push_back(bar);
+    }
+
+
     QBarSeries *dividendSeries = new QBarSeries();
 
     for(QBarSet *set : dividendsSets)
     {
         dividendSeries->append(set);
     }
+    QChart *dividendChart = new QChart();
+    dividendChart->addSeries(dividendSeries);
+    dividendChart->setTitle("Dividends");
+    dividendChart->setAnimationOptions(QChart::SeriesAnimations);
+
+    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    dividendChart->addAxis(axisX, Qt::AlignBottom);
+    dividendSeries->attachAxis(axisX);
+
+    QValueAxis *dividendsAxisY = new QValueAxis();
+    dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis+0.1*maxDividendAxis));
+    dividendChart->addAxis(dividendsAxisY, Qt::AlignLeft);
+    dividendSeries->attachAxis(dividendsAxisY);
+
+    dividendChart->legend()->setVisible(true);
+    dividendChart->legend()->setAlignment(Qt::AlignBottom);
+
+    QChartView *dividendChartView = new QChartView(dividendChart);
+    dividendChartView->setRenderHint(QPainter::Antialiasing);
+
+
 
     // Display the chart
     QWidget *chartWidget = new QWidget(this, Qt::Tool);
@@ -1121,18 +1259,26 @@ void MainWindow::on_pbShowGraph_clicked()
 
         VB->addWidget(investedChartView);
     }
+    else if(ui->cmGraphType->currentText() == "Dividends")
+    {
+        if(dividendSeries->count() == 0) return;
+
+        VB->addWidget(dividendChartView);
+    }
 
 
     QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
     QPushButton *zoomOut = new QPushButton("Zoom out", chartWidget);
     QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
 
-    QHBoxLayout *HB = new QHBoxLayout();
-    HB->addWidget(zoomIn);
-    HB->addWidget(zoomOut);
-    HB->addWidget(zoomReset);
-
-    VB->addLayout(HB);
+    if(ui->cmGraphType->currentText() != "Dividends")
+    {
+        QHBoxLayout *HB = new QHBoxLayout();
+        HB->addWidget(zoomIn);
+        HB->addWidget(zoomOut);
+        HB->addWidget(zoomReset);
+        VB->addLayout(HB);
+    }
 
     connect(
         zoomIn, &QPushButton::clicked,
@@ -1532,7 +1678,7 @@ void MainWindow::on_pbAddRecord_clicked()
                 else
                 {
                     lastRecord.dateTime = date->dateTime();
-                    lastRecord.type = static_cast<eSTOCKTYPE>(type->currentIndex());
+                    lastRecord.type = static_cast<eSTOCKEVENTTYPE>(type->currentIndex());
                     lastRecord.ticker = leTicker->text();
                     lastRecord.ISIN = leISIN->text();
                     lastRecord.currency = static_cast<eCURRENCY>(cmCurrency->currentIndex());
@@ -1666,7 +1812,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 void MainWindow::loadDegiroCSVslot()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    degiro->loadDegiroCSV(database->getSetting().degiroCSV, database->getSetting().CSVdelimeter);
+    degiro->loadCSV(database->getSetting().degiroCSV, database->getSetting().degiroCSVdelimeter);
 
     if(degiro->getIsRAWFile())
     {
@@ -1815,9 +1961,9 @@ void MainWindow::setDegiroHeader()
 
 void MainWindow::fillDegiroTable()
 {
-    QVector<sDEGIRORAW> data = degiro->getDegiroRawData();
+    QVector<sDEGIRORAW> degiroRawData = degiro->getRawData();
 
-    if(data.isEmpty())
+    if(degiroRawData.isEmpty())
     {
         return;
     }
@@ -1825,21 +1971,21 @@ void MainWindow::fillDegiroTable()
     ui->tableDegiro->setRowCount(0);
 
     ui->tableDegiro->setSortingEnabled(false);
-    for(int a = 0; a<data.count(); ++a)
+    for(int a = 0; a<degiroRawData.count(); ++a)
     {
         ui->tableDegiro->insertRow(a);
 
         QTableWidgetItem *item1 = new QTableWidgetItem;
-        item1->setData(Qt::EditRole, data.at(a).dateTime.date()); // data.at(a).dateTime.toString("dd.MM.yyyy")
+        item1->setData(Qt::EditRole, degiroRawData.at(a).dateTime.date()); // data.at(a).dateTime.toString("dd.MM.yyyy")
         ui->tableDegiro->setItem(a, 0, item1);
 
-        ui->tableDegiro->setItem(a, 1, new QTableWidgetItem(data.at(a).product));
-        ui->tableDegiro->setItem(a, 2, new QTableWidgetItem(data.at(a).ISIN));
-        ui->tableDegiro->setItem(a, 3, new QTableWidgetItem(data.at(a).description));
-        ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(data.at(a).currency)));
+        ui->tableDegiro->setItem(a, 1, new QTableWidgetItem(degiroRawData.at(a).product));
+        ui->tableDegiro->setItem(a, 2, new QTableWidgetItem(degiroRawData.at(a).ISIN));
+        ui->tableDegiro->setItem(a, 3, new QTableWidgetItem(degiroRawData.at(a).description));
+        ui->tableDegiro->setItem(a, 4, new QTableWidgetItem(database->getCurrencyText(degiroRawData.at(a).currency)));
 
         QTableWidgetItem *item2 = new QTableWidgetItem;
-        item2->setData(Qt::EditRole, data.at(a).price);
+        item2->setData(Qt::EditRole, degiroRawData.at(a).price);
         ui->tableDegiro->setItem(a, 5, item2);
     }
     ui->tableDegiro->setSortingEnabled(true);
@@ -1854,6 +2000,34 @@ void MainWindow::fillDegiroTable()
         }
     }
 }
+
+
+/********************************
+*
+*  Tastyworks
+*
+********************************/
+void MainWindow::loadTastyworksCSVslot()
+{
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    tastyworks->loadCSV(database->getSetting().tastyworksCSV, database->getSetting().tastyworksCSVdelimeter);
+
+    /*if(tastyworks->getIsRAWFile())
+    {
+        fillDegiroTable();
+        fillOverviewSlot();
+        fillOverviewTable();
+
+        setStatus("The Tastyworks csv file has been loaded!");
+    }
+    else
+    {
+        setStatus("The Tastyworks data are corrupted or are not loaded!");
+    }*/
+
+    QApplication::restoreOverrideCursor();
+}
+
 
 /********************************
 *

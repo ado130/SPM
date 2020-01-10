@@ -24,8 +24,8 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->lePosX->setText(QString::number(setting.xPos));
     ui->lePosY->setText(QString::number(setting.yPos));
     ui->leDegiroCSV->setText(setting.degiroCSV);
-    ui->cmCSV->setCurrentIndex(setting.CSVdelimeter);
-    ui->cbAutoLoad->setChecked(setting.degiroAutoLoad);
+    ui->cmDegiroCSV->setCurrentIndex(setting.degiroCSVdelimeter);
+    ui->cbDegiroAutoLoad->setChecked(setting.degiroAutoLoad);
     ui->cbFilterON->setChecked(setting.filterON);
     ui->cbStartReload->setChecked(setting.screenerAutoLoad);
 
@@ -42,18 +42,13 @@ SettingsForm::~SettingsForm()
     delete ui;
 }
 
-void SettingsForm::on_pbDegiroPath_clicked()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open CSV File"),
-                                                    QCoreApplication::applicationDirPath(),
-                                                    tr("CSV files (*.csv)"));
-
-    ui->leDegiroCSV->setText(fileName);
-    setting.degiroCSV = fileName;
-}
-
 void SettingsForm::on_buttonBox_accepted()
 {
+    setting.degiroCSVdelimeter = static_cast<eDELIMETER>(ui->cmDegiroCSV->currentIndex());
+    setting.degiroAutoLoad = ui->cbDegiroAutoLoad->isChecked();
+
+    setting.screenerAutoLoad = ui->cbStartReload->isChecked();
+
     setting.width = ui->leWidth->text().toInt();
     setting.height = ui->leHeight->text().toInt();
     setting.xPos = ui->lePosX->text().toInt();
@@ -62,15 +57,6 @@ void SettingsForm::on_buttonBox_accepted()
     emit setSetting(setting);
 }
 
-void SettingsForm::on_cmCSV_currentIndexChanged(int index)
-{
-    setting.CSVdelimeter = static_cast<eDELIMETER>(index);
-}
-
-void SettingsForm::on_cbAutoLoad_clicked(bool checked)
-{
-    setting.degiroAutoLoad = checked;
-}
 
 void SettingsForm::on_pbLoadParameters_clicked()
 {
@@ -104,19 +90,40 @@ void SettingsForm::updateScreenerParamsSlot(QVector<sSCREENERPARAM> params)
     setting.screenerParams = params;
 }
 
-void SettingsForm::on_pbLoadDegiroCSV_clicked()
+void SettingsForm::on_pbDegiroPath_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open CSV File"),
+                                                    QCoreApplication::applicationDirPath(),
+                                                    tr("CSV files (*.csv)"));
+
+    ui->leDegiroCSV->setText(fileName);
+    setting.degiroCSV = fileName;
+}
+
+void SettingsForm::on_pbDegiroLoadCSV_clicked()
 {
     emit loadDegiroCSV();
 }
 
+void SettingsForm::on_pbTastyworksPath_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open CSV File"),
+                                                    QCoreApplication::applicationDirPath(),
+                                                    tr("CSV files (*.csv)"));
+
+    ui->leTastyworksCSV->setText(fileName);
+    setting.tastyworksCSV = fileName;
+}
+
+void SettingsForm::on_pbTastyworksLoadCSV_clicked()
+{
+    emit loadTastyworksCSV();
+}
+
+
 void SettingsForm::on_cbFilterON_clicked(bool checked)
 {
     setting.filterON = checked;
-}
-
-void SettingsForm::on_cbStartReload_clicked(bool checked)
-{
-    setting.screenerAutoLoad = checked;
 }
 
 void SettingsForm::on_cmCurrency_currentIndexChanged(int index)

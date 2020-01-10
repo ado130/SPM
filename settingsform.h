@@ -25,25 +25,29 @@ public slots:
     void updateScreenerParamsSlot(QVector<sSCREENERPARAM> params);
 
 private slots:
-    void on_pbDegiroPath_clicked();
     void on_buttonBox_accepted();
-    void on_cmCSV_currentIndexChanged(int index);
 
+    void on_pbDegiroPath_clicked();
+    void on_pbDegiroLoadCSV_clicked();
 
-    void on_cbAutoLoad_clicked(bool checked);
     void on_pbLoadParameters_clicked();
     void on_pbShowParameters_clicked();
-    void on_pbLoadDegiroCSV_clicked();
     void on_cbFilterON_clicked(bool checked);
-    void on_cbStartReload_clicked(bool checked);
 
     void on_cmCurrency_currentIndexChanged(int index);
+
+    void on_pbTastyworksPath_clicked();
+
+    void on_pbTastyworksLoadCSV_clicked();
 
 signals:
     void setSetting(sSETTINGS);
     void setScreenerParams(QVector<sSCREENERPARAM> params);
     void loadOnlineParameters();
+
     void loadDegiroCSV();
+    void loadTastyworksCSV();
+
     void fillOverview();
 
 private:

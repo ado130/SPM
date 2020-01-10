@@ -14,7 +14,7 @@ public:
     void setStockData(const StockDataType &value);
     StockDataType getStockData() const;
 
-    double getTax(QString ticker, QDateTime date, eSTOCKTYPE type);
+    double getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type);
     void saveStockData();
 
     int getCurrentCount(QString ISIN);

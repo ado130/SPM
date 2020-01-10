@@ -156,7 +156,7 @@ StockDataType StockData::getStockData() const
     return stockData;
 }
 
-double StockData::getTax(QString ticker, QDateTime date, eSTOCKTYPE type)
+double StockData::getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ticker);
 
@@ -225,7 +225,7 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
 
     int buffer1;
     in >> buffer1;
-    param.type = static_cast<eSTOCKTYPE>(buffer1);
+    param.type = static_cast<eSTOCKEVENTTYPE>(buffer1);
 
     int buffer2;
     in >> buffer2;
