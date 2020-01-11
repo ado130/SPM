@@ -21,7 +21,7 @@ signals:
     void setDegiroData(StockDataType data);
 
 private:
-    QVector<sDEGIRORAW> degiroRawData;
+    QVector<sDEGIRORAW> rawData;
     bool isRAWFile;
 
     bool loadRawData();

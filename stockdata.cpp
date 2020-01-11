@@ -11,7 +11,7 @@ StockData::StockData(QObject *parent) : QObject(parent)
 }
 
 
-int StockData::getCurrentCount(QString ISIN)
+int StockData::getCurrentCount(QString ISIN, QDate from, QDate to)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
@@ -19,6 +19,8 @@ int StockData::getCurrentCount(QString ISIN)
 
     for(const sSTOCKDATA &stock : vector)
     {
+        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
         if(stock.type == BUY || stock.type == SELL)
         {
             count += stock.count;
@@ -28,7 +30,7 @@ int StockData::getCurrentCount(QString ISIN)
     return count;
 }
 
-double StockData::getTotalPrice(QString ISIN, sSETTINGS setting)
+double StockData::getTotalPrice(QString ISIN, QDate from, QDate to, sSETTINGS setting)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
@@ -36,6 +38,8 @@ double StockData::getTotalPrice(QString ISIN, sSETTINGS setting)
 
     for(const sSTOCKDATA &stock : vector)
     {
+        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
         if(stock.type == BUY || stock.type == SELL)
         {
             double moneyInUSD = 0.0;
@@ -70,7 +74,7 @@ double StockData::getTotalPrice(QString ISIN, sSETTINGS setting)
     return price;
 }
 
-double StockData::getTotalFee(QString ISIN, sSETTINGS setting)
+double StockData::getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS setting)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
@@ -78,6 +82,8 @@ double StockData::getTotalFee(QString ISIN, sSETTINGS setting)
 
     for(const sSTOCKDATA &stock : vector)
     {
+        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
         if(stock.type == TRANSACTIONFEE)
         {
             double moneyInUSD = 0.0;
@@ -107,7 +113,7 @@ double StockData::getTotalFee(QString ISIN, sSETTINGS setting)
     return abs(price);
 }
 
-double StockData::getReceivedDividend(QString ISIN, sSETTINGS setting)
+double StockData::getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTINGS setting)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
@@ -115,6 +121,8 @@ double StockData::getReceivedDividend(QString ISIN, sSETTINGS setting)
 
     for(const sSTOCKDATA &stock : vector)
     {
+        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
         if(stock.type == DIVIDEND || stock.type == TAX)
         {
             double moneyInUSD = 0.0;
@@ -211,7 +219,7 @@ QDataStream &operator<<(QDataStream &out, const sSTOCKDATA &param)
     out << static_cast<int>(param.currency);
     out << param.count;
     out << param.price;
-    out << param.isDegiroSource;
+    out << static_cast<int>(param.source);
 
     return out;
 }
@@ -233,7 +241,10 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
 
     in >> param.count;
     in >> param.price;
-    in >> param.isDegiroSource;
+
+    int buffer3;
+    in >> buffer3;
+    param.source = static_cast<eSTOCKSOURCE>(buffer3);
 
     return in;
 }

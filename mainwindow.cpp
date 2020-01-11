@@ -41,11 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
 
-
-    // Check version
-    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
-    manager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
-
     /********************************
      * Geometry
     ********************************/
@@ -454,6 +449,12 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
     }
 }
 
+void MainWindow::on_actionCheck_version_triggered()
+{
+    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
+    manager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
+}
+
 void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 {
     disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
@@ -555,11 +556,11 @@ void MainWindow::fillOverviewTable()
             ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
             ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
             ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
-            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(stockData->getCurrentCount(stock.ISIN))));
-            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
-            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(stockData->getCurrentCount(stock.ISIN, from, to))));
+            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
-            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
         //}
 
         pos++;
@@ -632,7 +633,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     table->setHorizontalHeaderLabels(header);
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
-    double price;
+    double price = 0.0;
 
     int pos = 0;
     table->setSortingEnabled(false);
@@ -1328,13 +1329,13 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "    <table align=\"center\" cellspacing=\"0\" cellpadding=\"2\" border=\"1\">";
     text += "       <tbody>";
     text += "           <tr>";
-    text += "               <td colspan=\"4\"><center><b>Export pro DAP</b></center></td>";
+    text += "               <td colspan=\"4\" align=\"center\"><b>Export pro DAP</b></td>";
     text += "           </tr>";
     text += "           <tr>";
     text += "               <td align=\"left\"><b>Jméno:</b></td>";
-    text += QString("       <td align=\"center\">%1</td>").arg(ui->lePDFName->text());
-    text += "               <td align=\"left\"><b>Platforma</b>:</td>";
-    text += QString("       <td align=\"center\">%1</td>").arg(ui->lePDFPlatform->text());
+    text += QString("       <td colspan=\"3\" align=\"center\">%1</td>").arg(ui->lePDFName->text());
+    //text += "               <td align=\"left\"><b>Platforma</b>:</td>";
+    //text += QString("       <td align=\"center\">%1</td>").arg(ui->lePDFPlatform->text());
     text += "           </tr>";
     text += "           <tr>";
     text += "               <td align=\"left\"><b>Datum:</b></td>";
@@ -1351,10 +1352,10 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "               <td align=\"center\" colspan=\"6\"><b>DAP tabuľka</b></td>";
     text += "           </tr>";
     text += "           <tr>";
-    text += "               <td align=\"center\"><b>Měna</b></td>";
     text += "               <td align=\"center\"><b>Datum</b></td>";
-    text += "               <td align=\"center\"><b>Cena</b></td>";
-    text += "               <td align=\"center\"><b>Daň</b></td>";
+    text += "               <td align=\"center\"><b>Zaplaceno<br>Měna výplaty</b></td>";
+    text += "               <td align=\"center\"><b>Zaplaceno<br>CZK</b></td>";
+    text += "               <td align=\"center\"><b>Daň<br>CZK</b></td>";
     text += "               <td align=\"center\"><b>Daň %</b></td>";
     text += "               <td align=\"center\"><b>Název</b></td>";
     text += "           </tr>";
@@ -1362,11 +1363,11 @@ void MainWindow::on_pbPDFExport_clicked()
     for(const sPDFEXPORT &pdf : pdfData)
     {
         text += "           <tr>";
-        text += QString("               <td align=\"center\">%1</td>").arg(pdf.currency);
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.date.toString("dd.MM.yyyy"));
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.paid);
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.price);
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.tax);
-        text += QString("               <td align=\"center\">%1</td>").arg(QString::number( (pdf.tax/pdf.price) * 100.0, 'f', 2));
+        text += QString("               <td align=\"center\">%1</td>").arg(QString::number( round((pdf.tax/pdf.price) * 100.0), 'f', 0));
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.name);
         text += "           </tr>";
     }
@@ -1415,7 +1416,7 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
             if( deg.stockName.toLower().contains("fundshare") ) continue;
 
 
-            /*if(deg.type == BUY || deg.type == SELL)
+            /*if(deg.type == SELL)
             {
                 if(degiro.type == BUY)
                 {
@@ -1439,22 +1440,25 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
                 switch(deg.currency)
                 {
                     case USD:
-                        pdfRow.price = deg.price * USD2CZK;
-                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX) * USD2CZK;
+                        pdfRow.price = round(deg.price * USD2CZK);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX) * USD2CZK);
+                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("USD");
                         break;
                     case CZK:
-                        pdfRow.price = deg.price;
-                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX);
+                        pdfRow.price = round(deg.price);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX));
+                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("CZK");
                         break;
                     case EUR:
-                        pdfRow.price = deg.price * EUR2CZK;
-                        pdfRow.tax = stockData->getTax(key, deg.dateTime, TAX) * EUR2CZK;
+                        pdfRow.price = round(deg.price * EUR2CZK);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX) * EUR2CZK);
+                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("EUR");
                         break;
                 }
 
                 pdfRow.date = deg.dateTime;
-                pdfRow.name = key;
-                pdfRow.currency = database->getCurrencyText(deg.currency);
+                pdfRow.name = deg.stockName;
+                pdfRow.tax = abs(pdfRow.tax);
 
                 // Find duplicates, then sum them or create new record
                 auto it = std::find_if(exportData.begin(), exportData.end(),
@@ -1742,7 +1746,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
         row1.currency = lastRecord.currency;
         row1.count = lastRecord.count;
         row1.price = lastRecord.price;
-        row1.isDegiroSource = false;
+        row1.source = MANUALLY;
 
         sSTOCKDATA row2;
 
@@ -1754,7 +1758,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             row2.ISIN = lastRecord.ISIN;
             row2.currency = lastRecord.currency;
             row2.price = lastRecord.fee;
-            row2.isDegiroSource = false;
+            row1.source = MANUALLY;
         }
 
         sTABLE table = screener->finvizParse(QString(data));
@@ -1850,7 +1854,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
         while (i.hasNext())
         {
-            if(i.next().isDegiroSource)
+            if(i.next().source == DEGIRO)
             {
                 i.remove();
             }

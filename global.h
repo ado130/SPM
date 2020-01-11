@@ -37,7 +37,8 @@ enum eCURRENCY
 {
     CZK = 0,
     EUR = 1,
-    USD = 2
+    USD = 2,
+    GBP = 3
 };
 
 struct sSETTINGS
@@ -81,7 +82,7 @@ struct sSETTINGS
 
 struct sPDFEXPORT
 {
-    QString currency;
+    QString paid;
     QDateTime date;
     double price;
     double tax;
@@ -101,6 +102,13 @@ enum eSTOCKEVENTTYPE
     SELL = 7
 };
 
+enum eSTOCKSOURCE
+{
+    MANUALLY = 0,
+    DEGIRO = 1,
+    TASTYWORKS = 2
+};
+
 struct sSTOCKDATA
 {
     QDateTime dateTime;
@@ -112,7 +120,7 @@ struct sSTOCKDATA
     int count;
     double price;
 
-    bool isDegiroSource;
+    eSTOCKSOURCE source;
 };
 
 struct sNEWRECORD
@@ -151,7 +159,7 @@ struct sTASTYWORKSRAW
     QString ticker;
     QString description;
     double price;
-    int cout;
+    int count;
     double fee;
 };
 

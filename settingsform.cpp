@@ -23,9 +23,15 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->leHeight->setText(QString::number(setting.height));
     ui->lePosX->setText(QString::number(setting.xPos));
     ui->lePosY->setText(QString::number(setting.yPos));
+
     ui->leDegiroCSV->setText(setting.degiroCSV);
     ui->cmDegiroCSV->setCurrentIndex(setting.degiroCSVdelimeter);
     ui->cbDegiroAutoLoad->setChecked(setting.degiroAutoLoad);
+
+    ui->leTastyworksCSV->setText(setting.tastyworksCSV);
+    ui->cmTastyworksCSV->setCurrentIndex(setting.tastyworksCSVdelimeter);
+    ui->cbTastyworksAutoLoad->setChecked(setting.tastyworksAutoLoad);
+
     ui->cbFilterON->setChecked(setting.filterON);
     ui->cbStartReload->setChecked(setting.screenerAutoLoad);
 

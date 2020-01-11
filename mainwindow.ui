@@ -1101,6 +1101,7 @@ QTabBar::close-button {
     <addaction name="actionHelp"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="actionCheck_version"/>
    </widget>
    <addaction name="menuFIle"/>
    <addaction name="menuAbout"/>
@@ -1137,6 +1138,11 @@ QTabBar::close-button {
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionCheck_version">
+   <property name="text">
+    <string>Check version</string>
    </property>
   </action>
  </widget>

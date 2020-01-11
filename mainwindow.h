@@ -84,6 +84,8 @@ private slots:
 
     void on_tableOverview_cellDoubleClicked(int row, int column);
 
+    void on_actionCheck_version_triggered();
+
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);

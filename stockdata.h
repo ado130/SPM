@@ -17,10 +17,10 @@ public:
     double getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type);
     void saveStockData();
 
-    int getCurrentCount(QString ISIN);
-    double getTotalPrice(QString ISIN, sSETTINGS setting);
-    double getTotalFee(QString ISIN, sSETTINGS setting);
-    double getReceivedDividend(QString ISIN, sSETTINGS setting);
+    int getCurrentCount(QString ISIN, QDate from, QDate to);
+    double getTotalPrice(QString ISIN, QDate from, QDate to, sSETTINGS setting);
+    double getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS setting);
+    double getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTINGS setting);
 signals:
 
 private:

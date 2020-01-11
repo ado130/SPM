@@ -21,7 +21,7 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
     }
 
     StockDataType stockData;
-    degiroRawData.clear();
+    rawData.clear();
 
     char chDelimeter = ',';
     switch (delimeter)
@@ -101,7 +101,7 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         }
 
 
-        degiroRawData.push_back(degiroRaw);
+        rawData.push_back(degiroRaw);
 
 
         sSTOCKDATA degData;
@@ -161,6 +161,8 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
             degData.dateTime = degiroRaw.dateTime;
             degData.ISIN = degiroRaw.ISIN;
             degData.stockName = degiroRaw.product;
+            degData.source = DEGIRO;
+            degData.currency = degiroRaw.currency;
 
             if(degData.count != 0)
             {
@@ -171,8 +173,6 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
                 degData.price = degiroRaw.price;
             }
 
-            degData.currency = degiroRaw.currency;
-            degData.isDegiroSource = true;
 
             QVector<sSTOCKDATA> vector = stockData[degiroRaw.ISIN];
 
@@ -205,7 +205,7 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         }
     }
 
-    if(degiroRawData.count() > 0)
+    if(rawData.count() > 0)
     {
         emit setDegiroData(stockData);
         saveRawData();
@@ -244,7 +244,7 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
 
 QVector<sDEGIRORAW> DeGiro::getRawData() const
 {
-    return degiroRawData;
+    return rawData;
 }
 
 bool DeGiro::loadRawData()
@@ -256,7 +256,7 @@ bool DeGiro::loadRawData()
         if (qFile.open(QIODevice::ReadOnly))
         {
             QDataStream in(&qFile);
-            in >> degiroRawData;
+            in >> rawData;
             qFile.close();
             return true;
         }
@@ -272,7 +272,7 @@ void DeGiro::saveRawData()
     if (qFile.open(QIODevice::WriteOnly))
     {
         QDataStream out(&qFile);
-        out << degiroRawData;
+        out << rawData;
         qFile.close();
     }
 }
