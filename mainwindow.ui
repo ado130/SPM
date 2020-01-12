@@ -13,7 +13,15 @@
   <property name="windowTitle">
    <string>Stock Portfolio Manager</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+	background-color:#f0f0f0;
+}</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -79,6 +87,21 @@ QTabBar::close-button {
          <layout class="QVBoxLayout" name="verticalLayout_19">
           <item>
            <widget class="QGroupBox" name="groupBox_2">
+            <property name="styleSheet">
+             <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+            </property>
             <property name="title">
              <string>Overview</string>
             </property>
@@ -161,13 +184,25 @@ QTabBar::close-button {
                 <layout class="QHBoxLayout" name="horizontalLayout_4">
                  <item>
                   <widget class="QLabel" name="label_3">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
                    <property name="text">
                     <string>Deposit</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leDeposit"/>
+                  <widget class="QLineEdit" name="leDeposit">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -181,7 +216,18 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leInvested"/>
+                  <widget class="QLineEdit" name="leInvested">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}
+
+</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -195,7 +241,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leTransactionFee"/>
+                  <widget class="QLineEdit" name="leTransactionFee">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -209,7 +264,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leDividends"/>
+                  <widget class="QLineEdit" name="leDividends">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -223,7 +287,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leDivTax"/>
+                  <widget class="QLineEdit" name="leDivTax">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -237,7 +310,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leDY"/>
+                  <widget class="QLineEdit" name="leDY">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -251,7 +333,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="leFees"/>
+                  <widget class="QLineEdit" name="leFees">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -265,7 +356,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lePortfolio"/>
+                  <widget class="QLineEdit" name="lePortfolio">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -279,7 +379,16 @@ QTabBar::close-button {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lePerformance"/>
+                  <widget class="QLineEdit" name="lePerformance">
+                   <property name="styleSheet">
+                    <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -317,6 +426,21 @@ QTabBar::close-button {
                 <width>16777215</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
               </property>
               <property name="title">
                <string>Graph</string>
@@ -412,8 +536,23 @@ QTabBar::close-button {
                </item>
                <item>
                 <widget class="QPushButton" name="pbShowGraph">
-                 <property name="text">
-                  <string>Show</string>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>42</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>63</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>Show graph</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">border-image:url(:/images/graph.png);</string>
                  </property>
                 </widget>
                </item>
@@ -422,33 +561,57 @@ QTabBar::close-button {
             </item>
             <item>
              <widget class="QGroupBox" name="groupBox_4">
+              <property name="styleSheet">
+               <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+              </property>
               <property name="title">
                <string>Table</string>
               </property>
               <widget class="QPushButton" name="pbAddRecord">
                <property name="geometry">
                 <rect>
-                 <x>510</x>
+                 <x>530</x>
                  <y>10</y>
-                 <width>75</width>
-                 <height>23</height>
+                 <width>51</width>
+                 <height>51</height>
                 </rect>
                </property>
-               <property name="text">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="toolTip">
                 <string>Add record</string>
                </property>
-              </widget>
-              <widget class="QPushButton" name="pbAddRecord_2">
-               <property name="geometry">
-                <rect>
-                 <x>510</x>
-                 <y>40</y>
-                 <width>75</width>
-                 <height>23</height>
-                </rect>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+	border-image:url(:/images/addProperty.png);
+}
+
+</string>
                </property>
                <property name="text">
-                <string>Delete record</string>
+                <string/>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>32</width>
+                 <height>24</height>
+                </size>
                </property>
               </widget>
              </widget>
@@ -457,6 +620,21 @@ QTabBar::close-button {
           </item>
           <item>
            <widget class="QGroupBox" name="groupBox_3">
+            <property name="styleSheet">
+             <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+            </property>
             <property name="title">
              <string>PDF export</string>
             </property>
@@ -529,7 +707,16 @@ QTabBar::close-button {
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lePDFEUR2CZK"/>
+                <widget class="QLineEdit" name="lePDFEUR2CZK">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -546,7 +733,16 @@ QTabBar::close-button {
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lePDFUSD2CZK"/>
+                <widget class="QLineEdit" name="lePDFUSD2CZK">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -563,7 +759,16 @@ QTabBar::close-button {
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lePDFName"/>
+                <widget class="QLineEdit" name="lePDFName">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -580,14 +785,32 @@ QTabBar::close-button {
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lePDFPlatform"/>
+                <widget class="QLineEdit" name="lePDFPlatform">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
              <item>
               <widget class="QPushButton" name="pbPDFExport">
-               <property name="text">
+               <property name="minimumSize">
+                <size>
+                 <width>38</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="toolTip">
                 <string>PDF export</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">border-image:url(:/images/pdf.png);</string>
                </property>
               </widget>
              </item>
@@ -601,20 +824,7 @@ QTabBar::close-button {
           <string>DeGiro</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="1">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="1" column="0" colspan="3">
+          <item row="0" column="0" colspan="2">
            <widget class="QTableWidget" name="tableDegiro">
             <property name="styleSheet">
              <string notr="true">QTableWidget {
@@ -637,36 +847,6 @@ QTabBar::close-button {
             </attribute>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pbDegiroLoad">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
-    border: 2px solid #8f8f91;
-    border-radius: 6px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-	min-height: 19px;
-}
-
-QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
-}
-
-QPushButton:flat {
-    border: none; /* no border for a flat push button */
-}
-
-QPushButton:default {
-    border-color: navy; /* make the default button prominent */
-}</string>
-            </property>
-            <property name="text">
-             <string>Load data</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="tabScreenerMain">
@@ -679,49 +859,51 @@ QPushButton:default {
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
+               <widget class="QLineEdit" name="leTicker">
+                <property name="maximumSize">
+                 <size>
+                  <width>99</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                </property>
+                <property name="placeholderText">
                  <string>Ticker</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="leTicker">
-                <property name="maximumSize">
+               <widget class="QPushButton" name="pbAddTicker">
+                <property name="minimumSize">
                  <size>
-                  <width>75</width>
-                  <height>16777215</height>
+                  <width>45</width>
+                  <height>30</height>
                  </size>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pbAddTicker">
+                <property name="toolTip">
+                 <string>Add ticker</string>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-    border: 2px solid #8f8f91;
-    border-radius: 6px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-	min-height: 19px;
-}
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 15px;
 
-QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+	border-image:url(:/images/add.png);
 }
-
-QPushButton:flat {
-    border: none; /* no border for a flat push button */
-}
-
-QPushButton:default {
-    border-color: navy; /* make the default button prominent */
-}</string>
+</string>
                 </property>
                 <property name="text">
-                 <string>Add</string>
+                 <string/>
                 </property>
                 <property name="autoDefault">
                  <bool>false</bool>
@@ -733,6 +915,45 @@ QPushButton:default {
               </item>
               <item>
                <widget class="QCheckBox" name="cbFilter">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Enable filters</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+QCheckBox::indicator {
+     width: 30px;
+     height: 30px;
+ }
+
+QCheckBox::indicator:checked
+  {
+    image: url(:/images/checked.png);
+  }
+
+  QCheckBox::indicator:unchecked
+  {
+    image: url(:/images/unchecked.png);
+  }</string>
+                </property>
                 <property name="text">
                  <string/>
                 </property>
@@ -740,22 +961,100 @@ QPushButton:default {
               </item>
               <item>
                <widget class="QPushButton" name="pbFilter">
-                <property name="text">
+                <property name="minimumSize">
+                 <size>
+                  <width>45</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
                  <string>Filter</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 15px;
+
+	border-image:url(:/images/filter.png);
+}
+
+</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="pbAlert">
-                <property name="text">
+                <property name="minimumSize">
+                 <size>
+                  <width>45</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
                  <string>Alerts</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 15px;
+
+	border-image:url(:/images/alert.png);
+}
+
+</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>31</width>
+                  <height>21</height>
+                 </size>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="pbDeleteTickers">
+                <property name="minimumSize">
+                 <size>
+                  <width>30</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Remove tickers</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 0px;
+
+	border-image:url(:/images/remove.png);
+}
+
+</string>
+                </property>
                 <property name="text">
-                 <string>Delete tickers</string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -774,98 +1073,92 @@ QPushButton:default {
               </item>
               <item>
                <widget class="QPushButton" name="pbNewScreener">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Add screener</string>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-    border: 2px solid #8f8f91;
-    border-radius: 6px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-	min-height: 19px;
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 40px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 0px;
+
+	border-image:url(:/images/addFolder.png);
 }
 
-QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
-}
-
-QPushButton:flat {
-    border: none; /* no border for a flat push button */
-}
-
-QPushButton:default {
-    border-color: navy; /* make the default button prominent */
-}</string>
+</string>
                 </property>
                 <property name="text">
-                 <string>New</string>
+                 <string/>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="pbDeleteScreener">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Delete screener</string>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-    border: 2px solid #8f8f91;
-    border-radius: 6px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-	min-height: 19px;
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 40px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 0px;
+
+	border-image:url(:/images/deleteFolder.png);
 }
 
-QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
-}
-
-QPushButton:flat {
-    border: none; /* no border for a flat push button */
-}
-
-QPushButton:default {
-    border-color: navy; /* make the default button prominent */
-}</string>
+</string>
                 </property>
                 <property name="text">
-                 <string>Delete Screener</string>
+                 <string/>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="pbRefresh">
+                <property name="minimumSize">
+                 <size>
+                  <width>55</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Refresh tickers</string>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-    border: 2px solid #8f8f91;
-    border-radius: 6px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-	min-height: 19px;
+                 <string notr="true">QPushButton 
+{ 
+	min-width: 40px;
+	min-height: 30px;
+	margin-left: 15px;
+	margin-right: 0px;
+
+	border-image:url(:/images/cloud.png);
 }
 
-QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
-}
-
-QPushButton:flat {
-    border: none; /* no border for a flat push button */
-}
-
-QPushButton:default {
-    border-color: navy; /* make the default button prominent */
-}</string>
+</string>
                 </property>
                 <property name="text">
-                 <string>Refresh</string>
+                 <string/>
                 </property>
                </widget>
               </item>
              </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2"/>
             </item>
             <item>
              <widget class="QTabWidget" name="tabScreener">
@@ -938,92 +1231,123 @@ QTabBar::close-button {
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_23">
               <item>
-               <widget class="QLabel" name="label_29">
-                <property name="text">
+               <widget class="QLineEdit" name="leISINISIN">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                </property>
+                <property name="placeholderText">
                  <string>ISIN</string>
                 </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="leISINISIN"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_24">
               <item>
-               <widget class="QLabel" name="label_30">
-                <property name="text">
+               <widget class="QLineEdit" name="leISINTicker">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                </property>
+                <property name="placeholderText">
                  <string>Ticker</string>
                 </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="leISINTicker"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_25">
               <item>
-               <widget class="QLabel" name="label_31">
-                <property name="text">
-                 <string>Name</string>
+               <widget class="QLineEdit" name="leISINName">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
                 </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
+                <property name="placeholderText">
+                 <string>Stock name</string>
                 </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="leISINName"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_26">
               <item>
-               <widget class="QLabel" name="label_32">
-                <property name="text">
+               <widget class="QLineEdit" name="leISINSector">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                </property>
+                <property name="placeholderText">
                  <string>Sector</string>
                 </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="leISINSector"/>
               </item>
              </layout>
             </item>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_27">
               <item>
-               <widget class="QLabel" name="label_33">
-                <property name="text">
+               <widget class="QLineEdit" name="leISINIndustry">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                </property>
+                <property name="placeholderText">
                  <string>Industry</string>
                 </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="leISINIndustry"/>
               </item>
              </layout>
             </item>
             <item>
              <widget class="QPushButton" name="pbISINAdd">
+              <property name="minimumSize">
+               <size>
+                <width>30</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Add row</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+	min-width: 30px;
+	min-height: 30px;
+	margin-left: 0px;
+	margin-right: 0px;
+
+	border-image:url(:/images/add.png);
+}
+
+</string>
+              </property>
               <property name="text">
-               <string>Add</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -1067,6 +1391,14 @@ QTabBar::close-button {
         </item>
         <item>
          <widget class="QLineEdit" name="leStatus">
+          <property name="styleSheet">
+           <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -1086,6 +1418,33 @@ QTabBar::close-button {
      <width>1226</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QMenuBar 
+{
+	background-color: #dadbde;
+	border : none;
+}
+
+
+QMenuBar::item 
+{
+	background-color: transparent;
+}
+
+
+QMenuBar::item:selected 
+{
+	background-color: #303030;
+	color: #fff;
+}
+
+
+QMenuBar::item:pressed 
+{
+	background-color: #1c1c1c;
+	color: #fff;
+}</string>
    </property>
    <widget class="QMenu" name="menuFIle">
     <property name="title">
@@ -1114,39 +1473,82 @@ QTabBar::close-button {
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="styleSheet">
+    <string notr="true">QStatusBar 
+{
+	color: #000;
+	margin : 0px;
+	padding : -5px;
+	background-color: #dadbde;
+}
+
+
+QStatusBar::item 
+{
+	background-color: transparent;
+	color: #000;
+}</string>
+   </property>
+  </widget>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/info.png</normaloff>:/images/info.png</iconset>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
   </action>
   <action name="actionHelp">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/help.png</normaloff>:/images/help.png</iconset>
+   </property>
    <property name="text">
     <string>Help</string>
    </property>
   </action>
   <action name="actionSettings">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
+   </property>
    <property name="text">
     <string>Settings</string>
    </property>
   </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/exit.png</normaloff>:/images/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/qt.png</normaloff>:/images/qt.png</iconset>
+   </property>
    <property name="text">
     <string>About Qt</string>
    </property>
   </action>
   <action name="actionCheck_version">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/updates.png</normaloff>:/images/updates.png</iconset>
+   </property>
    <property name="text">
     <string>Check version</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

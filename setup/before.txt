@@ -11,6 +11,10 @@
    ! Important - Take note!
 =======================================================
 
+=== Client Release 1.0.7.0 12 Jan 2020
+* Edited graphics
+* Edited progress dialog
+
 === Client Release 1.0.6.0 11 Jan 2020
 + Added dividend charts
 + Added check version function

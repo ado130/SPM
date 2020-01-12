@@ -64,7 +64,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\icons\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\icons\*"; DestDir: "{app}/icons/"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "dll\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

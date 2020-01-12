@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     tastyworks = std::make_shared<Tastyworks> (this);
     screener = std::make_shared<Screener> (this);
     stockData = std::make_shared<StockData> (this);
+    progressDialog = nullptr;
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
 
@@ -76,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // set status bar text
-    QLabel *author = new QLabel("Author: Andrej Copyright © 2019-2020");
+    QLabel *author = new QLabel("Author: Andrej © 2019-2020");
     QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR));
     ui->statusBar->addPermanentWidget(author, 1);
     ui->statusBar->addPermanentWidget(version, 0);
@@ -257,6 +258,7 @@ void MainWindow::on_actionAbout_triggered()
     text += "<b>Website:</b> <a href=\"http://ado.4fan.cz/SPM/web/\">http://ado.4fan.cz/SPM/web/</a><br>";
     text += "<b>Website:</b> <a href=\"https://www.investicnigramotnost.cz\">https://www.investicnigramotnost.cz</a><br>";
     text += "==================================<br>";
+    text += "<b>Icons8:</b> <a href=\"https://icons8.com\">https://icons8.com</a><br>";
     text += "<b>Exchange rates source:</b> <a href=\"https://exchangeratesapi.io\">https://exchangeratesapi.io</a><br>";
     text += "Exchange rates are updated once per day<br>";
     text += "The PDF export file is valid only for Czech republic<br>";
@@ -363,6 +365,13 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.height = this->geometry().height();
         database->setSetting(set);
 
+        if(progressDialog)
+        {
+            QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
+                       QPoint(progressDialog->size().width(), progressDialog->size().height());
+            progressDialog->move(p);
+        }
+
         return true;
     }
     else if(event->type() == QEvent::Move)
@@ -372,6 +381,13 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.xPos = point.x();
         set.yPos = point.y();
         database->setSetting(set);
+
+        if(progressDialog)
+        {
+            QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
+                       QPoint(progressDialog->size().width(), progressDialog->size().height());
+            progressDialog->move(p);
+        }
 
         return true;
     }
@@ -473,10 +489,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
             int start = input.indexOf(":");
             QString version = input.mid(start+1);
 
-            if(version != VERSION_STR)
-            {
-                setStatus(QString("Installed version is: %1; Latest version is: %2").arg(VERSION_STR).arg(version));
-            }
+            setStatus(QString("Installed version: %1; Latest version: %2").arg(VERSION_STR).arg(version));
         }
     }
 }
@@ -701,11 +714,12 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
         table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
 
-        QPushButton *pbDelete = new QPushButton("Delete", table);
+        QPushButton *pbDelete = new QPushButton(table);
+        pbDelete->setStyleSheet("QPushButton {border-image:url(:/images/delete.png);}");
 
-        connect(pbDelete, &QPushButton::clicked, [pbDelete, table, ISIN, stockList, this]()
+        connect(pbDelete, &QPushButton::clicked, [table, ISIN, stockList, this]()
                 {
-                    int ret = QMessageBox::warning(pbDelete,
+                    int ret = QMessageBox::warning(nullptr,
                                                    "Delete record",
                                                    "Do you really want to delete selected record?",
                                                    QMessageBox::Yes, QMessageBox::No);
@@ -729,7 +743,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                     }
                 } );
 
-        table->setItem(pos, 7, new QTableWidgetItem("Delete"));
+        table->setItem(pos, 7, new QTableWidgetItem());
         table->setCellWidget(pos, 7, pbDelete);
 
         pos++;
@@ -1312,6 +1326,8 @@ void MainWindow::on_pbPDFExport_clicked()
                                                     QString(),
                                                     "*.pdf");
 
+    if(fileName.isEmpty()) return;
+
     if (QFileInfo(fileName).suffix().isEmpty())
     {
         fileName.append(".pdf");
@@ -1834,11 +1850,6 @@ void MainWindow::loadDegiroCSVslot()
     QApplication::restoreOverrideCursor();
 }
 
-void MainWindow::on_pbDegiroLoad_clicked()
-{
-    loadDegiroCSVslot();
-}
-
 void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 {
     StockDataType stockList = stockData->getStockData();
@@ -2186,8 +2197,6 @@ void MainWindow::on_pbAddTicker_clicked()
         return;
     }
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
     QString ticker = ui->leTicker->text().trimmed();
     ui->leTicker->setText(ticker.toUpper());
 
@@ -2204,7 +2213,6 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the request! %1").arg(statusCode));
-        QApplication::restoreOverrideCursor();
     }
     else
     {
@@ -2238,7 +2246,6 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         }
         else    // end
         {
-            QApplication::restoreOverrideCursor();
             disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
             dataLoaded();
             emit refreshTickers(ticker);
@@ -2950,15 +2957,11 @@ void MainWindow::on_pbRefresh_clicked()
 
     if(!currentTickers.isEmpty())
     {
-        progressDialog = new QProgressDialog("Operation in progress", "Cancel", 0, currentTickers.count(), this);
-        connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
-        progressDialog->setMinimumDuration(0);
-        progressDialog->setWindowModality(Qt::WindowModal);
-        progressDialog->setValue(0);
+        createProgressDialog(0, currentTickers.count());
 
-        connect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
+        connect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
+
         ui->leTicker->setText(currentTickers.first());
-
         ui->pbAddTicker->click();
     }
 }
@@ -2969,27 +2972,37 @@ void MainWindow::refreshTickersSlot(QString ticker)
 
     if(pos == -1)   // error
     {
-        delete progressDialog;
-        progressDialog = nullptr;
-
         disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
+
+        if(progressDialog)
+        {
+            disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+            progressDialog->setValue(pos+1);
+            progressDialog->close();
+        }
+
         setStatus("An error appeard during the refresh");
     }
-    else if(pos == (currentTickers.count()-1))  // last
+    else if(pos == (currentTickers.count() - 1))  // last
     {
-        progressDialog->setValue(pos+1);
-
-        delete progressDialog;
-        progressDialog = nullptr;
+        if(progressDialog)
+        {
+            disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+            progressDialog->setValue(pos+1);
+            progressDialog->close();
+        }
 
         disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
         setStatus("All tickers have been refreshed");
     }
     else
     {
-        progressDialog->setValue(pos+1);
+        if(progressDialog)
+        {
+            progressDialog->setValue(pos+1);
+        }
 
-        QString next = currentTickers.at(pos+1);
+        QString next = currentTickers.at(pos + 1);
 
         ui->leTicker->setText(next);
         ui->pbAddTicker->click();
@@ -2998,13 +3011,54 @@ void MainWindow::refreshTickersSlot(QString ticker)
 
 void MainWindow::refreshTickersCanceled()
 {
-    disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
-    progressDialog->setValue(currentTickers.count());
+    disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
-    delete progressDialog;
-    progressDialog = nullptr;
+    if(progressDialog)
+    {
+        disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+        progressDialog->setValue(currentTickers.count());
+        progressDialog->close();
+    }
 
     setStatus("The process has been canceled");
+}
+
+void MainWindow::createProgressDialog(int min, int max)
+{
+    if(progressDialog) return;
+
+    progressDialog = new QProgressDialog("Operation in progress", "Cancel", min, max, this);
+    connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+
+    progressDialog->setWindowFlags(Qt::WindowStaysOnTopHint);
+    progressDialog->setAttribute(Qt::WA_DeleteOnClose);
+    progressDialog->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    progressDialog->setParent(this);
+    progressDialog->resize(400, 50);
+    progressDialog->adjustSize();
+    progressDialog->setMinimumDuration(0);
+    progressDialog->setWindowModality(Qt::NonModal);
+    progressDialog->setValue(0);
+
+
+    QPropertyAnimation *animFade = new QPropertyAnimation(progressDialog, "windowOpacity");
+    animFade->setDuration(1000);
+    animFade->setEasingCurve(QEasingCurve::Linear);
+    animFade->setStartValue(0.0);
+    animFade->setEndValue(1.0);
+
+
+    QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
+               QPoint(progressDialog->size().width(), progressDialog->size().height());
+
+    QPropertyAnimation *animMove = new QPropertyAnimation(progressDialog, "pos");
+    animMove->setDuration(1000);
+    animMove->setEasingCurve(QEasingCurve::OutQuad);
+    animMove->setStartValue(QPointF(p.x(), p.y() + progressDialog->size().height()));
+    animMove->setEndValue(p);
+
+    animFade->start(QAbstractAnimation::DeleteWhenStopped);
+    animMove->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void MainWindow::on_pbDeleteTickers_clicked()
@@ -3102,7 +3156,7 @@ void MainWindow::on_pbISINAdd_clicked()
 void MainWindow::setISINHeader()
 {
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Sector" << "Industry" << "Delete";
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "Industry" << "Last update" << "Update" << "Delete";
     ui->tableISIN->setColumnCount(header.count());
 
     ui->tableISIN->setRowCount(0);
@@ -3131,6 +3185,7 @@ void MainWindow::fillISINTable()
     ui->tableISIN->setRowCount(0);
 
     ui->tableISIN->setSortingEnabled(false);
+
     for(int a = 0; a<isinList.count(); ++a)
     {
         ui->tableISIN->insertRow(a);
@@ -3141,27 +3196,47 @@ void MainWindow::fillISINTable()
         ui->tableISIN->setItem(a, 3, new QTableWidgetItem(isinList.at(a).sector));
         ui->tableISIN->setItem(a, 4, new QTableWidgetItem(isinList.at(a).industry));
 
-        QTableWidgetItem *item = new QTableWidgetItem("Delete");
-        QPushButton *pbDelete = new QPushButton("Delete", ui->tableISIN);
+        ui->tableISIN->setItem(a, 5, new QTableWidgetItem("Last update"));
 
-        connect(pbDelete, &QPushButton::clicked, [this, pbDelete, isinList]()
+        QPushButton *pbUpdate = new QPushButton(ui->tableISIN);
+        pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
+        connect(pbUpdate, &QPushButton::clicked, [this, a, isinList]()
                 {
-                    int ret = QMessageBox::warning(pbDelete,
+                    if(isinList.at(a).ticker.isEmpty())
+                    {
+                        setStatus(QString("ISIN %1 does not have assigned the ticker!").arg(isinList.at(a).ISIN));
+                    }
+                    else
+                    {
+
+                    }
+                }
+
+                );
+
+        ui->tableISIN->setItem(a, 6, new QTableWidgetItem());
+        ui->tableISIN->setCellWidget(a, 6, pbUpdate);
+
+
+        QPushButton *pbDelete = new QPushButton(ui->tableISIN);
+        pbDelete->setStyleSheet("QPushButton {border-image:url(:/images/delete.png);}");
+
+        connect(pbDelete, &QPushButton::clicked, [this, a, isinList]()
+                {
+                    int ret = QMessageBox::warning(nullptr,
                                                    "Delete record",
-                                                   "Do you really want to delete selected record?",
+                                                   QString("Do you really want to delete %1?").arg(isinList.at(a).ISIN),
                                                    QMessageBox::Yes, QMessageBox::No);
 
                     if(ret == QMessageBox::Yes)
                     {
-                        int rowToDelete = ui->tableISIN->currentRow();
-
-                        QTableWidgetItem *isinItem = ui->tableISIN->item(rowToDelete, 0);
+                        QTableWidgetItem *isinItem = ui->tableISIN->item(a, 0);
 
                         if(isinItem)
                         {
                             QString ISIN = isinItem->text();
                             eraseISIN(ISIN);
-                            ui->tableISIN->removeRow(rowToDelete);
+                            ui->tableISIN->removeRow(a);
                         }
                     }
                 }
@@ -3169,8 +3244,8 @@ void MainWindow::fillISINTable()
                 );
 
 
-        ui->tableISIN->setItem(a, 5, item);
-        ui->tableISIN->setCellWidget(a, 5, pbDelete);
+        ui->tableISIN->setItem(a, 7, new QTableWidgetItem());
+        ui->tableISIN->setCellWidget(a, 7, pbDelete);
     }
     ui->tableISIN->setSortingEnabled(true);
 
@@ -3201,7 +3276,7 @@ void MainWindow::eraseISIN(QString ISIN)
 
 void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 {
-    if(column == 5) return;
+    if(column > 4) return;
 
     QTableWidgetItem *item = ui->tableISIN->item(row, column);
 

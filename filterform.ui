@@ -31,8 +31,24 @@
      </item>
      <item>
       <widget class="QPushButton" name="pbAddRow">
-       <property name="text">
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="toolTip">
         <string>Add row</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+	border-image:url(:/images/add.png);
+}
+
+</string>
+       </property>
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -65,7 +81,7 @@
         <x>0</x>
         <y>0</y>
         <width>425</width>
-        <height>218</height>
+        <height>204</height>
        </rect>
       </property>
      </widget>
@@ -88,8 +104,24 @@
      </item>
      <item>
       <widget class="QPushButton" name="pbSave">
-       <property name="text">
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="toolTip">
         <string>Save</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+	border-image:url(:/images/save.png);
+}
+
+</string>
+       </property>
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>

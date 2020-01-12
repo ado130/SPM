@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QProgressDialog>
+#include <QPointer>
 
 #include "downloadmanager.h"
 #include "database.h"
@@ -52,7 +53,6 @@ private slots:
     void on_pbAddTicker_clicked();
     void on_pbNewScreener_clicked();
     void on_pbDeleteScreener_clicked();
-    void on_pbDegiroLoad_clicked();
 
     void on_pbFilter_clicked();
     void on_cbFilter_clicked(bool checked);
@@ -124,7 +124,7 @@ private:
      */
     sNEWRECORD lastRecord;
 
-    QProgressDialog *progressDialog;
+    QPointer<QProgressDialog> progressDialog;
 
     void centerAndResize();
 
@@ -184,6 +184,7 @@ private:
      * @param ISIN - ISIN to be removed
      */
     void eraseISIN(QString ISIN);
+    void createProgressDialog(int min, int max);
 };
 
 #endif // MAINWINDOW_H

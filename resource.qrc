@@ -1,5 +1,26 @@
 <RCC>
     <qresource prefix="/images">
         <file alias="donate.gif">icons/btn_donateCC_LG.gif</file>
+        <file alias="settings.png">icons/icons8-settings-512.png</file>
+        <file alias="exit.png">icons/icons8-exit-96.png</file>
+        <file alias="help.png">icons/icons8-help-96.png</file>
+        <file alias="info.png">icons/icons8-info-512.png</file>
+        <file alias="updates.png">icons/icons8-available-updates-52.png</file>
+        <file alias="qt.png">icons/icons8-qt-500.png</file>
+        <file alias="pdf.png">icons/icons8-export-pdf-100.png</file>
+        <file alias="filter.png">icons/icons8-filter-96.png</file>
+        <file alias="alert.png">icons/icons8-add-reminder-64.png</file>
+        <file alias="addProperty.png">icons/icons8-add-property-64.png</file>
+        <file alias="addFolder.png">icons/icons8-add-folder-100.png</file>
+        <file alias="deleteFolder.png">icons/icons8-delete-folder-100.png</file>
+        <file alias="add.png">icons/icons8-add-100.png</file>
+        <file alias="checked.png">icons/icons8-tick-box-100.png</file>
+        <file alias="unchecked.png">icons/icons8-unchecked-checkbox-100.png</file>
+        <file alias="graph.png">icons/icons8-increase-100.png</file>
+        <file alias="remove.png">icons/icons8-minus-100.png</file>
+        <file alias="cloud.png">icons/icons8-download-from-cloud-100.png</file>
+        <file alias="save.png">icons/icons8-save-100.png</file>
+        <file alias="delete.png">icons/icons8-delete-bin-100.png</file>
+        <file alias="update.png">icons/icons8-update-100.png</file>
     </qresource>
 </RCC>

@@ -22,6 +22,21 @@
   <layout class="QVBoxLayout" name="verticalLayout_11">
    <item>
     <widget class="QGroupBox" name="gbGeneral">
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+     </property>
      <property name="title">
       <string>General</string>
      </property>
@@ -45,6 +60,14 @@
           </item>
           <item>
            <widget class="QLineEdit" name="leWidth">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
             <property name="text">
              <string>0</string>
             </property>
@@ -58,7 +81,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lePosX"/>
+           <widget class="QLineEdit" name="lePosX">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -73,6 +105,14 @@
           </item>
           <item>
            <widget class="QLineEdit" name="leHeight">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
             <property name="text">
              <string>0</string>
             </property>
@@ -86,7 +126,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lePosY"/>
+           <widget class="QLineEdit" name="lePosY">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -149,6 +198,21 @@
        <height>0</height>
       </size>
      </property>
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+     </property>
      <property name="title">
       <string>Exchange rates</string>
      </property>
@@ -165,7 +229,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leLastUpdate"/>
+           <widget class="QLineEdit" name="leLastUpdate">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -179,7 +252,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leCZK2USD"/>
+           <widget class="QLineEdit" name="leCZK2USD">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -197,7 +279,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leUSD2CZK"/>
+           <widget class="QLineEdit" name="leUSD2CZK">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -211,7 +302,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leEUR2CZK"/>
+           <widget class="QLineEdit" name="leEUR2CZK">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -229,7 +329,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leUSD2EUR"/>
+           <widget class="QLineEdit" name="leUSD2EUR">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -243,7 +352,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="leEUR2USD"/>
+           <widget class="QLineEdit" name="leEUR2USD">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -254,6 +372,21 @@
    </item>
    <item>
     <widget class="QGroupBox" name="gbDegiro">
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+     </property>
      <property name="title">
       <string>DeGiro</string>
      </property>
@@ -301,6 +434,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="cbDegiroAutoLoad">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
           <property name="text">
            <string>Autoload</string>
           </property>
@@ -313,7 +449,16 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QLineEdit" name="leDegiroCSV"/>
+           <widget class="QLineEdit" name="leDegiroCSV">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pbDegiroPath">
@@ -401,6 +546,21 @@ QPushButton:default {
    </item>
    <item>
     <widget class="QGroupBox" name="gbDegiro_2">
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+     </property>
      <property name="title">
       <string>Tastyworks</string>
      </property>
@@ -460,7 +620,16 @@ QPushButton:default {
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_23">
           <item>
-           <widget class="QLineEdit" name="leTastyworksCSV"/>
+           <widget class="QLineEdit" name="leTastyworksCSV">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pbTastyworksPath">
@@ -548,6 +717,21 @@ QPushButton:default {
    </item>
    <item>
     <widget class="QGroupBox" name="gbScreener">
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+    border: 2px solid gray;
+    border-radius: 5px;
+    margin-top: 1ex; /* leave space at the top for the title */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
+}</string>
+     </property>
      <property name="title">
       <string>Screener</string>
      </property>
