@@ -75,15 +75,10 @@ private slots:
     void on_pbAddRecord_clicked();
 
     void on_pbISINAdd_clicked();
-
     void on_tableISIN_cellDoubleClicked(int row, int column);
-
     void on_deOverviewFrom_userDateChanged(const QDate &date);
-
     void on_deOverviewTo_userDateChanged(const QDate &date);
-
     void on_tableOverview_cellDoubleClicked(int row, int column);
-
     void on_actionCheck_version_triggered();
 
 signals:
@@ -104,6 +99,8 @@ private:
     std::unique_ptr<StockData> stockData;
 
     QVector<ScreenerTab*> screenerTabs;
+
+    QMap<QString, std::function<double(double)> > exchangeRatesFuncMap;
 
     /**
      * @brief temporaryLoadedTable

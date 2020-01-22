@@ -42,6 +42,29 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
 
+    /*
+     * Fill exchange rates function
+     */
+    exchangeRatesFuncMap =
+        {
+            { "CZK2CZK", [](double x){return x; }},
+            { "CZK2EUR", [this](double x){return (x * database->getSetting().CZK2EUR); }},
+            { "CZK2USD", [this](double x){return (x * database->getSetting().CZK2USD); }},
+            { "CZK2GBP", [this](double x){return (x * database->getSetting().CZK2GBP); }},
+            { "EUR2EUR", [](double x){return x; }},
+            { "EUR2CZK", [this](double x){return (x * database->getSetting().EUR2CZK); }},
+            { "EUR2USD", [this](double x){return (x * database->getSetting().EUR2USD); }},
+            { "EUR2GBP", [this](double x){return (x * database->getSetting().EUR2GBP); }},
+            { "USD2USD", [](double x){return x; }},
+            { "USD2CZK", [this](double x){return (x * database->getSetting().USD2CZK); }},
+            { "USD2EUR", [this](double x){return (x * database->getSetting().USD2EUR); }},
+            { "USD2GBP", [this](double x){return (x * database->getSetting().USD2GBP); }},
+            { "GBP2GBP", [](double x){return x; }},
+            { "GBP2CZK", [this](double x){return (x * database->getSetting().GBP2CZK); }},
+            { "GBP2USD", [this](double x){return (x * database->getSetting().GBP2USD); }},
+            { "GBP2EUR", [this](double x){return (x * database->getSetting().GBP2EUR); }}
+        };
+
     /********************************
      * Geometry
     ********************************/
@@ -667,43 +690,40 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         table->setItem(pos, 3, item);
 
 
-        double moneyInUSD = 0.0;
-        double feeInUSD = 0.0;
+        QString rates;
+        eCURRENCY currencyFrom = stock.currency;
 
-        switch(stock.currency)
+        switch(currencyFrom)
         {
-            case USD:
-                moneyInUSD = stock.price * stock.count;
-                feeInUSD = stock.fee;
+            case USD: rates = "USD";
                 break;
-            case CZK:
-                moneyInUSD = (stock.price * stock.count * database->getSetting().CZK2USD);
-                feeInUSD = (stock.fee * database->getSetting().CZK2USD);
+            case CZK: rates = "CZK";
                 break;
-            case EUR:
-                moneyInUSD = (stock.price * stock.count * database->getSetting().EUR2USD);
-                feeInUSD = (stock.fee * database->getSetting().EUR2USD);
+            case EUR: rates = "EUR";
+                break;
+            case GBP: rates = "GBP";
+                break;
+        }
+
+        rates += "2";
+
+        switch(selectedCurrency)
+        {
+            case USD: rates += "USD";
+                break;
+            case CZK: rates += "CZK";
+                break;
+            case EUR: rates += "EUR";
+                break;
+            case GBP: rates += "GBP";
                 break;
         }
 
         double price = 0.0;
         double fee = 0.0;
 
-        switch(selectedCurrency)
-        {
-            case USD:
-                price = moneyInUSD;
-                fee = feeInUSD;
-                break;
-            case CZK:
-                price = (moneyInUSD * database->getSetting().USD2CZK);
-                fee = (feeInUSD * database->getSetting().USD2CZK);
-                break;
-            case EUR:
-                price = (moneyInUSD * database->getSetting().USD2EUR);
-                fee = (feeInUSD * database->getSetting().USD2EUR);
-                break;
-        }
+        price = exchangeRatesFuncMap[rates](stock.price) * stock.count;
+        fee = exchangeRatesFuncMap[rates](stock.fee);
 
         switch(stock.type)
         {
@@ -834,120 +854,79 @@ void MainWindow::fillOverviewSlot()
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
+            QString rates;
+            eCURRENCY currencyFrom = stock.currency;
 
-            double moneyInUSD = 0.0;
-            double feeInUSD = 0.0;
-
-            switch(stock.currency)
+            switch(currencyFrom)
             {
-                case USD:
-                    moneyInUSD = stock.price; feeInUSD = stock.fee;
-                    feeInUSD = stock.fee;
+                case USD: rates = "USD";
                     break;
-                case CZK:
-                    moneyInUSD = (stock.price * database->getSetting().CZK2USD);
-                    feeInUSD = (stock.fee * database->getSetting().CZK2USD);
+                case CZK: rates = "CZK";
                     break;
-                case EUR:
-                    moneyInUSD = (stock.price * database->getSetting().EUR2USD);
-                    feeInUSD = (stock.fee * database->getSetting().EUR2USD);
+                case EUR: rates = "EUR";
+                    break;
+                case GBP: rates = "GBP";
                     break;
             }
+
+            rates += "2";
+
+            switch(selectedCurrency)
+            {
+                case USD: rates += "USD";
+                    break;
+                case CZK: rates += "CZK";
+                    break;
+                case EUR: rates += "EUR";
+                    break;
+                case GBP: rates += "GBP";
+                    break;
+            }
+
 
             switch(stock.type)
             {
                 case DEPOSIT:
                 {
-                    switch(selectedCurrency)
-                    {
-                        case USD: deposit += moneyInUSD;
-                            break;
-                        case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
-                            break;
-                        case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
-                            break;
-                    }
+                    deposit += exchangeRatesFuncMap[rates](stock.price);
                 }
                 break;
 
                 case WITHDRAWAL:
                 {
-                    switch(selectedCurrency)
-                    {
-                        case USD: withdrawal += moneyInUSD;
-                            break;
-                        case CZK: withdrawal += (moneyInUSD * database->getSetting().USD2CZK);
-                            break;
-                        case EUR: withdrawal += (moneyInUSD * database->getSetting().USD2EUR);
-                            break;
-                    }
+                    withdrawal += exchangeRatesFuncMap[rates](stock.price);
                 }
                 break;
 
                 case BUY:
-                case SELL:
                 {
-                    if(stock.type == BUY)
-                    {
-                        moneyInUSD *= -1.0;
-                    }
-
-                    switch(selectedCurrency)
-                    {
-                        case USD:
-                            invested += moneyInUSD * stock.count;
-                            transFees += feeInUSD;
-                            break;
-                        case CZK:
-                            invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
-                            transFees += (feeInUSD * database->getSetting().USD2CZK);
-                            break;
-                        case EUR:
-                            invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
-                            transFees += (feeInUSD * database->getSetting().USD2EUR);
-                            break;
-                    }
+                    invested += exchangeRatesFuncMap[rates](stock.price) * stock.count;
+                    transFees += exchangeRatesFuncMap[rates](stock.fee);
                 }
                 break;
 
+                case SELL:
+                    break;
+
                 case DIVIDEND:
                 {
-                    switch(selectedCurrency)
-                    {
-                        case USD:
-                            dividends += moneyInUSD;
-                            divTax += feeInUSD;
-                            break;
-                        case CZK:
-                            dividends += (moneyInUSD * database->getSetting().USD2CZK);
-                            divTax += (feeInUSD * database->getSetting().USD2CZK);
-                            break;
-                        case EUR:
-                            dividends += (moneyInUSD * database->getSetting().USD2EUR);
-                            divTax += (feeInUSD * database->getSetting().USD2EUR);
-                            break;
-                    }
+                    dividends += exchangeRatesFuncMap[rates](stock.price);
+                    divTax += exchangeRatesFuncMap[rates](stock.fee);
                 }
                 break;
 
                 case FEE:
                 {
-                    switch(selectedCurrency)
-                    {
-                        case USD: fees += moneyInUSD;
-                            break;
-                        case CZK: fees += (moneyInUSD * database->getSetting().USD2CZK);
-                            break;
-                        case EUR: fees += (moneyInUSD * database->getSetting().USD2EUR);
-                            break;
-                    }
+                    fees += exchangeRatesFuncMap[rates](stock.price);
                 }
+                break;
             }
         }
     }
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
+    invested = abs(invested);
     divTax = abs(divTax);
     fees = abs(fees);
     transFees = abs(transFees);
@@ -1001,75 +980,70 @@ void MainWindow::on_pbShowGraph_clicked()
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
 
-            double moneyInUSD = 0.0;
+            QString rates;
+            eCURRENCY currencyFrom = stock.currency;
 
-            switch(stock.currency)
+            switch(currencyFrom)
             {
-                case USD: moneyInUSD = stock.price;
+                case USD: rates = "USD";
                     break;
-                case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
+                case CZK: rates = "CZK";
                     break;
-                case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
+                case EUR: rates = "EUR";
+                    break;
+                case GBP: rates = "GBP";
                     break;
             }
 
-            if(stock.type == DEPOSIT)
+            rates += "2";
+
+            switch(selectedCurrency)
             {
-                switch(selectedCurrency)
-                {
-                    case USD: deposit += moneyInUSD;
-                        break;
-                    case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
-                }
-
-                graphData.append(qMakePair(stock.dateTime.toMSecsSinceEpoch(), deposit));
-
-                depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
+                case USD: rates += "USD";
+                    break;
+                case CZK: rates += "CZK";
+                    break;
+                case EUR: rates += "EUR";
+                    break;
+                case GBP: rates += "GBP";
+                    break;
             }
-            else if(stock.type == BUY || stock.type == SELL)
+
+            switch(stock.type)
             {
-                if(stock.type == BUY)
+                case DEPOSIT:
                 {
-                    moneyInUSD *= -1.0;
-                }
+                    deposit += exchangeRatesFuncMap[rates](stock.price);
 
-                switch(selectedCurrency)
+                    graphData.append(qMakePair(stock.dateTime.toMSecsSinceEpoch(), deposit));
+                    depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
+                }
+                break;
+
+                case BUY:
                 {
-                    case USD: invested += moneyInUSD * stock.count;
-                        break;
-                    case CZK: invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
-                        break;
+                    invested += exchangeRatesFuncMap[rates]((-1.0)*stock.price);
+
+                    investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
                 }
+                break;
 
-                investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
-            }
-            else if(stock.type == DIVIDEND)
-            {
-                double price = 0.0;
-
-                switch(selectedCurrency)
+                case DIVIDEND:
                 {
-                    case USD: price = moneyInUSD;
-                        break;
-                    case CZK: price = (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: price = (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
+                    double price = 0.0;
+
+                    price = exchangeRatesFuncMap[rates](stock.price);
+
+                    if(price > maxDividendAxis) maxDividendAxis = price;
+
+                    QString ticker = stock.ticker;
+                    QDate date = stock.dateTime.date();
+
+                    auto vector = dividends.value(ticker);
+                    vector.push_back(qMakePair(date, price));
+                    dividends.insert(ticker, vector);
                 }
-
-                if(price > maxDividendAxis) maxDividendAxis = price;
-
-                QString ticker = stock.ticker;
-                QDate date = stock.dateTime.date();
-
-                auto vector = dividends.value(ticker);
-                vector.push_back(qMakePair(date, price));
-                dividends.insert(ticker, vector);
+                break;
             }
         }
     }

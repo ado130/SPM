@@ -278,7 +278,7 @@ QGroupBox::title {
                  <item>
                   <widget class="QLabel" name="label_6">
                    <property name="text">
-                    <string>Dividends</string>
+                    <string>Brutto dividends</string>
                    </property>
                   </widget>
                  </item>
@@ -393,7 +393,7 @@ QGroupBox::title {
                  <item>
                   <widget class="QLabel" name="label_7">
                    <property name="text">
-                    <string>Portfolio performance</string>
+                    <string>Performance</string>
                    </property>
                   </widget>
                  </item>
