@@ -13,7 +13,10 @@ Database::Database(QObject *parent) : QObject(parent)
 {
     QString writablePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
-    if(writablePath.isEmpty()) qFatal("Cannot determine settings storage location");
+    if(writablePath.isEmpty())
+    {
+        qFatal("Cannot determine settings storage location");
+    }
 
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 
@@ -145,6 +148,7 @@ void Database::loadScreenParams()
 void Database::saveScreenerParams()
 {
     QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + SCREENERPARAMSFILE);
+
     if (qFile.open(QIODevice::WriteOnly))
     {
         QDataStream out(&qFile);
@@ -176,6 +180,7 @@ QString Database::getCurrencyText(eCURRENCY currency)
         case CZK: return "CZK";
         case EUR: return "EUR";
         case USD: return "USD";
+        case GBP: return "GBP";
     }
 
     return "";
@@ -188,6 +193,7 @@ QString Database::getCurrencySign(eCURRENCY currency)
         case CZK: return "Kč";
         case EUR: return "€";
         case USD: return "$";
+        case GBP: return "Ł";
     }
 
     return "";
@@ -203,17 +209,6 @@ void Database::setSettingSlot(const sSETTINGS &value)
 {
     setting = value;
     saveConfig();
-}
-
-QVector<sISINDATA> Database::getIsinList() const
-{
-    return isinList;
-}
-
-void Database::setIsinList(const QVector<sISINDATA> &value)
-{
-    isinList = value;
-    saveIsinData();
 }
 
 QString Database::getDegiroCSV() const
@@ -332,6 +327,16 @@ QDataStream &operator>>(QDataStream &in, sFILTER &param)
     return in;
 }
 
+QVector<sISINDATA> Database::getIsinList() const
+{
+    return isinList;
+}
+
+void Database::setIsinList(const QVector<sISINDATA> &value)
+{
+    isinList = value;
+    saveIsinData();
+}
 
 bool Database::loadIsinData()
 {

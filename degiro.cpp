@@ -6,7 +6,7 @@
 #include <QFile>
 #include <QDataStream>
 
-DeGiro::DeGiro(sSETTINGS set, QObject *parent) : settings(set), QObject(parent)
+DeGiro::DeGiro(sSETTINGS set, QObject *parent) : QObject(parent), settings(set)
 {
     isRAWFile = loadRawData();
 }

@@ -14,19 +14,23 @@ public:
     void setStockData(const StockDataType &value);
     StockDataType getStockData() const;
 
-    double getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type);
+    double getTax(const QString &ticker, const QDateTime &date, const eSTOCKEVENTTYPE &type);
     void saveStockData();
 
-    int getCurrentCount(QString ISIN, QDate from, QDate to);
-    double getTotalPrice(QString ISIN, QDate from, QDate to, sSETTINGS setting);
-    double getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS setting);
-    double getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTINGS setting);
+    int getCurrentCount(const QString &ISIN, const QDate &from, const QDate &to);
+    double getTotalPrice(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
+    double getTotalFee(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
+    double getReceivedDividend(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
+    void saveOnlineStockInfo(const sTABLE &table, const QString &ISIN);
+
+    double getTotalSell(const QDate &from, const QDate &to, double EUR2CZK, double USD2CZK, double GBP2CZK);
 signals:
 
 private:
     StockDataType stockData;
 
     bool loadStockData();
+    void loadOnlineStockInfo();
 };
 
 QDataStream& operator<<(QDataStream& out, const sSTOCKDATA& param);

@@ -1,21 +1,27 @@
 #include "stockdata.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
 #include <QFile>
 #include <QDataStream>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QJsonDocument>
+
 
 StockData::StockData(QObject *parent) : QObject(parent)
 {
     loadStockData();
+    loadOnlineStockInfo();
 }
 
 
-int StockData::getCurrentCount(QString ISIN, QDate from, QDate to)
+int StockData::getCurrentCount(const QString &ISIN, const QDate &from, const QDate &to)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
-    int count = 0;
+    int count = 0.0;
 
     for(const sSTOCKDATA &stock : vector)
     {
@@ -30,11 +36,11 @@ int StockData::getCurrentCount(QString ISIN, QDate from, QDate to)
     return count;
 }
 
-double StockData::getTotalPrice(QString ISIN, QDate from, QDate to, sSETTINGS setting)
+double StockData::getTotalPrice(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
-    double price = 0;
+    double price = 0.0;
 
     for(const sSTOCKDATA &stock : vector)
     {
@@ -42,43 +48,47 @@ double StockData::getTotalPrice(QString ISIN, QDate from, QDate to, sSETTINGS se
 
         if(stock.type == BUY || stock.type == SELL)
         {
-            double moneyInUSD = 0.0;
+            QString rates;
+            eCURRENCY currencyFrom = stock.currency;
 
-            switch(stock.currency)
+            switch(currencyFrom)
             {
-                case USD: moneyInUSD = stock.price;
+                case USD: rates = "USD";
                     break;
-                case CZK: moneyInUSD = (stock.price * setting.CZK2USD);
+                case CZK: rates = "CZK";
                     break;
-                case EUR: moneyInUSD = (stock.price * setting.EUR2USD);
+                case EUR: rates = "EUR";
+                    break;
+                case GBP: rates = "GBP";
                     break;
             }
 
-            if(stock.type == BUY)
+            rates += "2";
+
+            switch(selectedCurrency)
             {
-                moneyInUSD *= -1.0;
+                case USD: rates += "USD";
+                    break;
+                case CZK: rates += "CZK";
+                    break;
+                case EUR: rates += "EUR";
+                    break;
+                case GBP: rates += "GBP";
+                    break;
             }
 
-            switch(setting.currency)
-            {
-                case USD: price += moneyInUSD * stock.count;
-                    break;
-                case CZK: price += (moneyInUSD * stock.count * setting.USD2CZK);
-                    break;
-                case EUR: price += (moneyInUSD * stock.count * setting.USD2EUR);
-                    break;
-            }
+            price += echangeRates[rates](stock.price) * stock.count;
         }
     }
 
-    return price;
+    return abs(price);
 }
 
-double StockData::getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS setting)
+double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
-    double price = 0;
+    double price = 0.0;
 
     for(const sSTOCKDATA &stock : vector)
     {
@@ -86,38 +96,47 @@ double StockData::getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS sett
 
         if(stock.type == BUY)
         {
-            double moneyInUSD = 0.0;
+            QString rates;
+            eCURRENCY currencyFrom = stock.currency;
 
-            switch(stock.currency)
+            switch(currencyFrom)
             {
-                case USD: moneyInUSD = stock.fee;
+                case USD: rates = "USD";
                     break;
-                case CZK: moneyInUSD = (stock.fee * setting.CZK2USD);
+                case CZK: rates = "CZK";
                     break;
-                case EUR: moneyInUSD = (stock.fee * setting.EUR2USD);
+                case EUR: rates = "EUR";
+                    break;
+                case GBP: rates = "GBP";
                     break;
             }
 
-            switch(setting.currency)
+            rates += "2";
+
+            switch(selectedCurrency)
             {
-                case USD: price += moneyInUSD;
+                case USD: rates += "USD";
                     break;
-                case CZK: price += (moneyInUSD * setting.USD2CZK);
+                case CZK: rates += "CZK";
                     break;
-                case EUR: price += (moneyInUSD * setting.USD2EUR);
+                case EUR: rates += "EUR";
+                    break;
+                case GBP: rates += "GBP";
                     break;
             }
+
+            price += echangeRates[rates](stock.fee);
         }
     }
 
     return abs(price);
 }
 
-double StockData::getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTINGS setting)
+double StockData::getReceivedDividend(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
-    double price = 0;
+    double price = 0.0;
 
     for(const sSTOCKDATA &stock : vector)
     {
@@ -125,33 +144,66 @@ double StockData::getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTI
 
         if(stock.type == DIVIDEND)
         {
-            double moneyInUSD = 0.0;
-            double feeInUSD = 0.0;
+            QString rates;
+            eCURRENCY currencyFrom = stock.currency;
 
-            switch(stock.currency)
+            switch(currencyFrom)
             {
-                case USD:
-                    moneyInUSD = stock.price;
-                    feeInUSD = stock.fee;
+                case USD: rates = "USD";
                     break;
-                case CZK:
-                    moneyInUSD = (stock.price * setting.CZK2USD);
-                    feeInUSD = (stock.fee * setting.CZK2USD);
+                case CZK: rates = "CZK";
                     break;
-                case EUR:
-                    moneyInUSD = (stock.price * setting.EUR2USD);
-                    feeInUSD = (stock.fee * setting.EUR2USD);
+                case EUR: rates = "EUR";
+                    break;
+                case GBP: rates = "GBP";
                     break;
             }
 
-            switch(setting.currency)
+            rates += "2";
+
+            switch(selectedCurrency)
             {
-                case USD: price += (moneyInUSD + feeInUSD);
+                case USD: rates += "USD";
                     break;
-                case CZK: price += (moneyInUSD * setting.USD2CZK + feeInUSD * setting.USD2CZK);
+                case CZK: rates += "CZK";
                     break;
-                case EUR: price += (moneyInUSD * setting.USD2EUR + feeInUSD * setting.USD2EUR);
+                case EUR: rates += "EUR";
                     break;
+                case GBP: rates += "GBP";
+                    break;
+            }
+
+            price += echangeRates[rates](stock.price) + echangeRates[rates](stock.fee);
+        }
+    }
+
+    return price;
+}
+
+double StockData::getTotalSell(const QDate &from, const QDate &to, double EUR2CZK, double USD2CZK, double GBP2CZK)
+{
+    double price = 0.0;
+    QList<QString> keys = stockData.keys();
+
+    for(const QString &key : keys)
+    {
+        for(const sSTOCKDATA &stock : stockData.value(key))
+        {
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if(stock.type == SELL)
+            {
+                switch(stock.currency)
+                {
+                    case USD: price += stock.price * stock.count * USD2CZK;
+                        break;
+                    case CZK: price += stock.price * stock.count;
+                        break;
+                    case EUR: price += stock.price * stock.count * EUR2CZK;
+                        break;
+                    case GBP: price += stock.price * stock.count * GBP2CZK;
+                        break;
+                }
             }
         }
     }
@@ -171,7 +223,7 @@ StockDataType StockData::getStockData() const
     return stockData;
 }
 
-double StockData::getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type)
+double StockData::getTax(const QString &ticker, const QDateTime &date, const eSTOCKEVENTTYPE &type)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ticker);
 
@@ -256,4 +308,99 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
     param.source = static_cast<eSTOCKSOURCE>(buffer3);
 
     return in;
+}
+
+void StockData::loadOnlineStockInfo()
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
+
+    QDir dir(path);
+
+    if(!dir.exists())
+    {
+        dir.mkpath(".");
+    }
+
+    QStringList files = dir.entryList(QStringList() << "*.json" << "*.JSON", QDir::Files);
+
+    for(const QString &file : files)
+    {
+        QString filePath = path + file;
+
+        QFile loadFile(filePath);
+
+        if(!loadFile.open(QIODevice::ReadOnly))
+        {
+            qWarning("Couldn't open json file.");
+        }
+
+        QJsonParseError errorPtr;
+        QJsonDocument doc = QJsonDocument::fromJson(loadFile.readAll(), &errorPtr);
+
+        if (doc.isNull())
+        {
+            qWarning() << "Parse failed";
+        }
+
+        QJsonObject json = doc.object();
+
+        if(json.keys().count() > 0)
+        {
+            QString ISIN = json.keys().at(0);
+            QJsonObject arr = json.value(ISIN).toObject();
+
+            for(const QString& key : arr.keys())
+            {
+                QJsonValue value = arr.value(key);
+                qDebug() << "Key = " << key << ", Value = " << value.toString();
+            }
+        }
+    }
+}
+
+void StockData::saveOnlineStockInfo(const sTABLE &table, const QString &ISIN)
+{
+    if(table.row.isEmpty() || ISIN.isEmpty()) return;
+
+
+    QJsonObject recordObject;
+    recordObject.insert("Sector", table.info.sector);
+    recordObject.insert("Ticker", table.info.ticker);
+    recordObject.insert("Country", table.info.country);
+    recordObject.insert("Industry", table.info.industry);
+    recordObject.insert("Stockname", table.info.stockName);
+
+    QStringList keys = table.row.keys();
+
+    for(const QString &key : keys)
+    {
+        recordObject.insert(key, table.row.value(key));
+    }
+
+    QJsonObject obj;
+    obj[ISIN]= recordObject;
+
+    QJsonDocument doc(obj);
+    qDebug() << doc.toJson();
+
+
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
+
+    QDir dir(path);
+
+    if(!dir.exists())
+    {
+        dir.mkpath(".");
+    }
+
+    QFile file(path + "/" + ISIN + ".json");
+
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        qWarning("Couldn't open json file.");
+    }
+
+    file.write(doc.toJson(QJsonDocument::Indented));
+
+    file.close();
 }

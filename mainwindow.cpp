@@ -597,10 +597,10 @@ void MainWindow::fillOverviewTable()
             ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
             ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
             ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(stockData->getCurrentCount(stock.ISIN, from, to))));
-            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
-            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
-            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting()), 0, 'f', 2) + " " + currencySign));
+            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
         //}
 
         pos++;
@@ -882,7 +882,6 @@ void MainWindow::fillOverviewSlot()
                 case GBP: rates += "GBP";
                     break;
             }
-
 
             switch(stock.type)
             {
@@ -1453,6 +1452,9 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
 
     double USD2CZK = ui->lePDFUSD2CZK->text().toDouble();
     double EUR2CZK = ui->lePDFEUR2CZK->text().toDouble();
+    double GBP2CZK = ui->lePDFGBP2CZK->text().toDouble();
+
+    bool isSellValueTest = stockData->getTotalSell(from, to, EUR2CZK, USD2CZK, GBP2CZK) > 100000 ? true : false;
 
     QList<QString> keys = stockList.keys();
 
@@ -1465,24 +1467,18 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
             if( deg.stockName.toLower().contains("fundshare") ) continue;
 
 
-            /*if(deg.type == SELL)
+            if(deg.type == SELL)
             {
-                if(degiro.type == BUY)
+                if(isSellValueTest)      // more than 100000 CZK, so we have to do the tax
                 {
-                    moneyInUSD *= -1.0;
-                }
 
-                switch(selectedCurrency)
-                {
-                    case USD: invested += moneyInUSD * deg.count;
-                        break;
-                    case CZK: invested += (moneyInUSD * deg.count * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: invested += (moneyInUSD * deg.count * database->getSetting().USD2EUR);
-                        break;
                 }
-            }*/
-            if(deg.type == DIVIDEND)
+                else                        // less than 100000 CZK, so check the time test
+                {
+
+                }
+            }
+            else if(deg.type == DIVIDEND)
             {
                 sPDFEXPORT pdfRow;
 
@@ -1502,6 +1498,11 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
                         pdfRow.price = round(deg.price * EUR2CZK);
                         pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * EUR2CZK);
                         pdfRow.paid = QString("%1 %2").arg(deg.price).arg("EUR");
+                        break;
+                    case GBP:
+                        pdfRow.price = round(deg.price * GBP2CZK);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * GBP2CZK);
+                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("GBP");
                         break;
                 }
 
@@ -1915,7 +1916,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
             QString ISIN = newStockData.value(key).first().ISIN;
             QString stockName = newStockData.value(key).first().stockName;
 
-            if(ISIN.isEmpty() || stockName.isEmpty()) continue;
+            if(ISIN.isEmpty() || stockName.isEmpty() || stockName.toLower().contains("fundshare")) continue;
 
             auto iter = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
                                   {
@@ -2221,7 +2222,7 @@ void MainWindow::on_pbAddTicker_clicked()
     QString ticker = ui->leTicker->text().trimmed();
     ui->leTicker->setText(ticker.toUpper());
 
-    temporaryLoadedTable.row.clear();
+    lastLoadedTable.row.clear();
     lastRequestSource = FINVIZ;
     connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
     QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
@@ -2239,6 +2240,11 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
     {
         QString ticker = ui->leTicker->text().trimmed();
 
+        if(ticker.isEmpty()) // when the update came from ISIN table, the leTicker is empty so we need to assign the ticker
+        {
+            ticker = ui->tableISIN->item(ui->tableISIN->currentRow(), 1)->text();
+        }
+
         sTABLE table;
 
         switch (lastRequestSource)
@@ -2246,7 +2252,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
             case FINVIZ:
                 table = screener->finvizParse(QString(data));
                 table.info.ticker = ticker;
-                temporaryLoadedTable.info = table.info;
+                lastLoadedTable.info = table.info;
                 break;
             case YAHOO:
                 table = screener->yahooParse(QString(data));
@@ -2256,7 +2262,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
 
         for(const QString &key : table.row.keys())
         {
-            temporaryLoadedTable.row.insert(key, table.row.value(key));
+            lastLoadedTable.row.insert(key, table.row.value(key));
         }
 
         if(lastRequestSource == FINVIZ)
@@ -2268,6 +2274,22 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         else    // end
         {
             disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
+
+            QString ISIN;
+            QVector<sISINDATA> isinList = database->getIsinList();
+
+            auto it = std::find_if(isinList.begin(), isinList.end(),
+                                   [ticker](sISINDATA a)
+                                   {
+                                       return a.ticker == ticker;
+                                   } );
+
+            if(it != isinList.end())
+            {
+                ISIN = it->ISIN;
+            }
+
+            stockData->saveOnlineStockInfo(lastLoadedTable, ISIN);
             dataLoaded();
             emit refreshTickers(ticker);
         }
@@ -2282,6 +2304,8 @@ void MainWindow::dataLoaded()
 
     QString ticker = ui->leTicker->text().trimmed();
 
+    if(ticker.isEmpty()) return;
+
     QStringList infoData;
     infoData << "Ticker" << "Stock name" << "Sector" << "Industry" << "Country";
 
@@ -2291,7 +2315,7 @@ void MainWindow::dataLoaded()
     {
         bParamFound = false;
 
-        for(int table = 0; table<temporaryLoadedTable.row.count() && !bParamFound; ++table)
+        for(int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
         {
             for(int info = 0; info<infoData.count() && !bParamFound; ++info)
             {
@@ -2299,23 +2323,23 @@ void MainWindow::dataLoaded()
                 {
                     if(infoData.at(info) == "Industry")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.industry));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.industry));
                     }
                     else if(infoData.at(info) == "Ticker")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.ticker));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.ticker));
                     }
                     else if(infoData.at(info) == "Stock name")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.stockName));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.stockName));
                     }
                     else if(infoData.at(info) == "Sector")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.sector));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.sector));
                     }
                     else if(infoData.at(info) == "Country")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), temporaryLoadedTable.info.country));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.country));
                     }
 
                     bParamFound = true;
@@ -2331,11 +2355,11 @@ void MainWindow::dataLoaded()
     {
         bParamFound = false;
 
-        for(int table = 0; table<temporaryLoadedTable.row.count() && !bParamFound; ++table)
+        for(int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
         {
-            if(temporaryLoadedTable.row.contains(screenerParams.at(param)))
+            if(lastLoadedTable.row.contains(screenerParams.at(param)))
             {
-                tickerLine.push_back(qMakePair(screenerParams.at(param), temporaryLoadedTable.row.value(screenerParams.at(param))));
+                tickerLine.push_back(qMakePair(screenerParams.at(param), lastLoadedTable.row.value(screenerParams.at(param))));
 
                 bParamFound = true;
             }
@@ -3223,13 +3247,21 @@ void MainWindow::fillISINTable()
         pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
         connect(pbUpdate, &QPushButton::clicked, [this, a, isinList]()
                 {
-                    if(isinList.at(a).ticker.isEmpty())
+                    QString ticker = isinList.at(a).ticker;
+
+                    if(ticker.isEmpty())
                     {
                         setStatus(QString("ISIN %1 does not have assigned the ticker!").arg(isinList.at(a).ISIN));
                     }
                     else
                     {
+                        lastLoadedTable.row.clear();
+                        lastRequestSource = FINVIZ;
 
+                        connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
+
+                        QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
+                        manager->execute(request);
                     }
                 }
 
@@ -3317,7 +3349,7 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 
     bool ok;
     QString text = QInputDialog::getText(this,
-                                         "Add desc",
+                                         "Change " + header,
                                          header,
                                          QLineEdit::Normal,
                                          previous,

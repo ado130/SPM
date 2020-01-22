@@ -100,13 +100,13 @@ private:
 
     QVector<ScreenerTab*> screenerTabs;
 
-    QMap<QString, std::function<double(double)> > exchangeRatesFuncMap;
+    ExchangeRatesFunctions exchangeRatesFuncMap;
 
     /**
      * @brief temporaryLoadedTable
      * @details sTABLE for last loaded ticker
      */
-    sTABLE temporaryLoadedTable;
+    sTABLE lastLoadedTable;
 
     int currentScreenerIndex;
     QStringList currentTickers;
