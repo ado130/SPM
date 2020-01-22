@@ -56,11 +56,25 @@ void Database::loadConfig()
     QDate currentDate = QDate::currentDate();
     currentDate = currentDate.addDays(-1);
     setting.lastExchangeRatesUpdate = QDate::fromString(settings.value("Exchange/lastExchangeRatesUpdate", currentDate.toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
-    setting.EUR2USD = settings.value("Exchange/EUR2USD", 1.12).toDouble();
     setting.CZK2USD = settings.value("Exchange/CZK2USD", 0.044).toDouble();
+    setting.CZK2EUR = settings.value("Exchange/CZK2EUR", 0.040).toDouble();
+    setting.CZK2GBP = settings.value("Exchange/CZK2GBP", 0.034).toDouble();
+
+    setting.EUR2USD = settings.value("Exchange/EUR2USD", 1.12).toDouble();
+    setting.EUR2GBP = settings.value("Exchange/EUR2GBP", 0.85).toDouble();
+    setting.EUR2CZK = settings.value("Exchange/EUR2CZK", 25.42).toDouble();
+
+    setting.GBP2CZK = settings.value("Exchange/GBP2CZK", 29.71).toDouble();
+    setting.GBP2EUR = settings.value("Exchange/GBP2EUR", 1.18).toDouble();
+    setting.GBP2USD = settings.value("Exchange/GBP2USD", 1.31).toDouble();
+
     setting.USD2CZK = settings.value("Exchange/USD2CZK", 22.68).toDouble();
     setting.USD2EUR = settings.value("Exchange/USD2EUR", 0.89).toDouble();
-    setting.EUR2CZK = settings.value("Exchange/EUR2CZK", 25.42).toDouble();
+    setting.USD2GBP = settings.value("Exchange/USD2GBP", 0.76).toDouble();
+
+    setting.EUR2CZKDAP = settings.value("Exchange/EUR2CZKDAP", 25.66).toDouble();
+    setting.USD2CZKDAP = settings.value("Exchange/USD2CZKDAP", 22.93).toDouble();
+    setting.GBP2CZKDAP = settings.value("Exchange/GBP2CZKDAP", 29.31).toDouble();
 }
 
 void Database::saveConfig()
@@ -89,11 +103,26 @@ void Database::saveConfig()
     settings.setValue("Overview/lastOverviewTo", setting.lastOverviewTo.toString("dd.MM.yyyy"));
 
     settings.setValue("Exchange/lastExchangeRatesUpdate", setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
-    settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
+
     settings.setValue("Exchange/CZK2USD", setting.CZK2USD);
+    settings.setValue("Exchange/CZK2EUR", setting.CZK2EUR);
+    settings.setValue("Exchange/CZK2GBP", setting.CZK2GBP);
+
+    settings.setValue("Exchange/EUR2USD", setting.EUR2USD);
+    settings.setValue("Exchange/EUR2GBP", setting.EUR2GBP);
     settings.setValue("Exchange/EUR2CZK", setting.EUR2CZK);
+
     settings.setValue("Exchange/USD2CZK", setting.USD2CZK);
     settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
+    settings.setValue("Exchange/USD2GBP", setting.USD2GBP);
+
+    settings.setValue("Exchange/GBP2CZK", setting.GBP2CZK);
+    settings.setValue("Exchange/GBP2EUR", setting.GBP2EUR);
+    settings.setValue("Exchange/GBP2USD", setting.GBP2USD);
+
+    settings.setValue("Exchange/EUR2CZKDAP", setting.EUR2CZKDAP);
+    settings.setValue("Exchange/USD2CZKDAP", setting.USD2CZKDAP);
+    settings.setValue("Exchange/GBP2CZKDAP", setting.GBP2CZKDAP);
 }
 
 void Database::loadScreenParams()
@@ -170,7 +199,7 @@ sSETTINGS Database::getSetting() const
     return setting;
 }
 
-void Database::setSetting(const sSETTINGS &value)
+void Database::setSettingSlot(const sSETTINGS &value)
 {
     setting = value;
     saveConfig();

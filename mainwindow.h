@@ -94,14 +94,14 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
 private:
-    Ui::MainWindow *ui;    
+    Ui::MainWindow *ui;
 
-    std::shared_ptr<DownloadManager> manager;
-    std::shared_ptr<Database> database;
-    std::shared_ptr<DeGiro> degiro;
-    std::shared_ptr<Tastyworks> tastyworks;
-    std::shared_ptr<Screener> screener;
-    std::shared_ptr<StockData> stockData;
+    std::unique_ptr<DownloadManager> manager;
+    std::unique_ptr<Database> database;
+    std::unique_ptr<DeGiro> degiro;
+    std::unique_ptr<Tastyworks> tastyworks;
+    std::unique_ptr<Screener> screener;
+    std::unique_ptr<StockData> stockData;
 
     QVector<ScreenerTab*> screenerTabs;
 

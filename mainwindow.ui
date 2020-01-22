@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1226</width>
+    <width>1440</width>
     <height>768</height>
    </rect>
   </property>
@@ -205,6 +205,25 @@ QGroupBox::title {
                   </widget>
                  </item>
                 </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>Withdrawal</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leWithdrawal">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -638,7 +657,7 @@ QGroupBox::title {
             <property name="title">
              <string>PDF export</string>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_16">
                <item>
@@ -747,6 +766,32 @@ QGroupBox::title {
               </layout>
              </item>
              <item>
+              <layout class="QVBoxLayout" name="verticalLayout_20">
+               <item>
+                <widget class="QLabel" name="label_25">
+                 <property name="text">
+                  <string>GBP2CZK</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lePDFGBP2CZK">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <layout class="QVBoxLayout" name="verticalLayout_12">
                <item>
                 <widget class="QLabel" name="label_17">
@@ -773,30 +818,14 @@ QGroupBox::title {
               </layout>
              </item>
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_13">
-               <item>
-                <widget class="QLabel" name="label_18">
-                 <property name="text">
-                  <string>Platform</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="lePDFPlatform">
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QCheckBox" name="cbPDFCustomText">
+               <property name="text">
+                <string>Custom text</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_13"/>
              </item>
              <item>
               <widget class="QPushButton" name="pbPDFExport">
@@ -1415,7 +1444,7 @@ QTabBar::close-button {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1226</width>
+     <width>1440</width>
      <height>22</height>
     </rect>
    </property>

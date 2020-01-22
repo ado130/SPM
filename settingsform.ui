@@ -6,24 +6,677 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>628</height>
+    <width>430</width>
+    <height>309</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>291</width>
-    <height>503</height>
+    <width>430</width>
+    <height>309</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Settings</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_11">
+  <layout class="QVBoxLayout" name="verticalLayout_7">
    <item>
-    <widget class="QGroupBox" name="gbGeneral">
+    <widget class="QTabWidget" name="tabWidget">
      <property name="styleSheet">
-      <string notr="true">QGroupBox {
+      <string notr="true">QTabWidget::pane { /* The tab widget frame */
+    border-top: 2px solid #C2C7CB;
+    position: absolute;
+    top: -0.5em;
+}
+
+QTabWidget::tab-bar {
+    alignment: center;
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
+    border: 2px solid #C4C4C3;
+    border-bottom-color: #C2C7CB; /* same as the pane color */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 8ex;
+    padding: 2px;
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #fafafa, stop: 0.4 #f4f4f4,
+                                stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+}
+
+QTabBar::tab:selected {
+    border-color: #9B9B9B;
+    border-bottom-color: #C2C7CB; /* same as pane color */
+}
+
+QTabBar::scroller { /* the width of the scroll buttons */
+    width: 20px;
+}
+
+QTabBar QToolButton { /* the scroll buttons are tool buttons */
+    border-width: 2px;
+}
+
+
+QTabBar::close-button {
+    subcontrol-position: left;
+}
+</string>
+     </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="tabGeneral">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_13">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="minimumSize">
+              <size>
+               <width>31</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Width</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leWidth">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Position X</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lePosX">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Height</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leHeight">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Position Y</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lePosY">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Currency</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="cmCurrency">
+             <item>
+              <property name="text">
+               <string>CZK</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>EUR</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>USD</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabRates">
+      <attribute name="title">
+       <string>Exchange rates</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_17">
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Last update</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="leLastUpdate">
+           <property name="styleSheet">
+            <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_28">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <item>
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>CZK2USD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leCZK2USD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_26">
+           <item>
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>CZK2GBP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leCZK2GBP">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_27">
+           <item>
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>CZK2EUR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leCZK2EUR">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_19">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>EUR2USD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leEUR2USD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_18">
+           <item>
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>EUR2GBP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leEUR2GBP">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <item>
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>EUR2CZK</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leEUR2CZK">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_16">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>USD2EUR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leUSD2EUR">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <item>
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>USD2GBP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leUSD2GBP">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <item>
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>USD2CZK</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leUSD2CZK">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_30">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_31">
+           <item>
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>GBP2EUR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leGBP2EUR">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_32">
+           <item>
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>GBP2USD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leGBP2USD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_33">
+           <item>
+            <widget class="QLabel" name="label_23">
+             <property name="text">
+              <string>GBP2CZK</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leGBP2CZK">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_29">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_25">
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>GBP2CZK DAP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leGBP2CZKDAP">
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_21">
+           <item>
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>USD2CZK DAP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leUSD2CZKDAP">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_20">
+           <item>
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>EUR2CZK DAP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="leEUR2CZKDAP">
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>102</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabImport">
+      <attribute name="title">
+       <string>Import</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_11">
+       <item>
+        <widget class="QGroupBox" name="gbDegiro">
+         <property name="styleSheet">
+          <string notr="true">QGroupBox {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #E0E0E0, stop: 1 #FFFFFF);
     border: 2px solid gray;
@@ -36,434 +689,84 @@ QGroupBox::title {
     subcontrol-position: top center; /* position at the top center */
     padding: 0 3px;
 }</string>
-     </property>
-     <property name="title">
-      <string>General</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_9">
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         </property>
+         <property name="title">
+          <string>DeGiro</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <widget class="QLabel" name="label">
-            <property name="minimumSize">
-             <size>
-              <width>31</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Width</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Delimeter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cmDegiroCSV">
+              <item>
+               <property name="text">
+                <string>Comma (,)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Semicolon (;)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Point (.)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cbDegiroAutoLoad">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Autoload</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <widget class="QLineEdit" name="leWidth">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLineEdit" name="leDegiroCSV">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Position X</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="lePosX">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Height</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leHeight">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Position Y</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="lePosY">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Currency</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="cmCurrency">
-          <item>
-           <property name="text">
-            <string>CZK</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>EUR</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>USD</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbExchanges">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QGroupBox {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
-    border: 2px solid gray;
-    border-radius: 5px;
-    margin-top: 1ex; /* leave space at the top for the title */
-}
-
-QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top center; /* position at the top center */
-    padding: 0 3px;
-}</string>
-     </property>
-     <property name="title">
-      <string>Exchange rates</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_7">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_18">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_17">
-          <item>
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Last update</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leLastUpdate">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_14">
-          <item>
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>CZK2USD</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leCZK2USD">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_16">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_13">
-          <item>
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>USD2CZK</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leUSD2CZK">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
-          <item>
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>EUR2CZK</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leEUR2CZK">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_15">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
-          <item>
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>USD2EUR</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leUSD2EUR">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
-          <item>
-           <widget class="QLabel" name="label_11">
-            <property name="text">
-             <string>EUR2USD</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leEUR2USD">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbDegiro">
-     <property name="styleSheet">
-      <string notr="true">QGroupBox {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
-    border: 2px solid gray;
-    border-radius: 5px;
-    margin-top: 1ex; /* leave space at the top for the title */
-}
-
-QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top center; /* position at the top center */
-    padding: 0 3px;
-}</string>
-     </property>
-     <property name="title">
-      <string>DeGiro</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Delimeter</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="cmDegiroCSV">
-          <item>
-           <property name="text">
-            <string>Comma (,)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Semicolon (;)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Point (.)</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbDegiroAutoLoad">
-          <property name="styleSheet">
-           <string notr="true"/>
-          </property>
-          <property name="text">
-           <string>Autoload</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLineEdit" name="leDegiroCSV">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pbDegiroPath">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pbDegiroPath">
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -484,33 +787,33 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-            </property>
-            <property name="text">
-             <string>Set Path</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pbDegiroLoadCSV">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
+                </property>
+                <property name="text">
+                 <string>Set Path</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pbDegiroLoadCSV">
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -531,23 +834,23 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-            </property>
-            <property name="text">
-             <string>Load CSV</string>
-            </property>
-           </widget>
+                </property>
+                <property name="text">
+                 <string>Load CSV</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbDegiro_2">
-     <property name="styleSheet">
-      <string notr="true">QGroupBox {
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gbDegiro_2">
+         <property name="styleSheet">
+          <string notr="true">QGroupBox {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #E0E0E0, stop: 1 #FFFFFF);
     border: 2px solid gray;
@@ -560,81 +863,81 @@ QGroupBox::title {
     subcontrol-position: top center; /* position at the top center */
     padding: 0 3px;
 }</string>
-     </property>
-     <property name="title">
-      <string>Tastyworks</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_9">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_22">
-        <item>
-         <widget class="QLabel" name="label_14">
-          <property name="text">
-           <string>Delimeter</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="cmTastyworksCSV">
+         </property>
+         <property name="title">
+          <string>Tastyworks</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
           <item>
-           <property name="text">
-            <string>Comma (,)</string>
-           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_22">
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Delimeter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cmTastyworksCSV">
+              <item>
+               <property name="text">
+                <string>Comma (,)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Semicolon (;)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Point (.)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cbTastyworksAutoLoad">
+              <property name="text">
+               <string>Autoload</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <property name="text">
-            <string>Semicolon (;)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Point (.)</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_8">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbTastyworksAutoLoad">
-          <property name="text">
-           <string>Autoload</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_10">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_23">
-          <item>
-           <widget class="QLineEdit" name="leTastyworksCSV">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit {
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_23">
+              <item>
+               <widget class="QLineEdit" name="leTastyworksCSV">
+                <property name="styleSheet">
+                 <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pbTastyworksPath">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pbTastyworksPath">
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -655,33 +958,33 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-            </property>
-            <property name="text">
-             <string>Set Path</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_24">
-          <item>
-           <spacer name="horizontalSpacer_9">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pbTastyworksLoadCSV">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {
+                </property>
+                <property name="text">
+                 <string>Set Path</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_24">
+              <item>
+               <spacer name="horizontalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pbTastyworksLoadCSV">
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -702,46 +1005,65 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-            </property>
-            <property name="text">
-             <string>Load CSV</string>
-            </property>
-           </widget>
+                </property>
+                <property name="text">
+                 <string>Load CSV</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="gbScreener">
-     <property name="styleSheet">
-      <string notr="true">QGroupBox {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #E0E0E0, stop: 1 #FFFFFF);
-    border: 2px solid gray;
-    border-radius: 5px;
-    margin-top: 1ex; /* leave space at the top for the title */
-}
-
-QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top center; /* position at the top center */
-    padding: 0 3px;
-}</string>
-     </property>
-     <property name="title">
-      <string>Screener</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
-        <item>
-         <widget class="QPushButton" name="pbLoadParameters">
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabScreener">
+      <attribute name="title">
+       <string>Screener</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_12">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QCheckBox" name="cbFilterON">
+             <property name="text">
+              <string>Filter always ON</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbStartReload">
+             <property name="text">
+              <string>Auto start reload</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_7">
+           <item>
+            <widget class="QPushButton" name="pbShowParameters">
+             <property name="styleSheet">
+              <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -762,33 +1084,33 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-          </property>
-          <property name="text">
-           <string>Load parameters</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_7">
-        <item>
-         <widget class="QPushButton" name="pbShowParameters">
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+             </property>
+             <property name="text">
+              <string>Show parameters</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QPushButton" name="pbLoadParameters">
+             <property name="styleSheet">
+              <string notr="true">QPushButton {
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -809,59 +1131,44 @@ QPushButton:flat {
 QPushButton:default {
     border-color: navy; /* make the default button prominent */
 }</string>
-          </property>
-          <property name="text">
-           <string>Show parameters</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
-        <item>
-         <widget class="QCheckBox" name="cbFilterON">
-          <property name="text">
-           <string>Filter always ON</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbStartReload">
-          <property name="text">
-           <string>Auto start reload</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
+             </property>
+             <property name="text">
+              <string>Load parameters</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>132</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>

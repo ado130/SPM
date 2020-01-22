@@ -57,11 +57,25 @@ struct sSETTINGS
 
     // Exchange
     QDate lastExchangeRatesUpdate;
-    double USD2EUR;
-    double USD2CZK;
-    double EUR2CZK;
     double CZK2USD;
+    double CZK2EUR;
+    double CZK2GBP;
+
     double EUR2USD;
+    double EUR2GBP;
+    double EUR2CZK;
+
+    double GBP2USD;
+    double GBP2EUR;
+    double GBP2CZK;
+
+    double USD2EUR;
+    double USD2GBP;
+    double USD2CZK;   
+
+    double EUR2CZKDAP;
+    double USD2CZKDAP;
+    double GBP2CZKDAP;
 
     // DeGiro
     QString degiroCSV;
@@ -92,14 +106,14 @@ struct sPDFEXPORT
 
 enum eSTOCKEVENTTYPE
 {
-    DIVIDEND = 0,
-    TAX = 1,
-    TRANSACTIONFEE = 2,
-    FEE = 3,
-    DEPOSIT = 4,
-    WITHDRAWAL = 5,
-    BUY = 6,
-    SELL = 7
+    DEPOSIT = 0,
+    WITHDRAWAL = 1,
+    BUY = 2,
+    SELL = 3,
+    FEE = 4,
+    DIVIDEND = 5,
+    TAX = 6,
+    TRANSACTIONFEE = 7
 };
 
 enum eSTOCKSOURCE
@@ -117,8 +131,11 @@ struct sSTOCKDATA
     QString ISIN;
     QString stockName;
     eCURRENCY currency;
+
     int count;
     double price;
+
+    double fee;         // dividend--tax; buy/sell--transactionfee
 
     eSTOCKSOURCE source;
 };

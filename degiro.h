@@ -9,7 +9,7 @@ class DeGiro : public QObject
 {
     Q_OBJECT
 public:
-    explicit DeGiro(QObject *parent = nullptr);
+    explicit DeGiro(sSETTINGS set, QObject *parent = nullptr);
 
     void loadCSV(QString path, eDELIMETER delimeter);
 
@@ -23,11 +23,13 @@ signals:
 private:
     QVector<sDEGIRORAW> rawData;
     bool isRAWFile;
+    sSETTINGS settings;
 
     bool loadRawData();
     void saveRawData();
     QStringList parseLine(QString line, char delimeter);
 
+    StockDataType mergeEventAndFee(StockDataType &data);
 };
 
 QDataStream& operator<<(QDataStream& out, const sDEGIRORAW& param);

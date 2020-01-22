@@ -84,17 +84,17 @@ double StockData::getTotalFee(QString ISIN, QDate from, QDate to, sSETTINGS sett
     {
         if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
-        if(stock.type == TRANSACTIONFEE)
+        if(stock.type == BUY)
         {
             double moneyInUSD = 0.0;
 
             switch(stock.currency)
             {
-                case USD: moneyInUSD = stock.price;
+                case USD: moneyInUSD = stock.fee;
                     break;
-                case CZK: moneyInUSD = (stock.price * setting.CZK2USD);
+                case CZK: moneyInUSD = (stock.fee * setting.CZK2USD);
                     break;
-                case EUR: moneyInUSD = (stock.price * setting.EUR2USD);
+                case EUR: moneyInUSD = (stock.fee * setting.EUR2USD);
                     break;
             }
 
@@ -123,27 +123,34 @@ double StockData::getReceivedDividend(QString ISIN, QDate from, QDate to, sSETTI
     {
         if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
-        if(stock.type == DIVIDEND || stock.type == TAX)
+        if(stock.type == DIVIDEND)
         {
             double moneyInUSD = 0.0;
+            double feeInUSD = 0.0;
 
             switch(stock.currency)
             {
-                case USD: moneyInUSD = stock.price;
+                case USD:
+                    moneyInUSD = stock.price;
+                    feeInUSD = stock.fee;
                     break;
-                case CZK: moneyInUSD = (stock.price * setting.CZK2USD);
+                case CZK:
+                    moneyInUSD = (stock.price * setting.CZK2USD);
+                    feeInUSD = (stock.fee * setting.CZK2USD);
                     break;
-                case EUR: moneyInUSD = (stock.price * setting.EUR2USD);
+                case EUR:
+                    moneyInUSD = (stock.price * setting.EUR2USD);
+                    feeInUSD = (stock.fee * setting.EUR2USD);
                     break;
             }
 
             switch(setting.currency)
             {
-                case USD: price += moneyInUSD;
+                case USD: price += (moneyInUSD + feeInUSD);
                     break;
-                case CZK: price += (moneyInUSD * setting.USD2CZK);
+                case CZK: price += (moneyInUSD * setting.USD2CZK + feeInUSD * setting.USD2CZK);
                     break;
-                case EUR: price += (moneyInUSD * setting.USD2EUR);
+                case EUR: price += (moneyInUSD * setting.USD2EUR + feeInUSD * setting.USD2EUR);
                     break;
             }
         }
@@ -172,7 +179,7 @@ double StockData::getTax(QString ticker, QDateTime date, eSTOCKEVENTTYPE type)
     {
         if(data.dateTime == date && data.type == type)
         {
-            return data.price;
+            return data.fee;
         }
     }
 
@@ -219,6 +226,7 @@ QDataStream &operator<<(QDataStream &out, const sSTOCKDATA &param)
     out << static_cast<int>(param.currency);
     out << param.count;
     out << param.price;
+    out << param.fee;
     out << static_cast<int>(param.source);
 
     return out;
@@ -241,6 +249,7 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
 
     in >> param.count;
     in >> param.price;
+    in >> param.fee;
 
     int buffer3;
     in >> buffer3;

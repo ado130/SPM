@@ -35,12 +35,28 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->cbFilterON->setChecked(setting.filterON);
     ui->cbStartReload->setChecked(setting.screenerAutoLoad);
 
-    ui->leLastUpdate->setText(setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
-    ui->leCZK2USD->setText(QString::number(setting.CZK2USD, 'f', 4));
-    ui->leEUR2USD->setText(QString::number(setting.EUR2USD, 'f', 4));
-    ui->leUSD2CZK->setText(QString::number(setting.USD2CZK, 'f', 4));
-    ui->leUSD2EUR->setText(QString::number(setting.USD2EUR, 'f', 4));
-    ui->leEUR2CZK->setText(QString::number(setting.EUR2CZK, 'f', 4));
+    ui->leLastUpdate->setText(setting.lastExchangeRatesUpdate.toString("ddd dd.MM.yyyy"));
+    ui->leCZK2USD->setText(QString::number(setting.CZK2USD, 'f', 2));
+    ui->leCZK2EUR->setText(QString::number(setting.CZK2EUR, 'f', 2));
+    ui->leCZK2GBP->setText(QString::number(setting.CZK2GBP, 'f', 2));
+
+    ui->leEUR2USD->setText(QString::number(setting.EUR2USD, 'f', 2));
+    ui->leEUR2CZK->setText(QString::number(setting.EUR2CZK, 'f', 2));
+    ui->leEUR2GBP->setText(QString::number(setting.EUR2GBP, 'f', 2));
+
+    ui->leUSD2CZK->setText(QString::number(setting.USD2CZK, 'f', 2));
+    ui->leUSD2GBP->setText(QString::number(setting.USD2GBP, 'f', 2));
+    ui->leUSD2EUR->setText(QString::number(setting.USD2EUR, 'f', 2));
+
+    ui->leGBP2CZK->setText(QString::number(setting.GBP2CZK, 'f', 2));
+    ui->leGBP2USD->setText(QString::number(setting.GBP2USD, 'f', 2));
+    ui->leGBP2EUR->setText(QString::number(setting.GBP2EUR, 'f', 2));
+
+    ui->leEUR2CZKDAP->setText(QString::number(setting.EUR2CZKDAP, 'f', 2));
+    ui->leUSD2CZKDAP->setText(QString::number(setting.USD2CZKDAP, 'f', 2));
+    ui->leGBP2CZKDAP->setText(QString::number(setting.GBP2CZKDAP, 'f', 2));
+
+    ui->tabWidget->setCurrentIndex(0);
 }
 
 SettingsForm::~SettingsForm()
@@ -59,6 +75,10 @@ void SettingsForm::on_buttonBox_accepted()
     setting.height = ui->leHeight->text().toInt();
     setting.xPos = ui->lePosX->text().toInt();
     setting.yPos = ui->lePosY->text().toInt();
+
+    setting.EUR2CZKDAP = ui->leEUR2CZKDAP->text().toDouble();
+    setting.USD2CZKDAP = ui->leUSD2CZKDAP->text().toDouble();
+    setting.GBP2CZKDAP = ui->leGBP2CZKDAP->text().toDouble();
 
     emit setSetting(setting);
 }

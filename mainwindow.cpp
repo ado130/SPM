@@ -32,12 +32,12 @@ MainWindow::MainWindow(QWidget *parent) :
                               QMessageBox::Ok);
     }
 
-    manager = std::make_shared<DownloadManager> (this);
-    database = std::make_shared<Database> (this);
-    degiro = std::make_shared<DeGiro> (this);
-    tastyworks = std::make_shared<Tastyworks> (this);
-    screener = std::make_shared<Screener> (this);
-    stockData = std::make_shared<StockData> (this);
+    manager = std::make_unique<DownloadManager> (this);
+    database = std::make_unique<Database> (this);
+    degiro = std::make_unique<DeGiro> (database->getSetting(), this);
+    tastyworks = std::make_unique<Tastyworks> (this);
+    screener = std::make_unique<Screener> (this);
+    stockData = std::make_unique<StockData> (this);
     progressDialog = nullptr;
 
     connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
         sSETTINGS set = database->getSetting();
         set.width = this->geometry().width();
         set.height = this->geometry().height();
-        database->setSetting(set);
+        database->setSettingSlot(set);
     }
     else
     {
@@ -83,8 +83,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addPermanentWidget(version, 0);
 
     // PDF export default data
-    ui->lePDFEUR2CZK->setText(QString::number(database->getSetting().EUR2CZK, 'f', 6));
-    ui->lePDFUSD2CZK->setText(QString::number(database->getSetting().USD2CZK, 'f', 6));
+    ui->lePDFEUR2CZK->setText(QString::number(database->getSetting().EUR2CZKDAP, 'f', 2));
+    ui->lePDFUSD2CZK->setText(QString::number(database->getSetting().USD2CZKDAP, 'f', 2));
+    ui->lePDFGBP2CZK->setText(QString::number(database->getSetting().GBP2CZKDAP, 'f', 2));
 
     // default graph date time values
     ui->deGraphTo->setDate(QDate::currentDate());
@@ -124,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
 
-        manager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK");
+        manager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK,GBP");
     }
 
     /********************************
@@ -244,7 +245,7 @@ void MainWindow::on_mainTab_currentChanged(int index)
 {
     sSETTINGS set = database->getSetting();
     set.lastOpenedTab = index;
-    database->setSetting(set);
+    database->setSettingSlot(set);
 }
 
 
@@ -304,7 +305,7 @@ void MainWindow::on_actionSettings_triggered()
 {
     SettingsForm *dlg = new SettingsForm(database->getSetting(), this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
-    connect(dlg, SIGNAL(setSetting(sSETTINGS)), database.get(), SLOT(setSetting(sSETTINGS)));
+    connect(dlg, SIGNAL(setSetting(sSETTINGS)), database.get(), SLOT(setSettingSlot(sSETTINGS)));
     connect(dlg, &SettingsForm::setScreenerParams, this, &MainWindow::setScreenerParamsSlot);
     connect(dlg, &SettingsForm::loadOnlineParameters, this, &MainWindow::loadOnlineParametersSlot);
     connect(dlg, &SettingsForm::loadDegiroCSV, this, &MainWindow::loadDegiroCSVslot);
@@ -317,8 +318,7 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionAbout_Qt_triggered()
 {
-    QMessageBox::aboutQt(this,
-                         "SPM");
+    QMessageBox::aboutQt(this, "SPM");
 }
 
 
@@ -363,7 +363,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         sSETTINGS set = database->getSetting();
         set.width = this->geometry().width();
         set.height = this->geometry().height();
-        database->setSetting(set);
+        database->setSettingSlot(set);
 
         if(progressDialog)
         {
@@ -380,7 +380,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         QPoint point = this->mapToGlobal(QPoint(0, 0));
         set.xPos = point.x();
         set.yPos = point.y();
-        database->setSetting(set);
+        database->setSettingSlot(set);
 
         if(progressDialog)
         {
@@ -423,12 +423,13 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 sSETTINGS set = database->getSetting();
                 set.USD2CZK = rates["CZK"].toDouble();
                 set.USD2EUR = rates["EUR"].toDouble();
-                database->setSetting(set);
+                set.USD2GBP = rates["GBP"].toDouble();
+                database->setSettingSlot(set);
 
 
                 connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
 
-                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK");
+                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK,GBP");
             }
             else if(jsonObject["base"].toString() == "EUR")
             {
@@ -437,12 +438,13 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 sSETTINGS set = database->getSetting();
                 set.EUR2USD = rates["USD"].toDouble();
                 set.EUR2CZK = rates["CZK"].toDouble();
-                database->setSetting(set);
+                set.EUR2GBP = rates["GBP"].toDouble();
+                database->setSettingSlot(set);
 
 
                 connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
 
-                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD");
+                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD,EUR,GBP");
             }
             else if(jsonObject["base"].toString() == "CZK")
             {
@@ -450,8 +452,10 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 
                 sSETTINGS set = database->getSetting();
                 set.CZK2USD = rates["USD"].toDouble();
+                set.CZK2EUR = rates["EUR"].toDouble();
+                set.CZK2GBP = rates["GBP"].toDouble();
                 set.lastExchangeRatesUpdate = QDate::currentDate();
-                database->setSetting(set);
+                database->setSettingSlot(set);
 
                 setStatus("The exchange rates have been updated!");
                 QApplication::restoreOverrideCursor();
@@ -503,7 +507,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 void MainWindow::setOverviewHeader()
 {
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price" << "Received dividend";
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price" << "Netto dividend";
     ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->setRowCount(0);
@@ -629,7 +633,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     stockDlg->setLayout(grid);
 
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price" << "Delete";
+    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price" << "Fee" << "Delete";
     table->setColumnCount(header.count());
 
     table->setRowCount(0);
@@ -646,7 +650,6 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     table->setHorizontalHeaderLabels(header);
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
-    double price = 0.0;
 
     int pos = 0;
     table->setSortingEnabled(false);
@@ -664,26 +667,41 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         table->setItem(pos, 3, item);
 
 
-
         double moneyInUSD = 0.0;
+        double feeInUSD = 0.0;
 
         switch(stock.currency)
         {
-            case USD: moneyInUSD = stock.price;
+            case USD:
+                moneyInUSD = stock.price * stock.count;
+                feeInUSD = stock.fee;
                 break;
-            case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
+            case CZK:
+                moneyInUSD = (stock.price * stock.count * database->getSetting().CZK2USD);
+                feeInUSD = (stock.fee * database->getSetting().CZK2USD);
                 break;
-            case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
+            case EUR:
+                moneyInUSD = (stock.price * stock.count * database->getSetting().EUR2USD);
+                feeInUSD = (stock.fee * database->getSetting().EUR2USD);
                 break;
         }
 
+        double price = 0.0;
+        double fee = 0.0;
+
         switch(selectedCurrency)
         {
-            case USD: price = moneyInUSD;
+            case USD:
+                price = moneyInUSD;
+                fee = feeInUSD;
                 break;
-            case CZK: price = (moneyInUSD * database->getSetting().USD2CZK);
+            case CZK:
+                price = (moneyInUSD * database->getSetting().USD2CZK);
+                fee = (feeInUSD * database->getSetting().USD2CZK);
                 break;
-            case EUR: price = (moneyInUSD * database->getSetting().USD2EUR);
+            case EUR:
+                price = (moneyInUSD * database->getSetting().USD2EUR);
+                fee = (feeInUSD * database->getSetting().USD2EUR);
                 break;
         }
 
@@ -713,6 +731,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
         table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
         table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
+        table->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(abs(fee), 0, 'f', 2) + " " + currencySign));
+
 
         QPushButton *pbDelete = new QPushButton(table);
         pbDelete->setStyleSheet("QPushButton {border-image:url(:/images/delete.png);}");
@@ -743,8 +763,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                     }
                 } );
 
-        table->setItem(pos, 7, new QTableWidgetItem());
-        table->setCellWidget(pos, 7, pbDelete);
+        table->setItem(pos, 8, new QTableWidgetItem());
+        table->setCellWidget(pos, 8, pbDelete);
 
         pos++;
     }
@@ -793,6 +813,7 @@ void MainWindow::fillOverviewSlot()
 
     double deposit = 0.0;
     double invested = 0.0;
+    double withdrawal = 0.0;
     double dividends = 0.0;
     double divTax = 0.0;
     double fees = 0.0;
@@ -815,92 +836,111 @@ void MainWindow::fillOverviewSlot()
 
 
             double moneyInUSD = 0.0;
+            double feeInUSD = 0.0;
 
             switch(stock.currency)
             {
-                case USD: moneyInUSD = stock.price;
+                case USD:
+                    moneyInUSD = stock.price; feeInUSD = stock.fee;
+                    feeInUSD = stock.fee;
                     break;
-                case CZK: moneyInUSD = (stock.price * database->getSetting().CZK2USD);
+                case CZK:
+                    moneyInUSD = (stock.price * database->getSetting().CZK2USD);
+                    feeInUSD = (stock.fee * database->getSetting().CZK2USD);
                     break;
-                case EUR: moneyInUSD = (stock.price * database->getSetting().EUR2USD);
+                case EUR:
+                    moneyInUSD = (stock.price * database->getSetting().EUR2USD);
+                    feeInUSD = (stock.fee * database->getSetting().EUR2USD);
                     break;
             }
 
-            if(stock.type == DEPOSIT)
+            switch(stock.type)
             {
-                switch(selectedCurrency)
+                case DEPOSIT:
                 {
-                    case USD: deposit += moneyInUSD;
-                        break;
-                    case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
+                    switch(selectedCurrency)
+                    {
+                        case USD: deposit += moneyInUSD;
+                            break;
+                        case CZK: deposit += (moneyInUSD * database->getSetting().USD2CZK);
+                            break;
+                        case EUR: deposit += (moneyInUSD * database->getSetting().USD2EUR);
+                            break;
+                    }
                 }
-            }
-            else if(stock.type == BUY || stock.type == SELL)
-            {
-                if(stock.type == BUY)
-                {
-                    moneyInUSD *= -1.0;
-                }
+                break;
 
-                switch(selectedCurrency)
+                case WITHDRAWAL:
                 {
-                    case USD: invested += moneyInUSD * stock.count;
-                        break;
-                    case CZK: invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
-                        break;
+                    switch(selectedCurrency)
+                    {
+                        case USD: withdrawal += moneyInUSD;
+                            break;
+                        case CZK: withdrawal += (moneyInUSD * database->getSetting().USD2CZK);
+                            break;
+                        case EUR: withdrawal += (moneyInUSD * database->getSetting().USD2EUR);
+                            break;
+                    }
                 }
-            }
-            else if(stock.type == DIVIDEND)
-            {
-                switch(selectedCurrency)
+                break;
+
+                case BUY:
+                case SELL:
                 {
-                    case USD: dividends += moneyInUSD;
-                        break;
-                    case CZK: dividends += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: dividends += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
+                    if(stock.type == BUY)
+                    {
+                        moneyInUSD *= -1.0;
+                    }
+
+                    switch(selectedCurrency)
+                    {
+                        case USD:
+                            invested += moneyInUSD * stock.count;
+                            transFees += feeInUSD;
+                            break;
+                        case CZK:
+                            invested += (moneyInUSD * stock.count * database->getSetting().USD2CZK);
+                            transFees += (feeInUSD * database->getSetting().USD2CZK);
+                            break;
+                        case EUR:
+                            invested += (moneyInUSD * stock.count * database->getSetting().USD2EUR);
+                            transFees += (feeInUSD * database->getSetting().USD2EUR);
+                            break;
+                    }
                 }
-            }
-            else if(stock.type == TAX)
-            {
-                switch(selectedCurrency)
+                break;
+
+                case DIVIDEND:
                 {
-                    case USD: divTax += moneyInUSD;
-                        break;
-                    case CZK: divTax += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: divTax += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
+                    switch(selectedCurrency)
+                    {
+                        case USD:
+                            dividends += moneyInUSD;
+                            divTax += feeInUSD;
+                            break;
+                        case CZK:
+                            dividends += (moneyInUSD * database->getSetting().USD2CZK);
+                            divTax += (feeInUSD * database->getSetting().USD2CZK);
+                            break;
+                        case EUR:
+                            dividends += (moneyInUSD * database->getSetting().USD2EUR);
+                            divTax += (feeInUSD * database->getSetting().USD2EUR);
+                            break;
+                    }
                 }
-            }
-            else if(stock.type == FEE)
-            {
-                switch(selectedCurrency)
+                break;
+
+                case FEE:
                 {
-                    case USD: fees += moneyInUSD;
-                        break;
-                    case CZK: fees += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: fees += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
-                }
-            }
-            else if(stock.type == TRANSACTIONFEE)
-            {
-                switch(selectedCurrency)
-                {
-                    case USD: transFees += moneyInUSD;
-                        break;
-                    case CZK: transFees += (moneyInUSD * database->getSetting().USD2CZK);
-                        break;
-                    case EUR: transFees += (moneyInUSD * database->getSetting().USD2EUR);
-                        break;
+                    switch(selectedCurrency)
+                    {
+                        case USD: fees += moneyInUSD;
+                            break;
+                        case CZK: fees += (moneyInUSD * database->getSetting().USD2CZK);
+                            break;
+                        case EUR: fees += (moneyInUSD * database->getSetting().USD2EUR);
+                            break;
+                    }
                 }
             }
         }
@@ -1283,8 +1323,22 @@ void MainWindow::on_pbShowGraph_clicked()
 
 
     QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
+    connect(
+        zoomIn, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomIn(); investedChart->zoomIn(); }
+        );
+
     QPushButton *zoomOut = new QPushButton("Zoom out", chartWidget);
+    connect(
+        zoomOut, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomOut(); investedChart->zoomOut(); }
+        );
+
     QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
+    connect(
+        zoomReset, &QPushButton::clicked,
+        [=]( ) { depositChart->zoomReset(); investedChart->zoomReset(); }
+        );
 
     if(ui->cmGraphType->currentText() != "Dividends")
     {
@@ -1294,21 +1348,6 @@ void MainWindow::on_pbShowGraph_clicked()
         HB->addWidget(zoomReset);
         VB->addLayout(HB);
     }
-
-    connect(
-        zoomIn, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomIn(); investedChart->zoomIn(); }
-        );
-
-    connect(
-        zoomOut, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomOut(); investedChart->zoomOut(); }
-        );
-
-    connect(
-        zoomReset, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomReset(); investedChart->zoomReset(); }
-        );
 
 
     chartWidget->setLayout(VB);
@@ -1321,6 +1360,20 @@ void MainWindow::on_pbShowGraph_clicked()
 
 void MainWindow::on_pbPDFExport_clicked()
 {
+    QString customText;
+    bool okCustom = false;
+
+    if(ui->cbPDFCustomText->isChecked())
+    {
+        customText = QInputDialog::getMultiLineText(this,
+                                                    tr("PDF export"),
+                                                    tr("Text:"),
+                                                    "",
+                                                    &okCustom);
+
+        customText.replace("\n", "<br>");
+    }
+
     QString fileName = QFileDialog::getSaveFileName(this,
                                                     "Export PDF",
                                                     QString(),
@@ -1350,8 +1403,6 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "           <tr>";
     text += "               <td align=\"left\"><b>Jméno:</b></td>";
     text += QString("       <td colspan=\"3\" align=\"center\">%1</td>").arg(ui->lePDFName->text());
-    //text += "               <td align=\"left\"><b>Platforma</b>:</td>";
-    //text += QString("       <td align=\"center\">%1</td>").arg(ui->lePDFPlatform->text());
     text += "           </tr>";
     text += "           <tr>";
     text += "               <td align=\"left\"><b>Datum:</b></td>";
@@ -1395,6 +1446,14 @@ void MainWindow::on_pbPDFExport_clicked()
     text += QString("Přepočet měn z USD do CZK byl proveden jednotným kurzem: 1 USD = %1 CZK").arg(ui->lePDFUSD2CZK->text());
     text += "<br>";
     text += QString("Přepočet měn z EUR do CZK byl proveden jednotným kurzem: 1 EUR = %1 CZK").arg(ui->lePDFEUR2CZK->text());
+    text += "<br>";
+    text += QString("Přepočet měn z GBP do CZK byl proveden jednotným kurzem: 1 EUR = %1 CZK").arg(ui->lePDFGBP2CZK->text());
+    text += "<br><br>";
+
+    if(okCustom && !customText.isEmpty())
+    {
+        text += customText;
+    }
 
     text += "</html>";
 
@@ -1457,17 +1516,17 @@ QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
                 {
                     case USD:
                         pdfRow.price = round(deg.price * USD2CZK);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX) * USD2CZK);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * USD2CZK);
                         pdfRow.paid = QString("%1 %2").arg(deg.price).arg("USD");
                         break;
                     case CZK:
                         pdfRow.price = round(deg.price);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX));
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND));
                         pdfRow.paid = QString("%1 %2").arg(deg.price).arg("CZK");
                         break;
                     case EUR:
                         pdfRow.price = round(deg.price * EUR2CZK);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, TAX) * EUR2CZK);
+                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * EUR2CZK);
                         pdfRow.paid = QString("%1 %2").arg(deg.price).arg("EUR");
                         break;
                 }
@@ -1515,7 +1574,7 @@ void MainWindow::deOverviewYearChanged(const QDate &date)
     sSETTINGS set = database->getSetting();
     set.lastOverviewFrom = ui->deOverviewFrom->date();
     set.lastOverviewTo = ui->deOverviewTo->date();
-    database->setSetting(set);
+    database->setSettingSlot(set);
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
@@ -1527,14 +1586,14 @@ void MainWindow::on_deOverviewFrom_userDateChanged(const QDate &date)
 {
     sSETTINGS set = database->getSetting();
     set.lastOverviewFrom = date;
-    database->setSetting(set);
+    database->setSettingSlot(set);
 }
 
 void MainWindow::on_deOverviewTo_userDateChanged(const QDate &date)
 {
     sSETTINGS set = database->getSetting();
     set.lastOverviewTo = date;
-    database->setSetting(set);
+    database->setSettingSlot(set);
 }
 
 void MainWindow::on_deGraphYear_userDateChanged(const QDate &date)
@@ -1585,7 +1644,7 @@ void MainWindow::on_pbAddRecord_clicked()
 
     QComboBox *type = new QComboBox(inputDlg);
     QStringList typeList;
-    typeList << "Dividend" << "Tax" << "Transaction fee" << "Fee" << "Deposit" << "Withdrawal" << "Buy" << "Sell";
+    typeList << "Deposit" << "Withdrawal" << "Buy" << "Sell" << "Fee" << "Dividend";
     type->addItems(typeList);
 
     HB2->addWidget(label2);
@@ -1678,7 +1737,7 @@ void MainWindow::on_pbAddRecord_clicked()
     HB7->addWidget(lePrice);
 
     QHBoxLayout *HB8 = new QHBoxLayout();
-    QLabel *label8 = new QLabel("Total Fee", inputDlg);
+    QLabel *label8 = new QLabel("Total fee/tax", inputDlg);
     QLineEdit *leFee = new QLineEdit(inputDlg);
     leFee->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
     HB8->addWidget(label8);
@@ -1711,18 +1770,6 @@ void MainWindow::on_pbAddRecord_clicked()
 
                     connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(addRecord(QByteArray, QString)));
                     manager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
-
-                    /*if(addRecord(record))
-                    {
-                        inputDlg->close();
-                    }
-                    else
-                    {
-                        QMessageBox::critical(inputDlg,
-                                              "Add record",
-                                              "There is an error - please check the ticker",
-                                              QMessageBox::Ok);
-                    }*/
                 }
             }
             );

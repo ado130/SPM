@@ -6,7 +6,7 @@
 #include <QFile>
 #include <QDataStream>
 
-DeGiro::DeGiro(QObject *parent) : QObject(parent)
+DeGiro::DeGiro(sSETTINGS set, QObject *parent) : settings(set), QObject(parent)
 {
     isRAWFile = loadRawData();
 }
@@ -70,6 +70,10 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         {
             degiroRaw.currency = EUR;
         }
+        else if(list.at(7).contains("GBP"))
+        {
+            degiroRaw.currency = GBP;
+        }
         else if(list.at(9).contains("CZK"))
         {
             degiroRaw.currency = CZK;
@@ -81,6 +85,10 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         else if(list.at(9).contains("EUR"))
         {
             degiroRaw.currency = EUR;
+        }
+        else if(list.at(9).contains("GBP"))
+        {
+            degiroRaw.currency = GBP;
         }
 
         bool ok;
@@ -132,6 +140,7 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         else if(degiroRaw.description.toLower().contains("dividend"))
         {
             degData.type = DIVIDEND;
+            degData.count = 1;
         }
         else if(degiroRaw.description.toLower().contains("nákup") || degiroRaw.description.toLower().contains("buy"))
         {
@@ -163,6 +172,7 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
             degData.stockName = degiroRaw.product;
             degData.source = DEGIRO;
             degData.currency = degiroRaw.currency;
+            degData.fee = 0.0;
 
             if(degData.count != 0)
             {
@@ -176,8 +186,10 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
 
             QVector<sSTOCKDATA> vector = stockData[degiroRaw.ISIN];
 
-            // check for multiple dividends/fees for the ISIN at the same time and sum them
-            // it might happen that degiro add and sub the dividend/fee
+            /*
+             * Check for multiple dividends/fees for the ISIN at the same time and sum them
+             * It might happen that degiro add and sub the dividend/fee
+            */
             if(degData.type == DIVIDEND || degData.type == TAX)
             {
                 auto exists = std::find_if(vector.begin(), vector.end(), [degData] (sSTOCKDATA &s)
@@ -189,7 +201,6 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
                 if(exists != vector.end())
                 {
                     exists->price += degData.price;
-                    exists->count += degData.count;
                 }
                 else
                 {
@@ -207,6 +218,8 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
 
     if(rawData.count() > 0)
     {
+        stockData = mergeEventAndFee(stockData);
+
         emit setDegiroData(stockData);
         saveRawData();
         isRAWFile = true;
@@ -239,6 +252,90 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
     }while(list.count() != 12);
 
     return list;
+}
+
+StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
+{
+    QList<QString> keys = data.keys();
+
+    for(const QString &key : keys)
+    {
+        QVector<sSTOCKDATA> vector = data.value(key);
+        auto vectorEnd = vector.end();
+
+        for (auto it = vector.begin(); it != vectorEnd; ++it)
+        {
+            if(it->type == TRANSACTIONFEE || it->type == FEE || it->type == TAX)
+            {
+                continue;
+            }
+
+            auto exists = std::find_if(vector.begin(), vector.end(), [it] (sSTOCKDATA &s)
+                                       {
+                                           return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                       }
+                                       );
+
+            bool bFound = false;
+
+            while(exists != vector.end())
+            {
+                double feeInUSD = 0.0;
+
+                switch (exists->currency)
+                {
+                    case USD:
+                        feeInUSD = exists->price;
+                        break;
+                    case CZK:
+                        feeInUSD = exists->price * settings.CZK2USD;
+                        break;
+                    case EUR:
+                        feeInUSD = exists->price * settings.EUR2USD;
+                        break;
+                }
+
+                switch (it->currency)
+                {
+                    case USD:
+                        it->fee += feeInUSD;
+                        break;
+                    case CZK:
+                        it->fee += feeInUSD * settings.USD2CZK;
+                        break;
+                    case EUR:
+                        it->fee += feeInUSD * settings.USD2EUR;
+                        break;
+                }
+
+                exists = std::find_if(++exists, vector.end(), [it] (sSTOCKDATA &s)
+                                      {
+                                          return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                      }
+                                      );
+
+                bFound = true;
+            }
+
+            if(bFound)
+            {
+                vector.erase( std::remove_if(vector.begin(), vector.end(), [it] (sSTOCKDATA &s)
+                                          {
+                                              return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                          }
+                                            ), vector.end()
+                             );
+
+                it = vector.begin();
+                vectorEnd = vector.end();
+            }
+
+        }
+
+        data[key] = vector;
+    }
+
+    return data;
 }
 
 

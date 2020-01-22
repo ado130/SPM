@@ -41,7 +41,7 @@ public:
 signals:
 
 public slots:
-    void setSetting(const sSETTINGS &value);
+    void setSettingSlot(const sSETTINGS &value);
 
 private:
     sSETTINGS setting;
