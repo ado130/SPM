@@ -586,6 +586,9 @@ void MainWindow::fillOverviewTable()
 
         if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
+        int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
+
+        if(totalCount == 0 && !database->getSetting().showSoldPositions) continue;
 
         ui->tableOverview->insertRow(pos);
 
@@ -596,7 +599,7 @@ void MainWindow::fillOverviewTable()
             ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
             ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
             ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
-            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(stockData->getCurrentCount(stock.ISIN, from, to))));
+            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
             ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
             ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
@@ -663,7 +666,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     table->setColumnCount(header.count());
 
     table->horizontalHeader()->setVisible(true);
-    table->verticalHeader()->setVisible(true);
+    table->verticalHeader()->setVisible(false);
 
     table->setSelectionBehavior(QAbstractItemView::SelectRows);
     table->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -799,10 +802,13 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     }
 
     table->resizeColumnsToContents();
-    stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(), table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height()+10);
+    stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(),
+                     table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height());
 
     stockDlg->open();
 }
+
+
 
 bool MainWindow::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
 {
@@ -838,6 +844,7 @@ void MainWindow::fillOverviewSlot()
     double divTax = 0.0;
     double fees = 0.0;
     double transFees = 0.0;
+    double account = 0.0;
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
 
@@ -905,6 +912,7 @@ void MainWindow::fillOverviewSlot()
                 break;
 
                 case SELL:
+                    account += exchangeRatesFuncMap[rates](stock.price) * stock.count;
                     break;
 
                 case DIVIDEND:
@@ -925,10 +933,15 @@ void MainWindow::fillOverviewSlot()
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
+    deposit = abs(deposit);
     invested = abs(invested);
+    dividends = abs(dividends);
     divTax = abs(divTax);
     fees = abs(fees);
     transFees = abs(transFees);
+    withdrawal = abs(withdrawal);
+
+    account += (deposit - invested - fees - transFees - withdrawal + dividends - divTax );
 
     if(!qFuzzyIsNull(invested))
     {
@@ -941,6 +954,8 @@ void MainWindow::fillOverviewSlot()
     ui->leDivTax->setText(QString("%L1").arg(divTax, 0, 'f', 2) + " " + currencySign);
     ui->leFees->setText(QString("%L1").arg(fees, 0, 'f', 2) + " " + currencySign);
     ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currencySign);
+    ui->leWithdrawal->setText(QString("%L1").arg(withdrawal, 0, 'f', 2) + " " + currencySign);
+    ui->leAccount->setText(QString("%L1").arg(account, 0, 'f', 2) + " " + currencySign);
 }
 
 void MainWindow::on_pbShowGraph_clicked()

@@ -179,42 +179,22 @@ QGroupBox::title {
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17">
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_4">
-                 <item>
-                  <widget class="QLabel" name="label_3">
-                   <property name="styleSheet">
-                    <string notr="true"/>
-                   </property>
-                   <property name="text">
-                    <string>Deposit</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leDeposit">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QLabel" name="label">
+                <widget class="QLabel" name="label_3">
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
                  <property name="text">
-                  <string>Withdrawal</string>
+                  <string>Deposit</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="leWithdrawal">
+                <widget class="QLineEdit" name="leDeposit">
+                 <property name="toolTip">
+                  <string>Deposited money</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -226,18 +206,41 @@ QGroupBox::title {
                 </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_5">
-                 <item>
-                  <widget class="QLabel" name="label_4">
-                   <property name="text">
-                    <string>Invested</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leInvested">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>Withdrawal</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leWithdrawal">
+                 <property name="toolTip">
+                  <string>Withdrawal money</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_4">
+                 <property name="text">
+                  <string>Invested</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leInvested">
+                 <property name="toolTip">
+                  <string>Invested money</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
@@ -245,171 +248,195 @@ QGroupBox::title {
 }
 
 </string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_15">
-                 <item>
-                  <widget class="QLabel" name="label_24">
-                   <property name="text">
-                    <string>Transaction fees</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leTransactionFee">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_24">
+                 <property name="text">
+                  <string>Transaction fees</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leTransactionFee">
+                 <property name="toolTip">
+                  <string>Transaction fees</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <item>
-                  <widget class="QLabel" name="label_6">
-                   <property name="text">
-                    <string>Brutto dividends</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leDividends">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Fees</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leFees">
+                 <property name="toolTip">
+                  <string>Account fees</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_11">
-                 <item>
-                  <widget class="QLabel" name="label_11">
-                   <property name="text">
-                    <string>Div tax</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leDivTax">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_26">
+                 <property name="text">
+                  <string>Account</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leAccount">
+                 <property name="toolTip">
+                  <string>Deposit + Netto dividends + Sold - Invested - Fees - Withdrawal</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_13">
-                 <item>
-                  <widget class="QLabel" name="label_28">
-                   <property name="text">
-                    <string>Div yield</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leDY">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_5">
+                 <property name="text">
+                  <string>Portfolio value</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lePortfolio">
+                 <property name="toolTip">
+                  <string>Portfolio value</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_12">
-                 <item>
-                  <widget class="QLabel" name="label_12">
-                   <property name="text">
-                    <string>Fees</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leFees">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_7">
+                 <property name="text">
+                  <string>Performance</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lePerformance">
+                 <property name="toolTip">
+                  <string>Portfolio value / Deposit</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Brutto dividends</string>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_6">
-                 <item>
-                  <widget class="QLabel" name="label_5">
-                   <property name="text">
-                    <string>Portfolio value</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="lePortfolio">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLineEdit" name="leDividends">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_8">
-                 <item>
-                  <widget class="QLabel" name="label_7">
-                   <property name="text">
-                    <string>Performance</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="lePerformance">
-                   <property name="styleSheet">
-                    <string notr="true">QLineEdit {
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>Div tax</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leDivTax">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     selection-background-color: darkgray;
 }</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_28">
+                 <property name="text">
+                  <string>Div yield</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leDY">
+                 <property name="toolTip">
+                  <string>Dividends / Invested</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </item>

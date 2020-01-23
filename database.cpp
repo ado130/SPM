@@ -55,6 +55,7 @@ void Database::loadConfig()
 
     setting.lastOverviewFrom = QDate::fromString(settings.value("Overview/lastOverviewFrom", QDate(QDate::currentDate().year(), 1, 1).toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
     setting.lastOverviewTo = QDate::fromString(settings.value("Overview/lastOverviewTo", QDate(QDate::currentDate().year(), 12, 31).toString("dd.MM.yyyy")).toString(), "dd.MM.yyyy");
+    setting.showSoldPositions = settings.value("Overview/soldPositions", false).toBool();
 
     QDate currentDate = QDate::currentDate();
     currentDate = currentDate.addDays(-1);
@@ -104,6 +105,7 @@ void Database::saveConfig()
 
     settings.setValue("Overview/lastOverviewFrom", setting.lastOverviewFrom.toString("dd.MM.yyyy"));
     settings.setValue("Overview/lastOverviewTo", setting.lastOverviewTo.toString("dd.MM.yyyy"));
+    settings.setValue("Overview/soldPositions", setting.showSoldPositions);
 
     settings.setValue("Exchange/lastExchangeRatesUpdate", setting.lastExchangeRatesUpdate.toString("dd.MM.yyyy"));
 

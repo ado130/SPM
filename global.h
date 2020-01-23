@@ -55,6 +55,7 @@ struct sSETTINGS
     // Overview
     QDate lastOverviewFrom;
     QDate lastOverviewTo;
+    bool showSoldPositions;
 
     // Exchange
     QDate lastExchangeRatesUpdate;

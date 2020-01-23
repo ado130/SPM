@@ -17,7 +17,7 @@ public:
     double getTax(const QString &ticker, const QDateTime &date, const eSTOCKEVENTTYPE &type);
     void saveStockData();
 
-    int getCurrentCount(const QString &ISIN, const QDate &from, const QDate &to);
+    int getTotalCount(const QString &ISIN, const QDate &from, const QDate &to);
     double getTotalPrice(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
     double getTotalFee(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
     double getReceivedDividend(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);

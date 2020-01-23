@@ -17,7 +17,7 @@ StockData::StockData(QObject *parent) : QObject(parent)
 }
 
 
-int StockData::getCurrentCount(const QString &ISIN, const QDate &from, const QDate &to)
+int StockData::getTotalCount(const QString &ISIN, const QDate &from, const QDate &to)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ISIN);
 
@@ -27,9 +27,13 @@ int StockData::getCurrentCount(const QString &ISIN, const QDate &from, const QDa
     {
         if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
-        if(stock.type == BUY || stock.type == SELL)
+        if(stock.type == BUY)
         {
             count += stock.count;
+        }
+        else if(stock.type == SELL)
+        {
+            count -= stock.count;
         }
     }
 
@@ -94,7 +98,7 @@ double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDat
     {
         if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
-        if(stock.type == BUY)
+        if(stock.type == BUY || stock.type == SELL)
         {
             QString rates;
             eCURRENCY currencyFrom = stock.currency;
@@ -352,7 +356,7 @@ void StockData::loadOnlineStockInfo()
             for(const QString& key : arr.keys())
             {
                 QJsonValue value = arr.value(key);
-                qDebug() << "Key = " << key << ", Value = " << value.toString();
+                //qDebug() << "Key = " << key << ", Value = " << value.toString();
             }
         }
     }

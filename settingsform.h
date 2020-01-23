@@ -40,6 +40,10 @@ private slots:
 
     void on_pbTastyworksLoadCSV_clicked();
 
+
+
+    void on_cbSoldPositions_clicked(bool checked);
+
 signals:
     void setSetting(sSETTINGS);
     void setScreenerParams(QVector<sSCREENERPARAM> params);

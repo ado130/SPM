@@ -24,6 +24,8 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->lePosX->setText(QString::number(setting.xPos));
     ui->lePosY->setText(QString::number(setting.yPos));
 
+    ui->cbSoldPositions->setChecked(setting.showSoldPositions);
+
     ui->leDegiroCSV->setText(setting.degiroCSV);
     ui->cmDegiroCSV->setCurrentIndex(setting.degiroCSVdelimeter);
     ui->cbDegiroAutoLoad->setChecked(setting.degiroAutoLoad);
@@ -155,6 +157,14 @@ void SettingsForm::on_cbFilterON_clicked(bool checked)
 void SettingsForm::on_cmCurrency_currentIndexChanged(int index)
 {
     setting.currency = static_cast<eCURRENCY>(index);
+    emit setSetting(setting);
+    emit fillOverview();
+}
+
+
+void SettingsForm::on_cbSoldPositions_clicked(bool checked)
+{
+    setting.showSoldPositions = checked;
     emit setSetting(setting);
     emit fillOverview();
 }
