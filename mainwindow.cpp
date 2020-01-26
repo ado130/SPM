@@ -578,13 +578,13 @@ void MainWindow::fillOverviewTable()
 
     for(const QString &key : keys)
     {
-        if( key.isEmpty() || stockList.value(key).count() == 0 || stockList.value(key).at(0).stockName.toLower().contains("fundshare") ) continue;
+        if( key.isEmpty() || stockList.value(key).count() == 0 ) continue;
 
         sSTOCKDATA stock = stockList.value(key).first();
 
         if(stock.stockName.toLower().contains("fundshare") ) continue;
 
-        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+        //if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
         int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
 
@@ -845,6 +845,7 @@ void MainWindow::fillOverviewSlot()
     double fees = 0.0;
     double transFees = 0.0;
     double account = 0.0;
+    double sell = 0.0;
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
 
@@ -912,7 +913,9 @@ void MainWindow::fillOverviewSlot()
                 break;
 
                 case SELL:
-                    account += exchangeRatesFuncMap[rates](stock.price) * stock.count;
+                    sell += exchangeRatesFuncMap[rates](stock.price) * stock.count;
+                    transFees += exchangeRatesFuncMap[rates](stock.fee);
+
                     break;
 
                 case DIVIDEND:
@@ -940,8 +943,9 @@ void MainWindow::fillOverviewSlot()
     fees = abs(fees);
     transFees = abs(transFees);
     withdrawal = abs(withdrawal);
+    sell = abs(sell);
 
-    account += (deposit - invested - fees - transFees - withdrawal + dividends - divTax );
+    account += (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal  );
 
     if(!qFuzzyIsNull(invested))
     {
@@ -956,6 +960,7 @@ void MainWindow::fillOverviewSlot()
     ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currencySign);
     ui->leWithdrawal->setText(QString("%L1").arg(withdrawal, 0, 'f', 2) + " " + currencySign);
     ui->leAccount->setText(QString("%L1").arg(account, 0, 'f', 2) + " " + currencySign);
+    ui->leSell->setText(QString("%L1").arg(sell, 0, 'f', 2) + " " + currencySign);
 }
 
 void MainWindow::on_pbShowGraph_clicked()
@@ -1036,7 +1041,9 @@ void MainWindow::on_pbShowGraph_clicked()
 
                 case BUY:
                 {
-                    invested += exchangeRatesFuncMap[rates]((-1.0)*stock.price);
+                    qDebug() << stock.stockName << stock.dateTime.date() << stock.price;
+
+                    invested += (exchangeRatesFuncMap[rates]((-1.0)*stock.price)*stock.count);
 
                     investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
                 }
@@ -1331,8 +1338,8 @@ void MainWindow::on_pbShowGraph_clicked()
     if(ui->cmGraphType->currentText() != "Dividends")
     {
         QHBoxLayout *HB = new QHBoxLayout();
-        HB->addWidget(zoomIn);
-        HB->addWidget(zoomOut);
+        //HB->addWidget(zoomIn);
+        //HB->addWidget(zoomOut);
         HB->addWidget(zoomReset);
         VB->addLayout(HB);
     }

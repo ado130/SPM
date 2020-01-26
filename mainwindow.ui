@@ -296,28 +296,6 @@ QGroupBox::title {
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_26">
-                 <property name="text">
-                  <string>Account</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="leAccount">
-                 <property name="toolTip">
-                  <string>Deposit + Netto dividends + Sold - Invested - Fees - Withdrawal</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit {
-    border: 2px solid gray;
-    border-radius: 10px;
-    padding: 0 8px;
-    selection-background-color: darkgray;
-}</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QLabel" name="label_5">
                  <property name="text">
                   <string>Portfolio value</string>
@@ -365,6 +343,25 @@ QGroupBox::title {
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QLabel" name="label_18">
+                 <property name="text">
+                  <string>Sell</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leSell">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
+               </item>
                <item>
                 <widget class="QLabel" name="label_6">
                  <property name="text">
@@ -426,17 +423,26 @@ QGroupBox::title {
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                <widget class="QLabel" name="label_26">
+                 <property name="text">
+                  <string>Account</string>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="leAccount">
+                 <property name="toolTip">
+                  <string>Deposit + Netto dividends + Sold - Invested - Fees - Withdrawal</string>
                  </property>
-                </spacer>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
