@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QMessageBox::critical(this,
                               "SSL supports",
-                              "The platform does not support the SSL, the application might not work correct!",
+                              "The application does not support the SSL, the application might not work correct!",
                               QMessageBox::Ok);
     }
 
@@ -40,7 +40,10 @@ MainWindow::MainWindow(QWidget *parent) :
     stockData = std::make_unique<StockData> (this);
     progressDialog = nullptr;
 
-    connect(degiro.get(), SIGNAL(setDegiroData(StockDataType)), this, SLOT(setDegiroDataSlot(StockDataType)));
+    connect(degiro.get(), &DeGiro::setDegiroData, this, &MainWindow::setDegiroDataSlot);
+
+    connect(stockData.get(), &StockData::updateStockData, this, &MainWindow::updateStockDataSlot);
+    stockData->loadOnlineStockInfo();
 
     /*
      * Fill exchange rates function
@@ -146,8 +149,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QApplication::setOverrideCursor(Qt::WaitCursor);
 
-        connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
-
+        connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
         manager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK,GBP");
     }
 
@@ -422,7 +424,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
+    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
 
     if(!statusCode.contains("200"))
     {
@@ -449,9 +451,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 set.USD2GBP = rates["GBP"].toDouble();
                 database->setSettingSlot(set);
 
-
-                connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
-
+                connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
                 manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK,GBP");
             }
             else if(jsonObject["base"].toString() == "EUR")
@@ -465,8 +465,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 database->setSettingSlot(set);
 
 
-                connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(updateExchangeRates(QByteArray, QString)));
-
+                connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
                 manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD,EUR,GBP");
             }
             else if(jsonObject["base"].toString() == "CZK")
@@ -494,13 +493,13 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 
 void MainWindow::on_actionCheck_version_triggered()
 {
-    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
+    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
     manager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
 }
 
 void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(checkVersion(QByteArray, QString)));
+    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
 
     if(!statusCode.contains("200"))
     {
@@ -530,7 +529,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 void MainWindow::setOverviewHeader()
 {
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Total current price" << "Netto dividend";
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Current price" << "Total current price" << "Netto dividend";
     ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->setRowCount(0);
@@ -570,6 +569,21 @@ void MainWindow::fillOverviewTable()
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
+    QString rates;
+    switch(database->getSetting().currency)
+    {
+        case USD: rates = "USD2USD";
+            break;
+        case CZK: rates = "USD2CZK";
+            break;
+        case EUR: rates = "USD2EUR";
+            break;
+        case GBP: rates = "USD2GBP";
+            break;
+    }
+
+    double portfolioValue = 0.0;
+
     QDate from = ui->deOverviewFrom->date();
     QDate to = ui->deOverviewTo->date();
 
@@ -590,25 +604,43 @@ void MainWindow::fillOverviewTable()
 
         if(totalCount == 0 && !database->getSetting().showSoldPositions) continue;
 
+        // Find sector
+        QVector<sISINDATA> isinList = database->getIsinList();
+
+        auto it = std::find_if(isinList.begin(), isinList.end(), [stock](sISINDATA a)
+                               {
+                                   return stock.ISIN == a.ISIN;
+                               }
+                               );
+
+        QString sector;
+
+        if(it != isinList.end())
+        {
+            sector = it->sector;
+        }
+
+        double stockValue = exchangeRatesFuncMap[rates](stockData->getCachedISINPrice(stock.ISIN))*totalCount;
+        portfolioValue += stockValue;
+
         ui->tableOverview->insertRow(pos);
 
-        //for(const sSTOCKDATA &deg : stockList.value(key))
-        //{
-            ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
-            ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
-            ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
-            ui->tableOverview->setItem(pos, 3, new QTableWidgetItem("Sector"));
-            ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
-            ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
-            ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-            ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-            ui->tableOverview->setItem(pos, 8, new QTableWidgetItem("Total current price"));
-            ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-        //}
+
+        ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
+        ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
+        ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
+        ui->tableOverview->setItem(pos, 3, new QTableWidgetItem(sector));
+        ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
+        ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
+        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(exchangeRatesFuncMap[rates](stockData->getCachedISINPrice(stock.ISIN)), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockValue, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
 
         pos++;
-
     }
+
     ui->tableOverview->setSortingEnabled(true);
 
 
@@ -621,6 +653,9 @@ void MainWindow::fillOverviewTable()
     }
 
     ui->tableOverview->resizeColumnsToContents();
+
+
+    ui->lePortfolio->setText(QString("%L1").arg(portfolioValue, 0, 'f', 2) + " " + currencySign);
 }
 
 void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
@@ -846,6 +881,7 @@ void MainWindow::fillOverviewSlot()
     double transFees = 0.0;
     double account = 0.0;
     double sell = 0.0;
+    double portfolioValue = 0.0;
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
 
@@ -1317,7 +1353,7 @@ void MainWindow::on_pbShowGraph_clicked()
     }
 
 
-    QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
+    /*QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
     connect(
         zoomIn, &QPushButton::clicked,
         [=]( ) { depositChart->zoomIn(); investedChart->zoomIn(); }
@@ -1327,7 +1363,7 @@ void MainWindow::on_pbShowGraph_clicked()
     connect(
         zoomOut, &QPushButton::clicked,
         [=]( ) { depositChart->zoomOut(); investedChart->zoomOut(); }
-        );
+        );*/
 
     QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
     connect(
@@ -1765,7 +1801,7 @@ void MainWindow::on_pbAddRecord_clicked()
 
                     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-                    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(addRecord(QByteArray, QString)));
+                    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
                     manager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
                 }
             }
@@ -1789,7 +1825,7 @@ void MainWindow::on_pbAddRecord_clicked()
 
 void MainWindow::addRecord(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(addRecord(QByteArray, QString)));
+    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
 
     if(!statusCode.contains("200"))
     {
@@ -1821,7 +1857,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             row1.source = MANUALLY;
         }
 
-        sTABLE table = screener->finvizParse(QString(data));
+        sONLINEDATA table = screener->finvizParse(QString(data));
         row1.stockName = table.info.stockName;
         row2.stockName = table.info.stockName;
 
@@ -1848,6 +1884,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             record.name = table.info.stockName;
             record.sector = table.info.sector;
             record.industry = table.info.industry;
+            record.lastUpdate = QDateTime(QDate(2000, 2, 31));      // should always return invalid date
 
             isinList.push_back(record);
             database->setIsinList(isinList);
@@ -1951,6 +1988,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
                 sISINDATA record;
                 record.ISIN = ISIN;
                 record.name = stockName;
+                record.lastUpdate = QDateTime(QDate(2000, 2, 31));
 
                 isinList.push_back(record);
             }
@@ -2097,7 +2135,6 @@ void MainWindow::loadOnlineParametersSlot()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(parseOnlineParameters(QByteArray, QString)));
     lastRequestSource = FINVIZ;
 
     // Clean and save screener params
@@ -2105,12 +2142,13 @@ void MainWindow::loadOnlineParametersSlot()
     screenerParams.clear();
     database->setScreenerParams(screenerParams);
 
+    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
     manager.get()->execute("https://finviz.com/quote.ashx?t=T");
 }
 
 void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(parseOnlineParameters(QByteArray, QString)));
+    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
 
     if(!statusCode.contains("200"))
     {
@@ -2120,7 +2158,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
     }
     else
     {
-        sTABLE table;
+        sONLINEDATA table;
         QVector<sSCREENERPARAM> screenerParams = database->getScreenerParams();
 
         sSCREENERPARAM param;
@@ -2164,8 +2202,8 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
 
         if(lastRequestSource == FINVIZ)
         {
-            connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(parseOnlineParameters(QByteArray, QString)));
             lastRequestSource = YAHOO;
+            connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
             manager.get()->execute("https://finance.yahoo.com/quote/T/key-statistics");
         }
         else        // end
@@ -2246,7 +2284,7 @@ void MainWindow::on_pbAddTicker_clicked()
 
     lastLoadedTable.row.clear();
     lastRequestSource = FINVIZ;
-    connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
+    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
     QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
     manager->execute(request);
 }
@@ -2267,7 +2305,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
             ticker = ui->tableISIN->item(ui->tableISIN->currentRow(), 1)->text();
         }
 
-        sTABLE table;
+        sONLINEDATA table;
 
         switch (lastRequestSource)
         {
@@ -2295,7 +2333,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         }
         else    // end
         {
-            disconnect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
+            disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
             QString ISIN;
             QVector<sISINDATA> isinList = database->getIsinList();
@@ -2311,7 +2349,8 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
                 ISIN = it->ISIN;
             }
 
-            stockData->saveOnlineStockInfo(lastLoadedTable, ISIN);
+            stockData->saveOnlineStockInfo(ISIN, lastLoadedTable);
+            updateStockDataSlot(ISIN, lastLoadedTable);
             dataLoaded();
             emit refreshTickers(ticker);
         }
@@ -3199,6 +3238,7 @@ void MainWindow::on_pbISINAdd_clicked()
     record.sector = ui->leISINSector->text();
     record.ticker = ui->leISINTicker->text();
     record.industry = ui->leISINIndustry->text();
+    record.lastUpdate = QDateTime(QDate(2000, 2, 31));
 
     QVector<sISINDATA> isin = database->getIsinList();
 
@@ -3263,7 +3303,11 @@ void MainWindow::fillISINTable()
         ui->tableISIN->setItem(a, 3, new QTableWidgetItem(isinList.at(a).sector));
         ui->tableISIN->setItem(a, 4, new QTableWidgetItem(isinList.at(a).industry));
 
-        ui->tableISIN->setItem(a, 5, new QTableWidgetItem("Last update"));
+        qDebug() << isinList.at(a).lastUpdate.date();
+
+        QTableWidgetItem *item = new QTableWidgetItem;
+        item->setData(Qt::EditRole, isinList.at(a).lastUpdate.date());
+        ui->tableISIN->setItem(a, 5, item);
 
         QPushButton *pbUpdate = new QPushButton(ui->tableISIN);
         pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
@@ -3277,13 +3321,22 @@ void MainWindow::fillISINTable()
                     }
                     else
                     {
-                        lastLoadedTable.row.clear();
-                        lastRequestSource = FINVIZ;
+                        QDateTime today = QDateTime::currentDateTime();
 
-                        connect(manager.get(), SIGNAL(sendData(QByteArray, QString)), this, SLOT(getData(QByteArray, QString)));
+                        if(today.date() == isinList.at(a).lastUpdate.date())
+                        {
+                            setStatus(QString("The ticker %1 was already updated today.").arg(ticker));
+                        }
+                        else
+                        {
+                            lastLoadedTable.row.clear();
+                            lastRequestSource = FINVIZ;
 
-                        QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
-                        manager->execute(request);
+                            connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
+
+                            QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
+                            manager->execute(request);
+                        }
                     }
                 }
 
@@ -3427,3 +3480,37 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
         }
     }
 }
+
+void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
+{
+    QVector<sISINDATA> isinList = database->getIsinList();
+
+    auto it = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
+                        {
+                            return ISIN == a.ISIN;
+                        }
+                        );
+
+    if(it != isinList.end())
+    {
+        it->lastUpdate = QDateTime::currentDateTime();
+
+        // First time
+        if(it->sector.isEmpty() || it->industry.isEmpty())
+        {
+            it->sector = table.info.sector;
+            it->industry = table.info.industry;
+
+            database->setIsinList(isinList);
+
+            fillISINTable();
+            fillOverviewTable();
+        }
+        else
+        {
+            database->setIsinList(isinList);
+            fillISINTable();
+        }
+    }
+}
+

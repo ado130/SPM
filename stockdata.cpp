@@ -13,7 +13,6 @@
 StockData::StockData(QObject *parent) : QObject(parent)
 {
     loadStockData();
-    loadOnlineStockInfo();
 }
 
 
@@ -314,6 +313,24 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
     return in;
 }
 
+double StockData::getCachedISINPrice(QString ISIN)
+{
+    auto it = std::find_if(cachedStockData.begin(), cachedStockData.end(), [ISIN](QPair<QString, sONLINEDATA> a)
+                           {
+                               return a.first == ISIN;
+                           }
+                           );
+    if(it != cachedStockData.end())
+    {
+        if(it->second.row.contains("Price"))
+        {
+            return it->second.row.value("Price").toDouble();
+        }
+    }
+
+    return 0.0;
+}
+
 void StockData::loadOnlineStockInfo()
 {
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
@@ -348,6 +365,8 @@ void StockData::loadOnlineStockInfo()
 
         QJsonObject json = doc.object();
 
+        sONLINEDATA table;
+
         if(json.keys().count() > 0)
         {
             QString ISIN = json.keys().at(0);
@@ -356,16 +375,46 @@ void StockData::loadOnlineStockInfo()
             for(const QString& key : arr.keys())
             {
                 QJsonValue value = arr.value(key);
+
+                if(key.contains("Sector"))
+                {
+                    table.info.sector = value.toString();
+                }
+                else if(key.contains("Ticker"))
+                {
+                    table.info.ticker = value.toString();
+                }
+                else if(key.contains("Country"))
+                {
+                    table.info.country = value.toString();
+                }
+                else if(key.contains("Industry"))
+                {
+                    table.info.industry = value.toString();
+                }
+                else if(key.contains("Stockname"))
+                {
+                    table.info.stockName = value.toString();
+                }
+                else
+                {
+                    table.row.insert(key, value.toString());
+                }
+
                 //qDebug() << "Key = " << key << ", Value = " << value.toString();
             }
+
+            cachedStockData.push_back(qMakePair(ISIN, table));
+            //emit updateStockData(ISIN, table);
         }
     }
 }
 
-void StockData::saveOnlineStockInfo(const sTABLE &table, const QString &ISIN)
+void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table)
 {
     if(table.row.isEmpty() || ISIN.isEmpty()) return;
 
+    cachedStockData.push_back(qMakePair(ISIN, table));
 
     QJsonObject recordObject;
     recordObject.insert("Sector", table.info.sector);
@@ -385,8 +434,6 @@ void StockData::saveOnlineStockInfo(const sTABLE &table, const QString &ISIN)
     obj[ISIN]= recordObject;
 
     QJsonDocument doc(obj);
-    qDebug() << doc.toJson();
-
 
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
 

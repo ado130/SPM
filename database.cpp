@@ -377,6 +377,7 @@ QDataStream &operator<<(QDataStream &out, const sISINDATA &param)
     out << param.name;
     out << param.sector;
     out << param.industry;
+    out << param.lastUpdate;
 
     return out;
 }
@@ -388,6 +389,7 @@ QDataStream &operator>>(QDataStream &in, sISINDATA &param)
     in >> param.name;
     in >> param.sector;
     in >> param.industry;
+    in >> param.lastUpdate;
 
     return in;
 }

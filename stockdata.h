@@ -21,16 +21,21 @@ public:
     double getTotalPrice(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
     double getTotalFee(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
     double getReceivedDividend(const QString &ISIN, const QDate &from, const QDate &to, const eCURRENCY selectedCurrency, ExchangeRatesFunctions echangeRates);
-    void saveOnlineStockInfo(const sTABLE &table, const QString &ISIN);
-
     double getTotalSell(const QDate &from, const QDate &to, double EUR2CZK, double USD2CZK, double GBP2CZK);
-signals:
 
+    void loadOnlineStockInfo();
+    void saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table);
+
+
+    double getCachedISINPrice(QString ISIN);
 private:
     StockDataType stockData;
+    QVector<QPair<QString, sONLINEDATA> > cachedStockData;
 
     bool loadStockData();
-    void loadOnlineStockInfo();
+
+signals:
+    void updateStockData(QString ISIN, sONLINEDATA table);
 };
 
 QDataStream& operator<<(QDataStream& out, const sSTOCKDATA& param);

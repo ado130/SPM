@@ -11,8 +11,8 @@ class Screener : public QObject
 public:
     explicit Screener(QObject *parent = nullptr);
 
-    sTABLE yahooParse(QString data);
-    sTABLE finvizParse(QString data);
+    sONLINEDATA yahooParse(QString data);
+    sONLINEDATA finvizParse(QString data);
 
     QVector<sSCREENER> getAllScreenerData() const;
     void setAllScreenerData(const QVector<sSCREENER> &value);

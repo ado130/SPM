@@ -48,9 +48,9 @@ void Screener::setAllScreenerData(const QVector<sSCREENER> &value)
     saveAllScreenerData();
 }
 
-sTABLE Screener::finvizParse(QString data)
+sONLINEDATA Screener::finvizParse(QString data)
 {
-    sTABLE table;
+    sONLINEDATA table;
     sTICKERINFO info;
 
     int startB = data.indexOf("<body");
@@ -100,7 +100,7 @@ sTABLE Screener::finvizParse(QString data)
     st = body.indexOf(">", st);
     en = body.indexOf("</a>", st);
     tmp = body.mid( st+1, en-st-1);
-    info.industry = tmp;
+    info.industry = tmp.replace("&amp;","&");
 
     st = body.indexOf("<a href", en);
     st = body.indexOf(">", st);
@@ -168,9 +168,9 @@ sTABLE Screener::finvizParse(QString data)
 
 }
 
-sTABLE Screener::yahooParse(QString data)
+sONLINEDATA Screener::yahooParse(QString data)
 {
-    sTABLE table;
+    sONLINEDATA table;
 
     int startB = data.indexOf("<body");
     int endB = data.indexOf("</body");
@@ -191,7 +191,7 @@ sTABLE Screener::yahooParse(QString data)
 
         QStringList TRvalues = body.mid(startTB, endTB-startTB).split("<tr");
 
-        sTABLE table;
+        sONLINEDATA table;
         for(const QString &TR : TRvalues)
         {
             if(!TR.startsWith(" class")) continue;

@@ -44,6 +44,7 @@ public Q_SLOTS:
     void fillOverviewSlot();
     void addRecord(const QByteArray data, QString statusCode);
     void fillOverviewTable();
+    void updateStockDataSlot(QString ISIN, sONLINEDATA table);
 
 private slots:
     void on_actionAbout_triggered();
@@ -106,7 +107,7 @@ private:
      * @brief temporaryLoadedTable
      * @details sTABLE for last loaded ticker
      */
-    sTABLE lastLoadedTable;
+    sONLINEDATA lastLoadedTable;
 
     int currentScreenerIndex;
     QStringList currentTickers;

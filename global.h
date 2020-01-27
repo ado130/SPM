@@ -191,7 +191,7 @@ struct sTICKERINFO
     QString ticker;
 };
 
-struct sTABLE
+struct sONLINEDATA
 {
     QHash<QString, QString> row;    // name, value
     sTICKERINFO info;
@@ -233,6 +233,8 @@ struct sISINDATA
     QString name;
     QString sector;
     QString industry;
+
+    QDateTime lastUpdate;
 };
 
 #endif // VARIABLES_H
