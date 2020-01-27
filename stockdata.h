@@ -27,7 +27,7 @@ public:
     void saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table);
 
 
-    double getCachedISINPrice(QString ISIN);
+    QString getCachedISINParam(const QString &ISIN, const QString &param);
 private:
     StockDataType stockData;
     QVector<QPair<QString, sONLINEDATA> > cachedStockData;

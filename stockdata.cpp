@@ -313,7 +313,7 @@ QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
     return in;
 }
 
-double StockData::getCachedISINPrice(QString ISIN)
+QString StockData::getCachedISINParam(const QString &ISIN, const QString &param)
 {
     auto it = std::find_if(cachedStockData.begin(), cachedStockData.end(), [ISIN](QPair<QString, sONLINEDATA> a)
                            {
@@ -324,11 +324,11 @@ double StockData::getCachedISINPrice(QString ISIN)
     {
         if(it->second.row.contains("Price"))
         {
-            return it->second.row.value("Price").toDouble();
+            return it->second.row.value(param);
         }
     }
 
-    return 0.0;
+    return QString();
 }
 
 void StockData::loadOnlineStockInfo()

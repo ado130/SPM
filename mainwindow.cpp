@@ -620,11 +620,23 @@ void MainWindow::fillOverviewTable()
             sector = it->sector;
         }
 
-        double stockValue = exchangeRatesFuncMap[rates](stockData->getCachedISINPrice(stock.ISIN))*totalCount;
-        portfolioValue += stockValue;
+        QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
+        double onlineStockPrice = 0.0;
+
+        if(!cachedPrice.isEmpty())
+        {
+            onlineStockPrice = exchangeRatesFuncMap[rates](cachedPrice.toDouble());
+        }
+
+        double totalOnlineStockPrice = onlineStockPrice*totalCount;
+
+        portfolioValue += (totalOnlineStockPrice);
+
+
+        double totalStockPrice = stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap);
+
 
         ui->tableOverview->insertRow(pos);
-
 
         ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
         ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
@@ -632,16 +644,52 @@ void MainWindow::fillOverviewTable()
         ui->tableOverview->setItem(pos, 3, new QTableWidgetItem(sector));
         ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
         ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
-        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(totalStockPrice, 0, 'f', 2) + " " + currencySign));
         ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(exchangeRatesFuncMap[rates](stockData->getCachedISINPrice(stock.ISIN)), 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(stockValue, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice*totalCount, 0, 'f', 2) + " " + currencySign));
         ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+
+        if(totalOnlineStockPrice > totalStockPrice)
+        {
+            ui->tableOverview->item(pos, 9)->setBackground(QColor(Qt::green));
+        }
+        else if(totalOnlineStockPrice < totalStockPrice)
+        {
+            ui->tableOverview->item(pos, 9)->setBackground(QColor(Qt::red));
+        }
 
         pos++;
     }
 
     ui->tableOverview->setSortingEnabled(true);
+
+
+    // Set %
+    for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
+    {
+        QTableWidgetItem *item = ui->tableOverview->item(row, 9);
+
+        if(item)
+        {
+            QString text = item->text();
+            text = text.mid(0, text.lastIndexOf(" "));
+            text.replace(",", ".");
+            text = text.simplified();
+            text.replace( " ", "" );
+
+            bool ok;
+
+            double price = text.toDouble(&ok);
+
+            if(ok)
+            {
+                double percentage = (price/portfolioValue)*100.0;
+
+                ui->tableOverview->item(row, 4)->setText(QString::number(percentage, 'f', 2));
+            }
+        }
+    }
 
 
     for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
@@ -881,7 +929,6 @@ void MainWindow::fillOverviewSlot()
     double transFees = 0.0;
     double account = 0.0;
     double sell = 0.0;
-    double portfolioValue = 0.0;
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
 
