@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Stock Portfolio Manager"
-#define MyAppVersion GetFileVersion('..\release\SPM.exe')
+#define MyAppVersion GetFileVersion('..\build\release\SPM.exe')
 #define MyAppPublisher "Andrej"
 #define MyAppURL "https://www.investicnigramotnost.cz"
 #define MyAppExeName "SPM.exe"
@@ -63,7 +63,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
-Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\icons\*"; DestDir: "{app}/icons/"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "dll\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

@@ -414,7 +414,22 @@ void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &tabl
 {
     if(table.row.isEmpty() || ISIN.isEmpty()) return;
 
+    auto it = std::find_if(cachedStockData.begin(), cachedStockData.end(), [ISIN](QPair<QString, sONLINEDATA> a)
+                           {
+                               return a.first == ISIN;
+                           }
+                           );
+
+    if(it != cachedStockData.end())
+    {
+        cachedStockData.erase(it);
+    }
+
     cachedStockData.push_back(qMakePair(ISIN, table));
+
+
+
+
 
     QJsonObject recordObject;
     recordObject.insert("Sector", table.info.sector);

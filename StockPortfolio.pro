@@ -43,8 +43,6 @@ DEFINES += QT_NO_FOREACH
 CONFIG += c++17
 /std:c++17
 
-# CMAKE
-# -Wall -Wextra -Wno-c++98-compat -Wno-c++98-compat-pedantic
 
 SOURCES += \
         database.cpp \
@@ -81,10 +79,26 @@ FORMS += \
         screenertab.ui \
         settingsform.ui
 
+
+RESOURCES += \
+    resource.qrc
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES += \
-    resource.qrc
+
+CONFIG(debug, debug|release) {
+    DESTDIR = build/debug
+    message(Debug build!)
+}
+CONFIG(release, debug|release) {
+    DESTDIR = build/release
+    message(Release build!)
+}
+
+OBJECTS_DIR = $$DESTDIR/.obj
+MOC_DIR = $$DESTDIR/.moc
+RCC_DIR = $$DESTDIR/.qrc
+UI_DIR = $$DESTDIR/.ui

@@ -44,8 +44,7 @@ CMakeLists.txt.user*
 
 # Directories to ignore
 # ---------------------
-debug/
-release/
+build
 setup/setup/
 openssl-1.1.1b-win32/
 
@@ -56,3 +55,7 @@ openssl-1.1.1b-win32/
 # qbs builds
 /*-debug/
 /*-release/
+
+# Others
+*.SPM
+compile_commands.json

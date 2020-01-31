@@ -103,10 +103,13 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // set status bar text
-    QLabel *author = new QLabel("Author: Andrej © 2019-2020");
-    QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR));
+    QLabel *author = new QLabel("Author: Andrej © 2019-2020", this);
+    QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR), this);
+    QLabel *built = new QLabel(QString("Built: %1 %2").arg(__DATE__).arg(__TIME__), this);
     ui->statusBar->addPermanentWidget(author, 1);
     ui->statusBar->addPermanentWidget(version, 0);
+    ui->statusBar->addPermanentWidget(built, 0);
+
 
     // PDF export default data
     ui->lePDFEUR2CZK->setText(QString::number(database->getSetting().EUR2CZKDAP, 'f', 2));
@@ -3130,7 +3133,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
         if(progressDialog)
         {
             disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
-            progressDialog->setValue(pos+1);
+            updateProgressDialog(pos+1);
             progressDialog->close();
         }
 
@@ -3141,8 +3144,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
         if(progressDialog)
         {
             disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
-            progressDialog->setValue(pos+1);
-            progressDialog->close();
+            updateProgressDialog(pos+1);
         }
 
         disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
@@ -3152,7 +3154,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
     {
         if(progressDialog)
         {
-            progressDialog->setValue(pos+1);
+            updateProgressDialog(pos+1);
         }
 
         QString next = currentTickers.at(pos + 1);
@@ -3169,8 +3171,7 @@ void MainWindow::refreshTickersCanceled()
     if(progressDialog)
     {
         disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
-        progressDialog->setValue(currentTickers.count());
-        progressDialog->close();
+        updateProgressDialog(currentTickers.count());
     }
 
     setStatus("The process has been canceled");
@@ -3212,6 +3213,13 @@ void MainWindow::createProgressDialog(int min, int max)
 
     animFade->start(QAbstractAnimation::DeleteWhenStopped);
     animMove->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void MainWindow::updateProgressDialog(int val)
+{
+    Q_ASSERT(progressDialog);
+
+    progressDialog->setValue(val);
 }
 
 void MainWindow::on_pbDeleteTickers_clicked()
@@ -3349,8 +3357,6 @@ void MainWindow::fillISINTable()
         ui->tableISIN->setItem(a, 2, new QTableWidgetItem(isinList.at(a).name));
         ui->tableISIN->setItem(a, 3, new QTableWidgetItem(isinList.at(a).sector));
         ui->tableISIN->setItem(a, 4, new QTableWidgetItem(isinList.at(a).industry));
-
-        qDebug() << isinList.at(a).lastUpdate.date();
 
         QTableWidgetItem *item = new QTableWidgetItem;
         item->setData(Qt::EditRole, isinList.at(a).lastUpdate.date());
@@ -3551,13 +3557,14 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
             database->setIsinList(isinList);
 
             fillISINTable();
-            fillOverviewTable();
         }
         else
         {
             database->setIsinList(isinList);
             fillISINTable();
         }
+
+        fillOverviewTable();
     }
 }
 

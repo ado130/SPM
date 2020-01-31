@@ -182,7 +182,9 @@ private:
      * @param ISIN - ISIN to be removed
      */
     void eraseISIN(QString ISIN);
+
     void createProgressDialog(int min, int max);
+    void updateProgressDialog(int val);
 };
 
 #endif // MAINWINDOW_H
