@@ -276,6 +276,12 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
         // Get cached price and calculate total online price
         QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
 
+        if(cachedPrice.isEmpty())
+        {
+            // ToDo the return price might be in EUR or USD or whatever
+            cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Previous Close");
+        }
+
         if(!cachedPrice.isEmpty())
         {
             row.onlineStockPrice = database->getExchangePrice(rates, cachedPrice.toDouble());

@@ -191,7 +191,6 @@ sONLINEDATA Screener::yahooParse(QString data)
 
         QStringList TRvalues = body.mid(startTB, endTB-startTB).split("<tr");
 
-        sONLINEDATA table;
         for(const QString &TR : TRvalues)
         {
             if(!TR.startsWith(" class")) continue;
@@ -207,7 +206,9 @@ sONLINEDATA Screener::yahooParse(QString data)
 
             TD = TR.indexOf("<td", TD);
             TD = TR.indexOf(">", TD);
-            value = TR.mid(TD+1, TR.indexOf("</td>", TD)-TD-1);
+            TD = TR.indexOf("<span", TD);
+            TD = TR.indexOf(">", TD);
+            value = TR.mid(TD+1, TR.indexOf("</span>", TD)-TD-1);
 
             table.row.insert(name, value);
         }

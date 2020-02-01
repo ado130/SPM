@@ -11,7 +11,15 @@
    ! Important - Take note!
 =======================================================
 
-=== Client Release 1.0.7.0 22 Jan 2020
+=== Client Release 1.0.9.0 1 Feb 2020
++ Added ETF online info for iShares on Amsterdam stock
+
+=== Client Release 1.0.8.0 1 Feb 2020
++ Added sectors chart
++ Added chart image export
++ Added average price and portfolio performance
+
+=== Client Release 1.0.7.0 26 Jan 2020
 + Added GBP support
 + Addec custom PDF text
 * Edited graphics

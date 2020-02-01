@@ -2848,11 +2848,24 @@ void MainWindow::fillISINTable()
                         else
                         {
                             lastLoadedTable.row.clear();
-                            lastRequestSource = FINVIZ;
 
                             connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
-                            QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
+                            QString request;
+                            // ToDo: might not be correct, the current stock is ETF which migh be listed in Amsterdam
+                            if(isinList.at(a).sector == "ETF" && isinList.at(a).ISIN.startsWith("IE"))
+                            {
+                                ticker += ".AS";
+
+                                lastRequestSource = YAHOO;
+                                request = QString("https://finance.yahoo.com/quote/%1/").arg(ticker);
+                            }
+                            else
+                            {
+                                lastRequestSource = FINVIZ;
+                                request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
+                            }
+
                             manager->execute(request);
                         }
                     }

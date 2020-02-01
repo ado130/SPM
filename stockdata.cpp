@@ -320,9 +320,10 @@ QString StockData::getCachedISINParam(const QString &ISIN, const QString &param)
                                return a.first == ISIN;
                            }
                            );
+
     if(it != cachedStockData.end())
     {
-        if(it->second.row.contains("Price"))
+        if(it->second.row.contains(param))
         {
             return it->second.row.value(param);
         }
