@@ -38,6 +38,9 @@ public:
     QVector<sISINDATA> getIsinList() const;
     void setIsinList(const QVector<sISINDATA> &value);
 
+    double getExchangePrice(QString rates, double price);
+    ExchangeRatesFunctions getExchangeRatesFuncMap() const;
+
 signals:
 
 public slots:
@@ -48,6 +51,8 @@ private:
     QStringList enabledScreenerParams;
     QVector<sFILTER> filterList;
     QVector<sISINDATA> isinList;
+
+    ExchangeRatesFunctions exchangeRatesFuncMap;
 
     void loadConfig();
     void saveConfig();

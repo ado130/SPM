@@ -45,6 +45,7 @@ CONFIG += c++17
 
 
 SOURCES += \
+        calculation.cpp \
         database.cpp \
         degiro.cpp \
         downloadmanager.cpp \
@@ -59,6 +60,7 @@ SOURCES += \
         tastyworks.cpp
 
 HEADERS += \
+        calculation.h \
         database.h \
         degiro.h \
         downloadmanager.h \

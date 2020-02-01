@@ -26,7 +26,6 @@ public:
     void loadOnlineStockInfo();
     void saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table);
 
-
     QString getCachedISINParam(const QString &ISIN, const QString &param);
 private:
     StockDataType stockData;

@@ -96,6 +96,47 @@ struct sSETTINGS
     bool screenerAutoLoad;
 };
 
+struct sOVERVIEWTABLE
+{
+    QString ISIN;
+    QString ticker;
+    QString stockName;
+    QString sector;
+    double percentage;
+    int totalCount;
+    double averageBuyPrice;
+    double totalStockPrice;
+    double totalFee;
+    double onlineStockPrice;
+    double totalOnlinePrice;
+    double dividend;
+};
+
+struct sOVERVIEWINFO
+{
+    double deposit;
+    double invested;
+    double withdrawal;
+    double dividends;
+    double divTax;
+    double DY;
+    double fees;
+    double transFees;
+    double account;
+    double sell;
+    double portfolio;
+    double performance;
+};
+
+enum eCHARTTYPE
+{
+    DEPOSITCHART = 0,
+    INVESTEDCHART,
+    DIVIDENDCHART,
+    SECTORCHART
+};
+
+
 struct sPDFEXPORT
 {
     QString paid;
@@ -122,7 +163,8 @@ enum eSTOCKSOURCE
 {
     MANUALLY = 0,
     DEGIRO = 1,
-    TASTYWORKS = 2
+    TASTYWORKS = 2,
+    LYNX = 4
 };
 
 struct sSTOCKDATA

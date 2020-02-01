@@ -4,16 +4,17 @@
 #include "filterform.h"
 
 #include <QDebug>
-#include <QTimer>
-#include <QLabel>
-#include <QTableWidgetItem>
-#include <QScreen>
 #include <QDesktopWidget>
 #include <QHash>
 #include <QInputDialog>
+#include <QLabel>
 #include <QMessageBox>
-#include <QtCharts>
+#include <QScreen>
+#include <QTableWidgetItem>
+#include <QTimer>
 #include <QPrinter>
+#include <QtCharts>
+
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -38,35 +39,13 @@ MainWindow::MainWindow(QWidget *parent) :
     tastyworks = std::make_unique<Tastyworks> (this);
     screener = std::make_unique<Screener> (this);
     stockData = std::make_unique<StockData> (this);
+    calculation = std::make_unique<Calculation> (database.get(), stockData.get(), this);
     progressDialog = nullptr;
 
     connect(degiro.get(), &DeGiro::setDegiroData, this, &MainWindow::setDegiroDataSlot);
 
     connect(stockData.get(), &StockData::updateStockData, this, &MainWindow::updateStockDataSlot);
     stockData->loadOnlineStockInfo();
-
-    /*
-     * Fill exchange rates function
-     */
-    exchangeRatesFuncMap =
-        {
-            { "CZK2CZK", [](double x){return x; }},
-            { "CZK2EUR", [this](double x){return (x * database->getSetting().CZK2EUR); }},
-            { "CZK2USD", [this](double x){return (x * database->getSetting().CZK2USD); }},
-            { "CZK2GBP", [this](double x){return (x * database->getSetting().CZK2GBP); }},
-            { "EUR2EUR", [](double x){return x; }},
-            { "EUR2CZK", [this](double x){return (x * database->getSetting().EUR2CZK); }},
-            { "EUR2USD", [this](double x){return (x * database->getSetting().EUR2USD); }},
-            { "EUR2GBP", [this](double x){return (x * database->getSetting().EUR2GBP); }},
-            { "USD2USD", [](double x){return x; }},
-            { "USD2CZK", [this](double x){return (x * database->getSetting().USD2CZK); }},
-            { "USD2EUR", [this](double x){return (x * database->getSetting().USD2EUR); }},
-            { "USD2GBP", [this](double x){return (x * database->getSetting().USD2GBP); }},
-            { "GBP2GBP", [](double x){return x; }},
-            { "GBP2CZK", [this](double x){return (x * database->getSetting().GBP2CZK); }},
-            { "GBP2USD", [this](double x){return (x * database->getSetting().GBP2USD); }},
-            { "GBP2EUR", [this](double x){return (x * database->getSetting().GBP2EUR); }}
-        };
 
     /********************************
      * Geometry
@@ -550,158 +529,62 @@ void MainWindow::setOverviewHeader()
 
 void MainWindow::fillOverviewTable()
 {
-    StockDataType stockList = stockData->getStockData();
+    QDate from = ui->deOverviewFrom->date();
+    QDate to = ui->deOverviewTo->date();
 
-    if(stockList.isEmpty())
+    QVector<sOVERVIEWTABLE> table = calculation->getOverviewTable(from, to);
+
+    if(table.isEmpty())
     {
         return;
     }
 
-    ui->tableOverview->setRowCount(0);
-
-
-    QList<QString> keys = stockList.keys();
-    std::sort(keys.begin(), keys.end(),
-              [](QString a, QString b)
-              {
-                  return a < b;
-              }
-              );
-
-
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
-    QString rates;
-    switch(database->getSetting().currency)
-    {
-        case USD: rates = "USD2USD";
-            break;
-        case CZK: rates = "USD2CZK";
-            break;
-        case EUR: rates = "USD2EUR";
-            break;
-        case GBP: rates = "USD2GBP";
-            break;
-    }
-
-    double portfolioValue = 0.0;
-
-    QDate from = ui->deOverviewFrom->date();
-    QDate to = ui->deOverviewTo->date();
 
     int pos = 0;
+
+    ui->tableOverview->setRowCount(0);
     ui->tableOverview->setSortingEnabled(false);
 
-    for(const QString &key : keys)
+    for(const sOVERVIEWTABLE &row : table)
     {
-        if( key.isEmpty() || stockList.value(key).count() == 0 ) continue;
-
-        sSTOCKDATA stock = stockList.value(key).first();
-
-        if(stock.stockName.toLower().contains("fundshare") ) continue;
-
-        //if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
-
-        int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
-
-        if(totalCount == 0 && !database->getSetting().showSoldPositions) continue;
-
-        // Find sector
-        QVector<sISINDATA> isinList = database->getIsinList();
-
-        auto it = std::find_if(isinList.begin(), isinList.end(), [stock](sISINDATA a)
-                               {
-                                   return stock.ISIN == a.ISIN;
-                               }
-                               );
-
-        QString sector;
-
-        if(it != isinList.end())
-        {
-            sector = it->sector;
-        }
-
-        QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
-        double onlineStockPrice = 0.0;
-
-        if(!cachedPrice.isEmpty())
-        {
-            onlineStockPrice = exchangeRatesFuncMap[rates](cachedPrice.toDouble());
-        }
-
-        double totalOnlineStockPrice = onlineStockPrice*totalCount;
-
-        portfolioValue += (totalOnlineStockPrice);
-
-        double totalStockPrice = stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap);
-        double averageBuyPrice = totalStockPrice/totalCount;
-
-
         ui->tableOverview->insertRow(pos);
 
-        ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
-        ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
-        ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
-        ui->tableOverview->setItem(pos, 3, new QTableWidgetItem(sector));
-        ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
-        ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
-        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(averageBuyPrice, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(totalStockPrice, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice*totalCount, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 11, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 0, new QTableWidgetItem(row.ISIN));
+        ui->tableOverview->setItem(pos, 1, new QTableWidgetItem(row.ticker));
+        ui->tableOverview->setItem(pos, 2, new QTableWidgetItem(row.stockName));
+        ui->tableOverview->setItem(pos, 3, new QTableWidgetItem(row.sector));
+        ui->tableOverview->setItem(pos, 4, new QTableWidgetItem(QString("%L1 %").arg(row.percentage, 0, 'f', 2)));
+        ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(row.totalCount)));
+        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(row.averageBuyPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(row.totalStockPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(row.totalFee, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(row.onlineStockPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(row.totalOnlinePrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 11, new QTableWidgetItem(QString("%L1").arg(row.dividend, 0, 'f', 2) + " " + currencySign));
 
-        if(totalOnlineStockPrice > totalStockPrice)
+        if(row.totalOnlinePrice > row.totalStockPrice)
         {
             ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::green));
         }
-        else if(totalOnlineStockPrice < totalStockPrice)
+        else if(row.totalOnlinePrice < row.totalStockPrice)
         {
             ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::red));
         }
 
-        if(averageBuyPrice < onlineStockPrice)
+        if(row.averageBuyPrice < row.onlineStockPrice)
         {
             ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::green));
         }
-        else if(averageBuyPrice > onlineStockPrice)
+        else if(row.averageBuyPrice > row.onlineStockPrice)
         {
             ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::red));
         }
 
         pos++;
     }
-
     ui->tableOverview->setSortingEnabled(true);
-
-
-    // Set %
-    for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
-    {
-        // ToDo: totalCurrentPrice
-        QTableWidgetItem *item = ui->tableOverview->item(row, 10);
-
-        if(item)
-        {
-            QString text = item->text();
-            text = text.mid(0, text.lastIndexOf(" "));
-            text.replace(",", ".");
-            text = text.simplified();
-            text.replace( " ", "" );
-
-            bool ok;
-            double price = text.toDouble(&ok);
-
-            if(ok)
-            {
-                double percentage = (price/portfolioValue)*100.0;
-
-                ui->tableOverview->item(row, 4)->setText(QString::number(percentage, 'f', 2));
-            }
-        }
-    }
 
 
     for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
@@ -713,9 +596,6 @@ void MainWindow::fillOverviewTable()
     }
 
     ui->tableOverview->resizeColumnsToContents();
-
-
-    ui->lePortfolio->setText(QString("%L1").arg(portfolioValue, 0, 'f', 2) + " " + currencySign);
 }
 
 void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
@@ -820,8 +700,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         double price = 0.0;
         double fee = 0.0;
 
-        price = exchangeRatesFuncMap[rates](stock.price) * stock.count;
-        fee = exchangeRatesFuncMap[rates](stock.fee);
+        price = database->getExchangePrice(rates, stock.price) * stock.count;
+        fee = database->getExchangePrice(rates, stock.fee);
 
         switch(stock.type)
         {
@@ -925,536 +805,66 @@ bool MainWindow::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
 
 void MainWindow::fillOverviewSlot()
 {
-    StockDataType stockList = stockData->getStockData();
-
-    if(stockList.isEmpty())
-    {
-        return;
-    }
-
-    double deposit = 0.0;
-    double invested = 0.0;
-    double withdrawal = 0.0;
-    double dividends = 0.0;
-    double divTax = 0.0;
-    double fees = 0.0;
-    double transFees = 0.0;
-    double account = 0.0;
-    double sell = 0.0;
-
-    eCURRENCY selectedCurrency = database->getSetting().currency;
-
     QDate from = ui->deOverviewFrom->date();
     QDate to = ui->deOverviewTo->date();
-
-    QList<QString> keys = stockList.keys();
-
-    for(const QString &key : keys)
-    {
-        for(const sSTOCKDATA &stock : stockList.value(key))
-        {
-            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
-
-            if( stock.stockName.toLower().contains("fundshare") ) continue;
-
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
-            switch(stock.type)
-            {
-                case DEPOSIT:
-                {
-                    deposit += exchangeRatesFuncMap[rates](stock.price);
-                }
-                break;
-
-                case WITHDRAWAL:
-                {
-                    withdrawal += exchangeRatesFuncMap[rates](stock.price);
-                }
-                break;
-
-                case BUY:
-                {
-                    invested += exchangeRatesFuncMap[rates](stock.price) * stock.count;
-                    transFees += exchangeRatesFuncMap[rates](stock.fee);
-                }
-                break;
-
-                case SELL:
-                    sell += exchangeRatesFuncMap[rates](stock.price) * stock.count;
-                    transFees += exchangeRatesFuncMap[rates](stock.fee);
-
-                    break;
-
-                case DIVIDEND:
-                {
-                    dividends += exchangeRatesFuncMap[rates](stock.price);
-                    divTax += exchangeRatesFuncMap[rates](stock.fee);
-                }
-                break;
-
-                case FEE:
-                {
-                    fees += exchangeRatesFuncMap[rates](stock.price);
-                }
-                break;
-            }
-        }
-    }
+    sOVERVIEWINFO info = calculation->getOverviewInfo(from, to);
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
-    deposit = abs(deposit);
-    invested = abs(invested);
-    dividends = abs(dividends);
-    divTax = abs(divTax);
-    fees = abs(fees);
-    transFees = abs(transFees);
-    withdrawal = abs(withdrawal);
-    sell = abs(sell);
-
-    account += (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal  );
-
-    if(!qFuzzyIsNull(invested-sell))
-    {
-        ui->leDY->setText(QString("%L1").arg(((dividends-divTax)/(invested-sell))*100.0, 0, 'f', 2) + " %");
-    }
+    double deposit = abs(info.deposit);
+    double invested = abs(info.invested);
+    double dividends = abs(info.dividends);
+    double divTax = abs(info.divTax);
+    double fees = abs(info.fees);
+    double transFees = abs(info.transFees);
+    double withdrawal = abs(info.withdrawal);
+    double sell = abs(info.sell);
 
     ui->leDeposit->setText(QString("%L1").arg(deposit, 0, 'f', 2) + " " + currencySign);
     ui->leInvested->setText(QString("%L1").arg(invested, 0, 'f', 2) + " " + currencySign);
     ui->leDividends->setText(QString("%L1").arg(dividends, 0, 'f', 2) + " " + currencySign);
     ui->leDivTax->setText(QString("%L1").arg(divTax, 0, 'f', 2) + " " + currencySign);
+    ui->leDY->setText(QString("%L1").arg(info.DY, 0, 'f', 2) + " %");
     ui->leFees->setText(QString("%L1").arg(fees, 0, 'f', 2) + " " + currencySign);
     ui->leTransactionFee->setText(QString("%L1").arg(transFees, 0, 'f', 2) + " " + currencySign);
     ui->leWithdrawal->setText(QString("%L1").arg(withdrawal, 0, 'f', 2) + " " + currencySign);
-    ui->leAccount->setText(QString("%L1").arg(account, 0, 'f', 2) + " " + currencySign);
+    ui->leAccount->setText(QString("%L1").arg(info.account, 0, 'f', 2) + " " + currencySign);
     ui->leSell->setText(QString("%L1").arg(sell, 0, 'f', 2) + " " + currencySign);
-
-    QString text = ui->lePortfolio->text();
-    text = text.mid(0, text.lastIndexOf(" "));
-    text.replace(",", ".");
-    text = text.simplified();
-    text.replace( " ", "" );
-
-    bool ok;
-    double portfolio = text.toDouble(&ok);
-
-    if(ok)
-    {
-        if(!qFuzzyIsNull(deposit))
-        {
-            double performance = ((portfolio+dividends-divTax-fees-transFees)/deposit)*100.0;
-
-            ui->lePerformance->setText(QString("%L1 %").arg(performance, 0, 'f', 2));
-        }
-    }
+    ui->lePortfolio->setText(QString("%L1").arg(info.portfolio, 0, 'f', 2) + " " + currencySign);
+    ui->lePerformance->setText(QString("%L1 %").arg(info.performance, 0, 'f', 2));
 }
 
 void MainWindow::on_pbShowGraph_clicked()
 {
-    StockDataType stockList = stockData->getStockData();
+    QDate from = ui->deGraphFrom->date();
+    QDate to = ui->deGraphTo->date();
+    eCHARTTYPE type = static_cast<eCHARTTYPE>(ui->cmGraphType->currentIndex());
 
-    if(stockList.isEmpty())
+    QChartView *chartView = calculation->getChartView(type, from, to);
+
+    if(chartView == nullptr)
     {
         return;
     }
 
-    double deposit = 0.0;
-    QLineSeries *depositSeries = new QLineSeries();
-
-    double invested = 0.0;
-    QLineSeries *investedSeries = new QLineSeries();
-
-    QHash<QString, QVector<QPair<QDate, double>> > dividends;
-    double maxDividendAxis = 0.0;
-
-    eCURRENCY selectedCurrency = database->getSetting().currency;
-
-    QDate from = ui->deGraphFrom->date();
-    QDate to = ui->deGraphTo->date();
-
-    QList<QString> keys = stockList.keys();
-
-    for(const QString &key : keys)
-    {
-        for(const sSTOCKDATA &stock : stockList.value(key))
-        {
-            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
-
-            if( stock.stockName.toLower().contains("fundshare") ) continue;
-
-
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
-            switch(stock.type)
-            {
-                case DEPOSIT:
-                {
-                    deposit += exchangeRatesFuncMap[rates](stock.price);
-
-                    depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
-                }
-                break;
-
-                case BUY:
-                {
-                    qDebug() << stock.stockName << stock.dateTime.date() << stock.price;
-
-                    invested += (exchangeRatesFuncMap[rates]((-1.0)*stock.price)*stock.count);
-
-                    investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
-                }
-                break;
-
-                case DIVIDEND:
-                {
-                    double price = 0.0;
-
-                    price = exchangeRatesFuncMap[rates](stock.price);
-
-                    if(price > maxDividendAxis) maxDividendAxis = price;
-
-                    QString ticker = stock.ticker;
-                    QDate date = stock.dateTime.date();
-
-                    auto vector = dividends.value(ticker);
-                    vector.push_back(qMakePair(date, price));
-                    dividends.insert(ticker, vector);
-                }
-                break;
-            }
-        }
-    }
-
-    // Sort the dates
-    QVector<QPointF> points = depositSeries->pointsVector();
-    QVector<qreal> xPoints;
-
-    for(int a = 0; a<points.count(); ++a)
-    {
-        xPoints.append(points.at(a).x());
-    }
-
-    std::sort(xPoints.begin(), xPoints.end());
-
-    for(int a = 0; a<points.count(); ++a)
-    {
-        depositSeries->replace(points.at(a).x(), points.at(a).y(), xPoints.at(a), points.at(a).y());
-    }
-
-
-    points = investedSeries->pointsVector();
-    xPoints.clear();
-
-    for(int a = 0; a<points.count(); ++a)
-    {
-        xPoints.append(points.at(a).x());
-    }
-
-    std::sort(xPoints.begin(), xPoints.end());
-
-    for(int a = 0; a<points.count(); ++a)
-    {
-        investedSeries->replace(points.at(a).x(), points.at(a).y(), xPoints.at(a), points.at(a).y());
-    }
-
-    points = investedSeries->pointsVector();
-
-
-    QString currencySign = database->getCurrencySign(database->getSetting().currency);
-
-
-    // Deposit
-    if(depositSeries->pointsVector().count() == 1)
-    {
-        depositSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
-    }
-
-    QChart *depositChart = new QChart();
-    depositChart->addSeries(depositSeries);
-    depositChart->legend()->hide();
-    depositChart->setTitle("Deposit");
-    depositChart->setTheme(QChart::ChartThemeQt);
-
-    QDateTimeAxis *depositAxisX = new QDateTimeAxis;
-    depositAxisX->setTickCount(10);
-    depositAxisX->setFormat("MMM yyyy");
-    depositAxisX->setTitleText("Date");
-    depositChart->addAxis(depositAxisX, Qt::AlignBottom);
-    depositSeries->attachAxis(depositAxisX);
-
-    QValueAxis *depositAxisY = new QValueAxis;
-    depositAxisY->setLabelFormat("%i");
-    depositAxisY->setTitleText("Deposit " + currencySign);
-    depositChart->addAxis(depositAxisY, Qt::AlignLeft);
-    depositSeries->attachAxis(depositAxisY);
-
-    QChartView *depositChartView = new QChartView(depositChart);
-    depositChartView->setRenderHint(QPainter::Antialiasing);
-    depositChartView->setMinimumSize(512, 512);
-    depositChartView->setRubberBand(QChartView::HorizontalRubberBand);
-
-
-    // Invested
-    if(investedSeries->pointsVector().count() == 1)
-    {
-        investedSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
-    }
-
-    QChart *investedChart = new QChart();
-    investedChart->addSeries(investedSeries);
-    investedChart->legend()->hide();
-    investedChart->setTitle("Invested");
-    investedChart->setTheme(QChart::ChartThemeQt);
-
-    QDateTimeAxis *investedAxisX = new QDateTimeAxis;
-    investedAxisX->setTickCount(10);
-    investedAxisX->setFormat("MMM yyyy");
-    investedAxisX->setTitleText("Date");
-    investedChart->addAxis(investedAxisX, Qt::AlignBottom);
-    investedSeries->attachAxis(investedAxisX);
-
-    QValueAxis *investedAxisY = new QValueAxis;
-    investedAxisY->setLabelFormat("%i");
-    investedAxisY->setTitleText("Invested " + currencySign);
-    investedChart->addAxis(investedAxisY, Qt::AlignLeft);
-    investedSeries->attachAxis(investedAxisY);
-
-    QChartView *investedChartView = new QChartView(investedChart);
-    investedChartView->setRenderHint(QPainter::Antialiasing);
-    investedChartView->setMinimumSize(512, 512);
-    investedChartView->setRubberBand(QChartView::HorizontalRubberBand);
-
-
-    // Dividends
-    // Sort from min to max and find the min and max
-    QDate min;
-    QDate max;
-
-    QList<QString> divKeys = dividends.keys();
-
-    min = dividends.value(divKeys.first()).first().first;
-    max = dividends.value(divKeys.first()).first().first;
-
-    for (const QString &key : divKeys)
-    {
-        auto vector = dividends.value(key);
-
-        std::sort(vector.begin(), vector.end(),
-                  [] (QPair<QDate, double> &a, QPair<QDate, double> &b)
-                  {
-                      return a.first < b.first;
-                  }
-                  );
-
-        dividends[key] = vector;
-
-        QDate localMin = vector.first().first;
-        QDate localMax = vector.last().first;
-
-        if(localMin < min) min = localMin;
-        if(localMax > max) max = localMax;
-    }
-
-    // Save categories - find all months between min and max date
-    QStringList categories;
-    QDate tmpMin = min;
-    QVector<QDate> dates;
-
-    while(tmpMin < max)
-    {
-        QString month = tmpMin.toString("MMM");
-        month = month.left(1).toUpper() + month.mid(1);     // first char to upper
-
-        categories << month;
-        dates.push_back(tmpMin);
-
-        tmpMin = tmpMin.addMonths(1);
-    }
-
-    // Fill empty places between dates
-    QMutableHashIterator it(dividends);
-
-    while(it.hasNext())
-    {
-        it.next();
-
-        tmpMin = min;
-
-        auto vector = it.value();
-
-        for(const QDate &d : dates)
-        {
-            auto found = std::find_if(vector.begin(), vector.end(), [d] (QPair<QDate, double> &a)
-                                  {
-                                          return d.month() == a.first.month();
-                                  }
-                                  );
-
-            if(found == vector.end())
-            {
-                int index = dates.indexOf(d);
-                vector.insert(index, qMakePair(d, 0.0));
-            }
-        }
-
-        it.value() = vector;
-    }
-
-    // set all sets, ticker and date
-    QVector<QBarSet*> dividendsSets;
-    divKeys = dividends.keys();
-
-    for (const QString &key : divKeys)
-    {
-        QBarSet *bar = new QBarSet(key);
-
-        auto vector = dividends.value(key);
-
-        for (const QPair<QDate, double> &v : vector)
-        {
-            bar->append(v.second);
-        }
-
-        dividendsSets.push_back(bar);
-    }
-
-
-    QBarSeries *dividendSeries = new QBarSeries();
-
-    for(QBarSet *set : dividendsSets)
-    {
-        dividendSeries->append(set);
-    }
-    QChart *dividendChart = new QChart();
-    dividendChart->addSeries(dividendSeries);
-    dividendChart->setTitle("Dividends");
-    dividendChart->setAnimationOptions(QChart::SeriesAnimations);
-
-    QBarCategoryAxis *axisX = new QBarCategoryAxis();
-    axisX->append(categories);
-    dividendChart->addAxis(axisX, Qt::AlignBottom);
-    dividendSeries->attachAxis(axisX);
-
-    QValueAxis *dividendsAxisY = new QValueAxis();
-    dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis+0.1*maxDividendAxis));
-    dividendChart->addAxis(dividendsAxisY, Qt::AlignLeft);
-    dividendSeries->attachAxis(dividendsAxisY);
-
-    dividendChart->legend()->setVisible(true);
-    dividendChart->legend()->setAlignment(Qt::AlignBottom);
-
-    QChartView *dividendChartView = new QChartView(dividendChart);
-    dividendChartView->setRenderHint(QPainter::Antialiasing);
-
-
-
-    // Display the chart
     QWidget *chartWidget = new QWidget(this, Qt::Tool);
 
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
-
-    if(ui->cmGraphType->currentText() == "Deposit")
-    {
-        if(depositSeries->pointsVector().count() == 0) return;
-
-        VB->addWidget(depositChartView);
-    }
-    else if(ui->cmGraphType->currentText() == "Invested")
-    {
-        if(investedSeries->pointsVector().count() == 0) return;
-
-        VB->addWidget(investedChartView);
-    }
-    else if(ui->cmGraphType->currentText() == "Dividends")
-    {
-        if(dividendSeries->count() == 0) return;
-
-        VB->addWidget(dividendChartView);
-    }
-
-
-    /*QPushButton *zoomIn = new QPushButton("Zoom in", chartWidget);
-    connect(
-        zoomIn, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomIn(); investedChart->zoomIn(); }
-        );
-
-    QPushButton *zoomOut = new QPushButton("Zoom out", chartWidget);
-    connect(
-        zoomOut, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomOut(); investedChart->zoomOut(); }
-        );*/
+    VB->addWidget(chartView);
 
     QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
-    connect(
-        zoomReset, &QPushButton::clicked,
-        [=]( ) { depositChart->zoomReset(); investedChart->zoomReset(); }
-        );
+    connect(zoomReset, &QPushButton::clicked, [chartView]( )
+            {
+                chartView->chart()->zoomReset();
+            }
+            );
 
     if(ui->cmGraphType->currentText() != "Dividends")
     {
         QHBoxLayout *HB = new QHBoxLayout();
-        //HB->addWidget(zoomIn);
-        //HB->addWidget(zoomOut);
         HB->addWidget(zoomReset);
         VB->addLayout(HB);
     }
-
 
     chartWidget->setLayout(VB);
     chartWidget->activateWindow();
@@ -3593,3 +3003,8 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
     }
 }
 
+
+void MainWindow::on_pbUpdate_clicked()
+{
+
+}

@@ -5,10 +5,11 @@
 #include <QProgressDialog>
 #include <QPointer>
 
-#include "downloadmanager.h"
+#include "calculation.h"
 #include "database.h"
-#include "global.h"
 #include "degiro.h"
+#include "downloadmanager.h"
+#include "global.h"
 #include "screener.h"
 #include "screenertab.h"
 #include "stockdata.h"
@@ -82,6 +83,8 @@ private slots:
     void on_tableOverview_cellDoubleClicked(int row, int column);
     void on_actionCheck_version_triggered();
 
+    void on_pbUpdate_clicked();
+
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);
@@ -92,16 +95,17 @@ protected:
 private:
     Ui::MainWindow *ui;
 
-    std::unique_ptr<DownloadManager> manager;
+    std::unique_ptr<Calculation> calculation;
     std::unique_ptr<Database> database;
     std::unique_ptr<DeGiro> degiro;
-    std::unique_ptr<Tastyworks> tastyworks;
+    std::unique_ptr<DownloadManager> manager;
     std::unique_ptr<Screener> screener;
     std::unique_ptr<StockData> stockData;
+    std::unique_ptr<Tastyworks> tastyworks;
 
-    QVector<ScreenerTab*> screenerTabs;
+    QPointer<QProgressDialog> progressDialog;
 
-    ExchangeRatesFunctions exchangeRatesFuncMap;
+    eSCREENSOURCE lastRequestSource;
 
     /**
      * @brief temporaryLoadedTable
@@ -109,10 +113,9 @@ private:
      */
     sONLINEDATA lastLoadedTable;
 
+    QVector<ScreenerTab*> screenerTabs;
     int currentScreenerIndex;
     QStringList currentTickers;
-
-    eSCREENSOURCE lastRequestSource;
 
     QVector<sFILTER> filterList;
 
@@ -122,7 +125,6 @@ private:
      */
     sNEWRECORD lastRecord;
 
-    QPointer<QProgressDialog> progressDialog;
 
     void centerAndResize();
 

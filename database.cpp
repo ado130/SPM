@@ -25,6 +25,29 @@ Database::Database(QObject *parent) : QObject(parent)
         dir.mkpath(".");
     }
 
+    /*
+     * Fill exchange rates function
+     */
+    exchangeRatesFuncMap =
+        {
+            { "CZK2CZK", [](double x){return x; }},
+            { "CZK2EUR", [this](double x){return (x * setting.CZK2EUR); }},
+            { "CZK2USD", [this](double x){return (x * setting.CZK2USD); }},
+            { "CZK2GBP", [this](double x){return (x * setting.CZK2GBP); }},
+            { "EUR2EUR", [](double x){return x; }},
+            { "EUR2CZK", [this](double x){return (x * setting.EUR2CZK); }},
+            { "EUR2USD", [this](double x){return (x * setting.EUR2USD); }},
+            { "EUR2GBP", [this](double x){return (x * setting.EUR2GBP); }},
+            { "USD2USD", [](double x){return x; }},
+            { "USD2CZK", [this](double x){return (x * setting.USD2CZK); }},
+            { "USD2EUR", [this](double x){return (x * setting.USD2EUR); }},
+            { "USD2GBP", [this](double x){return (x * setting.USD2GBP); }},
+            { "GBP2GBP", [](double x){return x; }},
+            { "GBP2CZK", [this](double x){return (x * setting.GBP2CZK); }},
+            { "GBP2USD", [this](double x){return (x * setting.GBP2USD); }},
+            { "GBP2EUR", [this](double x){return (x * setting.GBP2EUR); }}
+        };
+
     loadConfig();
     loadScreenParams();
     loadFilterList();
@@ -175,6 +198,11 @@ QDataStream &operator>>(QDataStream &in, sSCREENERPARAM &param)
     return in;
 }
 
+double Database::getExchangePrice(QString rates, double price)
+{
+    return exchangeRatesFuncMap[rates](price);
+}
+
 QString Database::getCurrencyText(eCURRENCY currency)
 {
     switch (currency)
@@ -211,6 +239,11 @@ void Database::setSettingSlot(const sSETTINGS &value)
 {
     setting = value;
     saveConfig();
+}
+
+ExchangeRatesFunctions Database::getExchangeRatesFuncMap() const
+{
+    return exchangeRatesFuncMap;
 }
 
 QString Database::getDegiroCSV() const
