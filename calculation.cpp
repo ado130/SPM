@@ -1,7 +1,5 @@
 #include "calculation.h"
 
-
-
 Calculation::Calculation(Database *db, StockData *sd, QObject *parent) : QObject(parent), database(db), stockData(sd)
 {
 
@@ -9,6 +7,9 @@ Calculation::Calculation(Database *db, StockData *sd, QObject *parent) : QObject
 
 double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     StockDataType stockList = stockData->getStockData();
 
     QList<QString> keys = stockList.keys();
@@ -60,6 +61,9 @@ double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 
 sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     StockDataType stockList = stockData->getStockData();
 
     if(stockList.isEmpty())
@@ -201,6 +205,9 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 
 QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const QDate &to)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     QVector<sOVERVIEWTABLE> table;
 
     StockDataType stockList = stockData->getStockData();
@@ -312,6 +319,9 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
 ********************************/
 QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     StockDataType stockList = stockData->getStockData();
 
     if(stockList.isEmpty())
@@ -396,6 +406,9 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 
 QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     StockDataType stockList = stockData->getStockData();
 
     if(stockList.isEmpty())
@@ -481,6 +494,9 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 
 QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
 {
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
     StockDataType stockList = stockData->getStockData();
 
     if(stockList.isEmpty())
@@ -663,8 +679,62 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     return dividendSeries;
 }
 
+QPieSeries* Calculation::getSectorSeries(const QDate &from, const QDate &to)
+{
+    QVector<sOVERVIEWTABLE> table = getOverviewTable(from, to);
+
+    if(table.isEmpty())
+    {
+        return nullptr;
+    }
+
+    QVector<QPair<QString, double> > sectors;
+
+    for(const sOVERVIEWTABLE &item : table)
+    {
+        auto it = std::find_if(sectors.begin(), sectors.end(), [item](QPair<QString, double> a)
+                               {
+                                   return a.first == item.sector;
+                               }
+                               );
+
+        if(it != sectors.end()) // sector already exists
+        {
+            it->second += item.totalOnlinePrice;
+        }
+        else
+        {
+            sectors.push_back(qMakePair(item.sector, item.totalOnlinePrice));
+        }
+    }
+
+    QPieSeries *sectorSeries = new QPieSeries();
+
+    for(const QPair<QString, double> &item : sectors)
+    {
+        sectorSeries->append(item.first, item.second);
+    }
+
+    sectorSeries->setLabelsVisible();
+
+    for(QPieSlice *slice : sectorSeries->slices())
+    {
+        slice->setLabel(QString("%1 (%2%)").arg(slice->label()).arg(100*slice->percentage(), 0, 'f', 1));
+    }
+
+    /*QPieSlice *slice = sectorSeries->slices().at(1);
+    slice->setExploded();
+    slice->setLabelVisible();
+    slice->setPen(QPen(Qt::darkGreen, 2));
+    slice->setBrush(Qt::green);*/
+
+    return sectorSeries;
+}
+
 QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to)
 {
+    Q_ASSERT(database);
+
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
     QChart* chart = new QChart();
 
@@ -761,7 +831,16 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
         case SECTORCHART:
         {
+            QPieSeries *sectorSeries = getSectorSeries(from, to);
 
+            if(sectorSeries == nullptr)
+            {
+                return nullptr;
+            }
+
+            chart->addSeries(sectorSeries);
+            chart->setTitle("Sectors");
+            chart->legend()->hide();
         }
         break;
     }
@@ -804,7 +883,10 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
 
         case SECTORCHART:
         {
-
+            view = new QChartView(getChart(type, from, to));
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
         }
         break;
     }

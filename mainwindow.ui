@@ -78,7 +78,7 @@ QTabBar::close-button {
 </string>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabOverviewMain">
          <attribute name="title">
@@ -580,6 +580,11 @@ QGroupBox::title {
                    <item>
                     <property name="text">
                      <string>Dividends</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sectors</string>
                     </property>
                    </item>
                   </widget>

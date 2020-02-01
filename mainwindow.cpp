@@ -852,19 +852,49 @@ void MainWindow::on_pbShowGraph_clicked()
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
     VB->addWidget(chartView);
 
-    QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
-    connect(zoomReset, &QPushButton::clicked, [chartView]( )
-            {
-                chartView->chart()->zoomReset();
-            }
-            );
-
-    if(ui->cmGraphType->currentText() != "Dividends")
+    if(ui->cmGraphType->currentText() != "Dividends" && ui->cmGraphType->currentText() != "Sectors")
     {
+        QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
+        connect(zoomReset, &QPushButton::clicked, [chartView]( )
+                {
+                    chartView->chart()->zoomReset();
+                }
+                );
+
         QHBoxLayout *HB = new QHBoxLayout();
         HB->addWidget(zoomReset);
         VB->addLayout(HB);
-    }
+    }        
+
+    QPushButton *makeImage = new QPushButton("Save PNG", chartWidget);
+    connect(makeImage, &QPushButton::clicked, [chartView, chartWidget]()
+            {
+                QString fileName = QFileDialog::getSaveFileName(chartWidget,
+                                                                "Save File",
+                                                                QString(),
+                                                                tr("PNG (*.png)"));
+                if(!fileName.isEmpty())
+                {
+                    QPixmap p = chartView->grab();
+                    QOpenGLWidget *glWidget  = chartView->findChild<QOpenGLWidget*>();
+
+                    if(glWidget)
+                    {
+                        QPainter painter(&p);
+                        QPoint d = glWidget->mapToGlobal(QPoint())-chartView->mapToGlobal(QPoint());
+                        painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
+                        painter.drawImage(d, glWidget->grabFramebuffer());
+                        painter.end();
+                    }
+
+                    p.save(fileName, "PNG");
+                }
+            }
+            );
+
+    QHBoxLayout *HB = new QHBoxLayout();
+    HB->addWidget(makeImage);
+    VB->addLayout(HB);
 
     chartWidget->setLayout(VB);
     chartWidget->activateWindow();
