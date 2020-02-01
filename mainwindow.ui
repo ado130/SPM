@@ -215,7 +215,7 @@ QGroupBox::title {
                <item>
                 <widget class="QLineEdit" name="leWithdrawal">
                  <property name="toolTip">
-                  <string>Withdrawal money</string>
+                  <string>Withdrawn money</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit {
@@ -327,7 +327,7 @@ QGroupBox::title {
                <item>
                 <widget class="QLineEdit" name="lePerformance">
                  <property name="toolTip">
-                  <string>Portfolio value / Deposit</string>
+                  <string>(Portfolio value + div - fees) / Deposit</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit {
@@ -410,7 +410,7 @@ QGroupBox::title {
                <item>
                 <widget class="QLineEdit" name="leDY">
                  <property name="toolTip">
-                  <string>Dividends / Invested</string>
+                  <string>Dividends / (Invested - Sold)</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit {

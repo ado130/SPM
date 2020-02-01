@@ -136,12 +136,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(
         ui->deOverviewTo, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
+        [=]( ) { fillOverviewTable(); fillOverviewSlot(); }
         );
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
+        [=]( ) { fillOverviewTable(); fillOverviewSlot(); }
         );
 
 
@@ -159,10 +159,9 @@ MainWindow::MainWindow(QWidget *parent) :
     /********************************
      * Overview
     ********************************/
-    fillOverviewSlot();
-
     setOverviewHeader();
     fillOverviewTable();
+    fillOverviewSlot();
 
     /********************************
      * DeGiro table
@@ -532,7 +531,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 void MainWindow::setOverviewHeader()
 {
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Total price" << "Fees" << "Current price" << "Total current price" << "Netto dividend";
+    header << "ISIN" << "Ticker" << "Name" << "Sector" << "%" << "Count" << "Average price" << "Total price" << "Fees" << "Current price" << "Total current price" << "Netto dividend";
     ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->setRowCount(0);
@@ -635,8 +634,8 @@ void MainWindow::fillOverviewTable()
 
         portfolioValue += (totalOnlineStockPrice);
 
-
         double totalStockPrice = stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap);
+        double averageBuyPrice = totalStockPrice/totalCount;
 
 
         ui->tableOverview->insertRow(pos);
@@ -647,19 +646,29 @@ void MainWindow::fillOverviewTable()
         ui->tableOverview->setItem(pos, 3, new QTableWidgetItem(sector));
         ui->tableOverview->setItem(pos, 4, new QTableWidgetItem("%"));
         ui->tableOverview->setItem(pos, 5, new QTableWidgetItem(QString::number(totalCount)));
-        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(totalStockPrice, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice*totalCount, 0, 'f', 2) + " " + currencySign));
-        ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(averageBuyPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(totalStockPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 8, new QTableWidgetItem(QString("%L1").arg(stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 9, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(onlineStockPrice*totalCount, 0, 'f', 2) + " " + currencySign));
+        ui->tableOverview->setItem(pos, 11, new QTableWidgetItem(QString("%L1").arg(stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, exchangeRatesFuncMap), 0, 'f', 2) + " " + currencySign));
 
         if(totalOnlineStockPrice > totalStockPrice)
         {
-            ui->tableOverview->item(pos, 9)->setBackground(QColor(Qt::green));
+            ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::green));
         }
         else if(totalOnlineStockPrice < totalStockPrice)
         {
-            ui->tableOverview->item(pos, 9)->setBackground(QColor(Qt::red));
+            ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::red));
+        }
+
+        if(averageBuyPrice < onlineStockPrice)
+        {
+            ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::green));
+        }
+        else if(averageBuyPrice > onlineStockPrice)
+        {
+            ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::red));
         }
 
         pos++;
@@ -671,7 +680,8 @@ void MainWindow::fillOverviewTable()
     // Set %
     for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
     {
-        QTableWidgetItem *item = ui->tableOverview->item(row, 9);
+        // ToDo: totalCurrentPrice
+        QTableWidgetItem *item = ui->tableOverview->item(row, 10);
 
         if(item)
         {
@@ -682,7 +692,6 @@ void MainWindow::fillOverviewTable()
             text.replace( " ", "" );
 
             bool ok;
-
             double price = text.toDouble(&ok);
 
             if(ok)
@@ -1033,9 +1042,9 @@ void MainWindow::fillOverviewSlot()
 
     account += (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal  );
 
-    if(!qFuzzyIsNull(invested))
+    if(!qFuzzyIsNull(invested-sell))
     {
-        ui->leDY->setText(QString("%L1").arg((dividends/invested)*100.0, 0, 'f', 2) + " %");
+        ui->leDY->setText(QString("%L1").arg(((dividends-divTax)/(invested-sell))*100.0, 0, 'f', 2) + " %");
     }
 
     ui->leDeposit->setText(QString("%L1").arg(deposit, 0, 'f', 2) + " " + currencySign);
@@ -1047,6 +1056,25 @@ void MainWindow::fillOverviewSlot()
     ui->leWithdrawal->setText(QString("%L1").arg(withdrawal, 0, 'f', 2) + " " + currencySign);
     ui->leAccount->setText(QString("%L1").arg(account, 0, 'f', 2) + " " + currencySign);
     ui->leSell->setText(QString("%L1").arg(sell, 0, 'f', 2) + " " + currencySign);
+
+    QString text = ui->lePortfolio->text();
+    text = text.mid(0, text.lastIndexOf(" "));
+    text.replace(",", ".");
+    text = text.simplified();
+    text.replace( " ", "" );
+
+    bool ok;
+    double portfolio = text.toDouble(&ok);
+
+    if(ok)
+    {
+        if(!qFuzzyIsNull(deposit))
+        {
+            double performance = ((portfolio+dividends-divTax-fees-transFees)/deposit)*100.0;
+
+            ui->lePerformance->setText(QString("%L1 %").arg(performance, 0, 'f', 2));
+        }
+    }
 }
 
 void MainWindow::on_pbShowGraph_clicked()
@@ -1066,8 +1094,6 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QHash<QString, QVector<QPair<QDate, double>> > dividends;
     double maxDividendAxis = 0.0;
-
-    QVector<QPair<qint64, double> > graphData;
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
 
@@ -1120,7 +1146,6 @@ void MainWindow::on_pbShowGraph_clicked()
                 {
                     deposit += exchangeRatesFuncMap[rates](stock.price);
 
-                    graphData.append(qMakePair(stock.dateTime.toMSecsSinceEpoch(), deposit));
                     depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
                 }
                 break;
@@ -1661,7 +1686,7 @@ void MainWindow::deOverviewYearChanged(const QDate &date)
 
     connect(
         ui->deOverviewFrom, &QDateEdit::userDateChanged,
-        [=]( ) { fillOverviewSlot(); fillOverviewTable(); }
+        [=]( ) { fillOverviewTable(); fillOverviewSlot(); }
         );
 }
 
