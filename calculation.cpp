@@ -323,7 +323,7 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
 *  CHARTS
 *
 ********************************/
-QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
+QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to, QChart *chart)
 {
     Q_ASSERT(stockData);
     Q_ASSERT(database);
@@ -386,6 +386,11 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
         }
     }
 
+    if(depositSeries->pointsVector().count() == 0)
+    {
+        return nullptr;
+    }
+
     // Sort the dates
     QVector<QPointF> points = depositSeries->pointsVector();
     QVector<qreal> xPoints;
@@ -404,13 +409,37 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 
     if(depositSeries->pointsVector().count() == 1)
     {
-        depositSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
+        depositSeries->append(QDateTime(from).toMSecsSinceEpoch(), 0);
     }
+
+    Callout *tooltip = new Callout(chart);
+
+    connect(depositSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
+            {
+                if (tooltip == nullptr)
+                {
+                    tooltip = new Callout(chart);
+                }
+
+                if (state)
+                {
+                    tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd MM yyyy")).arg(point.y()));
+                    tooltip->setAnchor(point);
+                    tooltip->setZValue(11);
+                    tooltip->updateGeometry();
+                    tooltip->show();
+                }
+                else
+                {
+                    tooltip->hide();
+                }
+            }
+            );
 
     return depositSeries;
 }
 
-QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
+QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to, QChart *chart)
 {
     Q_ASSERT(stockData);
     Q_ASSERT(database);
@@ -474,6 +503,11 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
         }
     }
 
+    if(investedSeries->pointsVector().count() == 0)
+    {
+        return nullptr;
+    }
+
     // Sort the dates
     QVector<QPointF> points = investedSeries->pointsVector();
     QVector<qreal> xPoints;
@@ -494,6 +528,30 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
     {
         investedSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
     }
+
+    Callout *tooltip = new Callout(chart);
+
+    connect(investedSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
+            {
+                if (tooltip == nullptr)
+                {
+                    tooltip = new Callout(chart);
+                }
+
+                if (state)
+                {
+                    tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd MM yyyy")).arg(point.y()));
+                    tooltip->setAnchor(point);
+                    tooltip->setZValue(11);
+                    tooltip->updateGeometry();
+                    tooltip->show();
+                }
+                else
+                {
+                    tooltip->hide();
+                }
+            }
+            );
 
     return investedSeries;
 }
@@ -728,30 +786,28 @@ QPieSeries* Calculation::getSectorSeries(const QDate &from, const QDate &to)
         slice->setLabel(QString("%1 (%2%)").arg(slice->label()).arg(100*slice->percentage(), 0, 'f', 1));
     }
 
-    /*QPieSlice *slice = sectorSeries->slices().at(1);
-    slice->setExploded();
-    slice->setLabelVisible();
-    slice->setPen(QPen(Qt::darkGreen, 2));
-    slice->setBrush(Qt::green);*/
-
     return sectorSeries;
 }
 
-QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to)
+QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to)
 {
     Q_ASSERT(database);
 
     QString currencySign = database->getCurrencySign(database->getSetting().currency);
     QChart* chart = new QChart();
+    chart->setAcceptHoverEvents(true);
 
     switch(type)
     {
         case DEPOSITCHART:
         {
-            QLineSeries *depositSeries = getDepositSeries(from, to);
+            QLineSeries *depositSeries = getDepositSeries(from, to, chart);
 
             if(depositSeries == nullptr)
             {
+                delete chart;
+                chart = nullptr;
+
                 return nullptr;
             }
 
@@ -762,7 +818,21 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             QDateTimeAxis *depositAxisX = new QDateTimeAxis;
             depositAxisX->setTickCount(10);
-            depositAxisX->setFormat("MMM yyyy");
+
+            QPointF first = depositSeries->pointsVector().first();
+            QPointF last = depositSeries->pointsVector().last();
+
+            QDateTime firstDate = QDateTime::fromMSecsSinceEpoch(first.x());
+            QDateTime lastDate = QDateTime::fromMSecsSinceEpoch(last.x());
+
+            if(firstDate.date().year() == lastDate.date().year() && firstDate.date().month() == lastDate.date().month())
+            {
+                depositAxisX->setFormat("dd MMM");
+            }
+            else
+            {
+                depositAxisX->setFormat("MMM yyyy");
+            }
             depositAxisX->setTitleText("Date");
             chart->addAxis(depositAxisX, Qt::AlignBottom);
             depositSeries->attachAxis(depositAxisX);
@@ -777,10 +847,13 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
         case INVESTEDCHART:
         {
-            QLineSeries *investedSeries = getInvestedSeries(from, to);
+            QLineSeries *investedSeries = getInvestedSeries(from, to, chart);
 
             if(investedSeries == nullptr)
             {
+                delete chart;
+                chart = nullptr;
+
                 return nullptr;
             }
 
@@ -812,6 +885,9 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             if(dividendSeries == nullptr)
             {
+                delete chart;
+                chart = nullptr;
+
                 return nullptr;
             }
 
@@ -841,6 +917,9 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             if(sectorSeries == nullptr)
             {
+                delete chart;
+                chart = nullptr;
+
                 return nullptr;
             }
 
@@ -857,12 +936,18 @@ QChart* Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to)
 {
     QChartView *view = nullptr;
+    QChart *chart = getChart(type, from, to);
+
+    if(chart == nullptr)
+    {
+        return nullptr;
+    }
 
     switch(type)
-        {
+    {
         case DEPOSITCHART:
         {
-            view = new QChartView(getChart(type, from, to));
+            view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);
             view->setMinimumSize(512, 512);
             view->setRubberBand(QChartView::HorizontalRubberBand);
@@ -871,7 +956,7 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
 
         case INVESTEDCHART:
         {
-            view = new QChartView(getChart(type, from, to));
+            view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);
             view->setMinimumSize(512, 512);
             view->setRubberBand(QChartView::HorizontalRubberBand);
@@ -880,7 +965,7 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
 
         case DIVIDENDCHART:
         {
-            view = new QChartView(getChart(type, from, to));
+            view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);
             view->setMinimumSize(512, 512);
             view->setRubberBand(QChartView::HorizontalRubberBand);
@@ -889,7 +974,7 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
 
         case SECTORCHART:
         {
-            view = new QChartView(getChart(type, from, to));
+            view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);
             view->setMinimumSize(512, 512);
             view->setRubberBand(QChartView::HorizontalRubberBand);

@@ -85,27 +85,27 @@ sONLINEDATA Screener::finvizParse(QString data)
     int st = body.indexOf("<b>", start18TR);
     st = body.indexOf(">", st);
     int en = body.indexOf("</b>", st);
-    QString tmp = body.mid( st+1, en-st-1);
-    info.stockName = tmp.replace("&amp;","&");
+    QString tmp = body.mid(st+1, en-st-1);
+    info.stockName = tmp.replace("&amp;", "&");
 
     int start20TR = body.indexOf("<tr", start19TR+1);
 
     st = body.indexOf("<a href", start19TR);
     st = body.indexOf(">", st);
     en = body.indexOf("</a>", st);
-    tmp = body.mid( st+1, en-st-1);
+    tmp = body.mid(st+1, en-st-1);
     info.sector = tmp;
 
     st = body.indexOf("<a href", en);
     st = body.indexOf(">", st);
     en = body.indexOf("</a>", st);
     tmp = body.mid( st+1, en-st-1);
-    info.industry = tmp.replace("&amp;","&");
+    info.industry = tmp.replace("&amp;", "&");
 
     st = body.indexOf("<a href", en);
     st = body.indexOf(">", st);
     en = body.indexOf("</a>", st);
-    tmp = body.mid( st+1, en-st-1);
+    tmp = body.mid(st+1, en-st-1);
     info.country = tmp;
 
     table.info = info;

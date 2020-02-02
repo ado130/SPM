@@ -46,6 +46,7 @@ CONFIG += c++17
 
 SOURCES += \
         calculation.cpp \
+        callout.cpp \
         database.cpp \
         degiro.cpp \
         downloadmanager.cpp \
@@ -61,6 +62,7 @@ SOURCES += \
 
 HEADERS += \
         calculation.h \
+        callout.h \
         database.h \
         degiro.h \
         downloadmanager.h \

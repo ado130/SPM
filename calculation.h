@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QtCharts>
 
+#include "callout.h"
 #include "database.h"
 #include "stockdata.h"
 
@@ -22,12 +23,13 @@ private:
     StockData *stockData;
 
     QChart *getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to);
-    QLineSeries *getInvestedSeries(const QDate &from, const QDate &to);
-    QLineSeries *getDepositSeries(const QDate &from, const QDate &to);
+    QLineSeries *getInvestedSeries(const QDate &from, const QDate &to, QChart *chart);
+    QLineSeries *getDepositSeries(const QDate &from, const QDate &to, QChart *chart);
     QBarSeries *getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
     QPieSeries *getSectorSeries(const QDate &from, const QDate &to);
 signals:
-
 };
+
+
 
 #endif // CALCULATION_H

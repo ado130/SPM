@@ -289,7 +289,7 @@ void MainWindow::on_actionHelp_triggered()
     text =  "<html><body>";
     text += "Set the CSV path to the DeGiro file and delimeter in the Settings.<br>";
     text += "Please load the parameters under the Settings window and select the order and the visibility.<br><br>";
-    text += "The filter windows allows to set one of the predefined filter:";
+    text += "The filter window allows to set one of the predefined filter:";
     text += "<ul>";
     text += "<li> f&lt; </li>";
     text += "<li> f&gt; </li>";
@@ -299,7 +299,7 @@ void MainWindow::on_actionHelp_triggered()
     text += "The color column has to be either HEX color number or \"HIDE\".<br>";
     text += "The color HEX palette is available under the context menu (right click).<br>";
     text += "<br>";
-    text += "Double click on the row in the Overview table opens details about the selected stock.";
+    text += "Double click on the row in the Overview table opens selected stock details.";
     text += "</body></html>";
 
     QMessageBox::about(this,
@@ -2593,7 +2593,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
 
     if(pos == -1)   // error
     {
-        disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
+        disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
         if(progressDialog)
         {
@@ -2612,7 +2612,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
             updateProgressDialog(pos+1);
         }
 
-        disconnect(this, SIGNAL(refreshTickers(QString)), this, SLOT(refreshTickersSlot(QString)));
+        disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
         setStatus("All tickers have been refreshed");
     }
     else
@@ -2852,11 +2852,9 @@ void MainWindow::fillISINTable()
                             connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
                             QString request;
-                            // ToDo: might not be correct, the current stock is ETF which migh be listed in Amsterdam
-                            if(isinList.at(a).sector == "ETF" && isinList.at(a).ISIN.startsWith("IE"))
+                            // ToDo: might not be correct, the current stock is ETF
+                            if(isinList.at(a).sector == "ETF")
                             {
-                                ticker += ".AS";
-
                                 lastRequestSource = YAHOO;
                                 request = QString("https://finance.yahoo.com/quote/%1/").arg(ticker);
                             }
