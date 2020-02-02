@@ -17,15 +17,15 @@ public:
     QVector<sOVERVIEWTABLE> getOverviewTable(const QDate &from, const QDate &to);
     double getPortfolioValue(const QDate &from, const QDate &to);
     sOVERVIEWINFO getOverviewInfo(const QDate &from, const QDate &to);
-    QChartView *getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to);
+    QChartView *getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to, const QString &ISIN = QString());
 private:
     Database *database;
     StockData *stockData;
 
-    QChart *getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to);
+    QChart *getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to, const QString &ISIN = QString());
     QLineSeries *getInvestedSeries(const QDate &from, const QDate &to, QChart *chart);
     QLineSeries *getDepositSeries(const QDate &from, const QDate &to, QChart *chart);
-    QBarSeries *getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
+    QBarSeries *getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis, const QString &ISIN = QString());
     QPieSeries *getSectorSeries(const QDate &from, const QDate &to);
 signals:
 };

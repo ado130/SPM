@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "settingsform.h"
+
 #include "filterform.h"
 
 #include <QDebug>
@@ -617,7 +618,6 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     stockDlg->setAttribute(Qt::WA_DeleteOnClose);
     stockDlg->setWindowTitle("SPM " + vector.at(0).stockName);
 
-    QGridLayout *grid = new QGridLayout(stockDlg);
 
     QTableWidget *table = new QTableWidget(stockDlg);
     table->setStyleSheet(""
@@ -630,11 +630,9 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                          "}"
                          "");
 
-    grid->addWidget(table);
-    stockDlg->setLayout(grid);
 
     QStringList header;
-    header << "ISIN" << "Ticker" << "Name" << "Date" << "Type" << "Count" << "Price" << "Fee" << "Delete";
+    header << "Date" << "Type" << "Count" << "Price" << "Fee" << "Delete";
     table->setColumnCount(header.count());
 
     table->setRowCount(0);
@@ -651,6 +649,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     table->setHorizontalHeaderLabels(header);
 
     eCURRENCY selectedCurrency = database->getSetting().currency;
+    QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
     int pos = 0;
     table->setSortingEnabled(false);
@@ -659,13 +658,9 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     {
         table->insertRow(pos);
 
-        table->setItem(pos, 0, new QTableWidgetItem(stock.ISIN));
-        table->setItem(pos, 1, new QTableWidgetItem(stock.ticker));
-        table->setItem(pos, 2, new QTableWidgetItem(stock.stockName));
-
         QTableWidgetItem *item = new QTableWidgetItem;
         item->setData(Qt::EditRole, stock.dateTime.date());
-        table->setItem(pos, 3, item);
+        table->setItem(pos, 0, item);
 
 
         QString rates;
@@ -705,31 +700,27 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
         switch(stock.type)
         {
-            case DEPOSIT: table->setItem(pos, 4, new QTableWidgetItem("Deposit"));
+            case DEPOSIT: table->setItem(pos, 1, new QTableWidgetItem("Deposit"));
                 break;
-            case BUY: table->setItem(pos, 4, new QTableWidgetItem("Buy"));
+            case BUY: table->setItem(pos, 1, new QTableWidgetItem("Buy"));
                 break;
-            case SELL: table->setItem(pos, 4, new QTableWidgetItem("Sell"));
+            case SELL: table->setItem(pos, 1, new QTableWidgetItem("Sell"));
                 break;
-            case DIVIDEND: table->setItem(pos, 4, new QTableWidgetItem("Dividend"));
+            case DIVIDEND: table->setItem(pos, 1, new QTableWidgetItem("Dividend"));
                 break;
-            case TAX: table->setItem(pos, 4, new QTableWidgetItem("Tax"));
+            case TAX: table->setItem(pos, 1, new QTableWidgetItem("Tax"));
                 break;
-            case FEE: table->setItem(pos, 4, new QTableWidgetItem("Fee"));
+            case FEE: table->setItem(pos, 1, new QTableWidgetItem("Fee"));
                 break;
-            case TRANSACTIONFEE: table->setItem(pos, 4, new QTableWidgetItem("Transaction fee"));
+            case TRANSACTIONFEE: table->setItem(pos, 1, new QTableWidgetItem("Transaction fee"));
                 break;
-            case WITHDRAWAL: table->setItem(pos, 4, new QTableWidgetItem("Withdrawal"));
+            case WITHDRAWAL: table->setItem(pos, 1, new QTableWidgetItem("Withdrawal"));
                 break;
         }
 
-
-        QString currencySign = database->getCurrencySign(database->getSetting().currency);
-
-
-        table->setItem(pos, 5, new QTableWidgetItem(QString::number(stock.count)));
-        table->setItem(pos, 6, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
-        table->setItem(pos, 7, new QTableWidgetItem(QString("%L1").arg(abs(fee), 0, 'f', 2) + " " + currencySign));
+        table->setItem(pos, 2, new QTableWidgetItem(QString::number(stock.count)));
+        table->setItem(pos, 3, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
+        table->setItem(pos, 4, new QTableWidgetItem(QString("%L1").arg(abs(fee), 0, 'f', 2) + " " + currencySign));
 
 
         QPushButton *pbDelete = new QPushButton(table);
@@ -761,8 +752,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                     }
                 } );
 
-        table->setItem(pos, 8, new QTableWidgetItem());
-        table->setCellWidget(pos, 8, pbDelete);
+        table->setItem(pos, 5, new QTableWidgetItem());
+        table->setCellWidget(pos, 5, pbDelete);
 
         pos++;
     }
@@ -777,8 +768,74 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     }
 
     table->resizeColumnsToContents();
-    stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(),
-                     table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height());
+
+    if(table->rowCount() > 5)
+    {
+        table->setMinimumHeight(table->rowHeight(0)*5);
+    }
+    else
+    {
+        table->setMinimumHeight(table->rowHeight(0)*table->rowCount()+30);
+    }
+
+    int tableWidth = 0;
+    for(int colTable = 0; colTable<table->columnCount(); ++colTable)
+    {
+        tableWidth += table->columnWidth(colTable);
+    }
+
+    table->setMinimumWidth(tableWidth-50);
+
+    QVBoxLayout *VB = new QVBoxLayout(stockDlg);
+
+    QFont font("Helvetica", 10);
+    font.setBold(true);
+
+    QHBoxLayout *HBStockName = new QHBoxLayout();
+    QLabel *labelName = new QLabel(QString("%1").arg(vector.first().stockName));
+    labelName->setAlignment(Qt::AlignCenter);
+    labelName->setFont(font);
+    HBStockName->addWidget(labelName);
+    VB->addLayout(HBStockName);
+
+    QHBoxLayout *HBIsin = new QHBoxLayout();
+    QLabel *labelIsin = new QLabel(QString("%1 (%2)").arg(vector.first().ticker).arg(vector.first().ISIN));
+    labelIsin->setAlignment(Qt::AlignCenter);
+    HBIsin->addWidget(labelIsin);
+    VB->addLayout(HBIsin);
+
+    QHBoxLayout *HBTable = new QHBoxLayout();
+    HBTable->addWidget(table);
+    VB->addLayout(HBTable);
+
+
+    /************************
+    * CHART
+    ************************/
+    QChartView *chartView = calculation->getChartView(ISINCHART, vector.last().dateTime.date(), vector.first().dateTime.date(), ISIN);
+
+    if(chartView != nullptr)
+    {
+        chartView->chart()->axes(Qt::Horizontal).first()->setTitleText(QString("Years"));
+        chartView->chart()->axes(Qt::Vertical).first()->setTitleText(QString("Dividends (%1)").arg(currencySign));
+
+        QHBoxLayout *HBChart = new QHBoxLayout();
+        HBChart->addWidget(chartView);
+        VB->addLayout(HBChart);
+    }
+
+    stockDlg->setLayout(VB);
+
+    if(chartView != nullptr)
+    {
+        stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(),
+                        table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height()+chartView->size().height());
+    }
+    else
+    {
+        stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(),
+                         table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height());
+    }
 
     stockDlg->open();
 }

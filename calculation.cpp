@@ -348,37 +348,37 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to, Q
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
             if(stock.type == DEPOSIT)
             {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
                 deposit += database->getExchangePrice(rates, stock.price);
 
                 depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
@@ -464,38 +464,38 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to, 
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
-
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
             if(stock.type == BUY)
             {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
+
                 invested += database->getExchangePrice(rates, (-1.0)*stock.price) * stock.count;
 
                 investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
@@ -556,7 +556,7 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to, 
     return investedSeries;
 }
 
-QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
+QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis, const QString &ISIN)
 {
     Q_ASSERT(stockData);
     Q_ASSERT(database);
@@ -573,6 +573,12 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
+    if(!ISIN.isEmpty())
+    {
+        keys.clear();
+        keys << ISIN;
+    }
+
     for(const QString &key : keys)
     {
         for(const sSTOCKDATA &stock : stockList.value(key))
@@ -581,60 +587,93 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
-
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
             if(stock.type == DIVIDEND)
             {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
                 double price = 0.0;
 
                 price = database->getExchangePrice(rates, stock.price);
 
-                if(price > maxDividendAxis) maxDividendAxis = price;
+                if(price > maxDividendAxis)
+                {
+                    maxDividendAxis = price;
+                }
 
                 QString ticker = stock.ticker;
                 QDate date = stock.dateTime.date();
 
-                auto vector = dividends.value(ticker);
-                vector.push_back(qMakePair(date, price));
+                QVector<QPair<QDate, double>> vector = dividends.value(ticker);
+
+                if(ISIN.isEmpty())  // we are in DIVIDENDCHART mode, just add new record to the vector
+                {
+                    vector.push_back(qMakePair(date, price));
+                }
+                else    // We are in the ISINCHART mode, sum the dividends within a year
+                {
+                    auto it = std::find_if(vector.begin(), vector.end(), [date](QPair<QDate, double> a)
+                                           {
+                                               return date.year() == a.first.year();
+                                           }
+                                           );
+
+                    if(it != vector.end())  // we need to sum
+                    {
+                        it->second += price;
+
+                        if(it->second > maxDividendAxis)
+                        {
+                            maxDividendAxis = it->second;
+                        }
+                    }
+                    else                    // create new record, because we have found new year
+                    {
+                        vector.push_back(qMakePair(date, price));
+                    }
+                }
+
                 dividends.insert(ticker, vector);
             }
         }
     }
 
-    // Dividends
     // Sort from min to max and find the min and max
     QDate min;
     QDate max;
 
     QList<QString> divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
 
     min = dividends.value(divKeys.first()).first().first;
     max = dividends.value(divKeys.first()).first().first;
@@ -655,8 +694,15 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
         QDate localMin = vector.first().first;
         QDate localMax = vector.last().first;
 
-        if(localMin < min) min = localMin;
-        if(localMax > max) max = localMax;
+        if(localMin < min)
+        {
+            min = localMin;
+        }
+
+        if(localMax > max)
+        {
+            max = localMax;
+        }
     }
 
     // Save categories - find all months between min and max date
@@ -664,15 +710,30 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     QDate tmpMin = min;
     QVector<QDate> dates;
 
-    while(tmpMin < max)
+    if(ISIN.isEmpty())
     {
-        QString month = tmpMin.toString("MMM");
-        month = month.left(1).toUpper() + month.mid(1);     // first char to upper
+        while(tmpMin <= max)
+        {
+            QString month = tmpMin.toString("MMM");
+            month = month.left(1).toUpper() + month.mid(1);     // first char to upper
 
-        categories << month;
-        dates.push_back(tmpMin);
+            categories << month;
+            dates.push_back(tmpMin);
 
-        tmpMin = tmpMin.addMonths(1);
+            tmpMin = tmpMin.addMonths(1);
+        }
+    }
+    else
+    {
+        while(tmpMin.year() <= max.year())
+        {
+            QString year = tmpMin.toString("yyyy");
+
+            categories << year;
+            dates.push_back(tmpMin);
+
+            tmpMin = tmpMin.addYears(1);
+        }
     }
 
     // Fill empty places between dates
@@ -786,10 +847,12 @@ QPieSeries* Calculation::getSectorSeries(const QDate &from, const QDate &to)
         slice->setLabel(QString("%1 (%2%)").arg(slice->label()).arg(100*slice->percentage(), 0, 'f', 1));
     }
 
+    sectorSeries->setHoleSize(0.35);
+
     return sectorSeries;
 }
 
-QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to)
+QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const QDate &to, const QString &ISIN)
 {
     Q_ASSERT(database);
 
@@ -822,17 +885,18 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             QPointF first = depositSeries->pointsVector().first();
             QPointF last = depositSeries->pointsVector().last();
 
-            QDateTime firstDate = QDateTime::fromMSecsSinceEpoch(first.x());
-            QDateTime lastDate = QDateTime::fromMSecsSinceEpoch(last.x());
+            QDateTime firstDate = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(first.x()));
+            QDateTime lastDate = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(last.x()));
 
             if(firstDate.date().year() == lastDate.date().year() && firstDate.date().month() == lastDate.date().month())
             {
-                depositAxisX->setFormat("dd MMM");
+                depositAxisX->setFormat("dd MMM yy");
             }
             else
             {
                 depositAxisX->setFormat("MMM yyyy");
             }
+
             depositAxisX->setTitleText("Date");
             chart->addAxis(depositAxisX, Qt::AlignBottom);
             depositSeries->attachAxis(depositAxisX);
@@ -864,7 +928,22 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             QDateTimeAxis *investedAxisX = new QDateTimeAxis;
             investedAxisX->setTickCount(10);
-            investedAxisX->setFormat("MMM yyyy");
+
+            QPointF first = investedSeries->pointsVector().first();
+            QPointF last = investedSeries->pointsVector().last();
+
+            QDateTime firstDate = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(first.x()));
+            QDateTime lastDate = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(last.x()));
+
+            if(firstDate.date().year() == lastDate.date().year() && firstDate.date().month() == lastDate.date().month())
+            {
+                investedAxisX->setFormat("dd MMM yy");
+            }
+            else
+            {
+                investedAxisX->setFormat("MMM yyyy");
+            }
+
             investedAxisX->setTitleText("Date");
             chart->addAxis(investedAxisX, Qt::AlignBottom);
             investedSeries->attachAxis(investedAxisX);
@@ -891,7 +970,6 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
                 return nullptr;
             }
 
-            chart->addSeries(dividendSeries);
             chart->addSeries(dividendSeries);
             chart->setTitle("Dividends");
             chart->setAnimationOptions(QChart::SeriesAnimations);
@@ -928,15 +1006,48 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             chart->legend()->hide();
         }
         break;
+
+        case ISINCHART:
+        {
+            QStringList categories;
+            double maxDividendAxis;
+            QBarSeries *dividendSeries = getDividendSeries(from, to, &categories, &maxDividendAxis, ISIN);
+
+            if(dividendSeries == nullptr)
+            {
+                delete chart;
+                chart = nullptr;
+
+                return nullptr;
+            }
+
+            chart->addSeries(dividendSeries);
+            chart->setTitle("Year dividends");
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+
+            QBarCategoryAxis *dividendsAxisX = new QBarCategoryAxis();
+            dividendsAxisX->append(categories);
+            chart->addAxis(dividendsAxisX, Qt::AlignBottom);
+            dividendSeries->attachAxis(dividendsAxisX);
+
+            QValueAxis *dividendsAxisY = new QValueAxis();
+            dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis+0.1*maxDividendAxis));
+            chart->addAxis(dividendsAxisY, Qt::AlignLeft);
+            dividendSeries->attachAxis(dividendsAxisY);
+
+            chart->legend()->setVisible(false);
+        }
+        break;
     }
 
     return chart;
 }
 
-QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to)
+QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to, const QString &ISIN)
 {
     QChartView *view = nullptr;
-    QChart *chart = getChart(type, from, to);
+
+    QChart *chart = getChart(type, from, to, ISIN);
 
     if(chart == nullptr)
     {
@@ -973,6 +1084,15 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
         break;
 
         case SECTORCHART:
+        {
+            view = new QChartView(chart);
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
+        }
+        break;
+
+        case ISINCHART:
         {
             view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);
