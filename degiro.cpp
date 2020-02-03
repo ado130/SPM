@@ -293,6 +293,9 @@ StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
                     case EUR:
                         feeInUSD = exists->price * settings.EUR2USD;
                         break;
+                    case GBP:
+                        feeInUSD = exists->price * settings.GBP2USD;
+                        break;
                 }
 
                 switch (it->currency)
@@ -305,6 +308,9 @@ StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
                         break;
                     case EUR:
                         it->fee += feeInUSD * settings.USD2EUR;
+                        break;
+                    case GBP:
+                        it->fee += feeInUSD * settings.USD2GBP;
                         break;
                 }
 
@@ -321,7 +327,10 @@ StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
             {
                 vector.erase( std::remove_if(vector.begin(), vector.end(), [it] (sSTOCKDATA &s)
                                           {
-                                              return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                                qDebug() <<it->dateTime;
+                                                qDebug() <<s.dateTime;
+                                              return ( (s.dateTime == it->dateTime) &&
+                                                        (s.type == TRANSACTIONFEE || s.type == FEE || s.type == TAX) );
                                           }
                                             ), vector.end()
                              );

@@ -43,6 +43,13 @@ double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 
 
         QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
+
+        if(cachedPrice.isEmpty())
+        {
+            // ToDo the return price might be in EUR or USD or whatever
+            cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Previous Close");
+        }
+
         double onlineStockPrice = 0.0;
         double totalOnlinePrice = 0.0;
 
