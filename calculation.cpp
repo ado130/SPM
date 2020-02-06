@@ -39,7 +39,7 @@ double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 
         int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
 
-        if(totalCount == 0 && !database->getSetting().showSoldPositions) continue;
+        if(totalCount <= 0 && !database->getSetting().showSoldPositions) continue;
 
 
         QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
@@ -258,7 +258,7 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
         // Check the total count
         int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
 
-        if(totalCount == 0 && !database->getSetting().showSoldPositions) continue;
+        if(totalCount <= 0 && !database->getSetting().showSoldPositions) continue;
 
         row.totalCount = totalCount;
 

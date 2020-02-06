@@ -12,7 +12,9 @@
 =======================================================
 
 === Client Release 1.0.9.0 1 Feb 2020
-+ Added ETF online info for iShares on Amsterdam stock
++ Added ETF online info
++ Added chart tooltip
+- Fixed DeGiro CSV import
 
 === Client Release 1.0.8.0 1 Feb 2020
 + Added sectors chart
