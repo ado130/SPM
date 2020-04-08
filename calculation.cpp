@@ -811,6 +811,152 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     return dividendSeries;
 }
 
+QStackedBarSeries* Calculation::getYearDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
+{
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
+    StockDataType stockList = stockData->getStockData();
+
+    if(stockList.isEmpty())
+    {
+        return nullptr;
+    }
+
+
+    QVector<QPair<double, int> > dividends;     // price, year
+    double maxDividendAxis = 0.0;
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+    QList<QString> keys = stockList.keys();
+
+    for(const QString &key : keys)
+    {
+        for(const sSTOCKDATA &stock : stockList.value(key))
+        {
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if( stock.stockName.toLower().contains("fundshare") ) continue;
+
+            if(stock.type == DIVIDEND)
+            {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
+                double price = 0.0;
+
+                price = database->getExchangePrice(rates, stock.price);
+
+                if(price > maxDividendAxis)
+                {
+                    maxDividendAxis = price;
+                }
+
+                QString ticker = stock.ticker;
+                QDate date = stock.dateTime.date();
+
+
+                auto it = std::find_if(dividends.begin(), dividends.end(), [date](QPair<double, int> a)
+                                       {
+                                           return date.year() == a.second;
+                                       }
+                                       );
+
+                if(it != dividends.end())  // we need to sum
+                {
+                    it->first += price;
+
+                    if(it->first > maxDividendAxis)
+                    {
+                        maxDividendAxis = it->first;
+                    }
+                }
+                else                    // create new record, because we have found new year
+                {
+                    dividends.push_back(qMakePair(price, date.year()));
+                }
+            }
+        }
+    }
+
+    if(dividends.count() == 0)
+    {
+        return nullptr;
+    }
+
+    std::sort(dividends.begin(), dividends.end(),
+              [] (QPair<double, int> &a, QPair<double, int> &b)
+              {
+                  return a.second < b.second;
+              }
+              );
+
+    int yearMin = dividends.first().second;
+    int yearMax = dividends.last().second;
+
+    // Set all sets, ticker and date
+    QStringList categories;
+    QStackedBarSeries *dividendSeries = new QStackedBarSeries();
+
+    for (const QPair<double, int> &key : dividends)
+    {
+        QBarSet *bar = new QBarSet(QString::number(key.second));
+
+        for(int a = yearMin; a<yearMax+1; ++a)
+        {
+            if(a == key.second)
+            {
+                bar->append(key.first);
+            }
+            else
+            {
+                bar->append(0);
+            }
+        }
+
+        categories << QString::number(key.second);
+
+        dividendSeries->append(bar);
+    }
+
+    if(xAxis != nullptr)
+    {
+        *xAxis = categories;
+    }
+
+    if(maxYAxis != nullptr)
+    {
+        *maxYAxis = maxDividendAxis;
+    }
+
+    return dividendSeries;
+}
+
 QPieSeries* Calculation::getSectorSeries(const QDate &from, const QDate &to)
 {
     QVector<sOVERVIEWTABLE> table = getOverviewTable(from, to);
@@ -852,6 +998,34 @@ QPieSeries* Calculation::getSectorSeries(const QDate &from, const QDate &to)
     for(QPieSlice *slice : sectorSeries->slices())
     {
         slice->setLabel(QString("%1 (%2%)").arg(slice->label()).arg(100*slice->percentage(), 0, 'f', 1));
+    }
+
+    sectorSeries->setHoleSize(0.35);
+
+    return sectorSeries;
+}
+
+QPieSeries* Calculation::getStockSeries(const QDate &from, const QDate &to)
+{
+    QVector<sOVERVIEWTABLE> table = getOverviewTable(from, to);
+
+    if(table.isEmpty())
+    {
+        return nullptr;
+    }
+
+    QPieSeries *sectorSeries = new QPieSeries();
+
+    for(const sOVERVIEWTABLE &item : table)
+    {
+        sectorSeries->append(item.ticker, item.percentage);
+    }
+
+    sectorSeries->setLabelsVisible();
+
+    for(QPieSlice *slice : sectorSeries->slices())
+    {
+        slice->setLabel(QString("%1 (%2%)").arg(slice->label()).arg(100*slice->percentage(), 0, 'f', 2));
     }
 
     sectorSeries->setHoleSize(0.35);
@@ -987,9 +1161,46 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             dividendSeries->attachAxis(axisX);
 
             QValueAxis *dividendsAxisY = new QValueAxis();
-            dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis+0.1*maxDividendAxis));
+            dividendsAxisY->setLabelFormat("%i");
+            dividendsAxisY->setTitleText("Dividend " + currencySign);
+            dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis*1.1));
             chart->addAxis(dividendsAxisY, Qt::AlignLeft);
             dividendSeries->attachAxis(dividendsAxisY);
+
+            chart->legend()->setVisible(true);
+            chart->legend()->setAlignment(Qt::AlignBottom);
+        }
+        break;
+
+        case YEARDIVIDENDCHART:
+        {
+            QStringList categories;
+            double maxDividendAxis;
+            QStackedBarSeries  *yearDividendSeries = getYearDividendSeries(from, to, &categories, &maxDividendAxis);
+
+            if(yearDividendSeries == nullptr)
+            {
+                delete chart;
+                chart = nullptr;
+
+                return nullptr;
+            }
+
+            chart->addSeries(yearDividendSeries);
+            chart->setTitle("Year dividends");
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            yearDividendSeries->attachAxis(axisX);
+
+            QValueAxis *dividendsAxisY = new QValueAxis();
+            dividendsAxisY->setLabelFormat("%i");
+            dividendsAxisY->setTitleText("Dividend " + currencySign);
+            dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis*1.1));
+            chart->addAxis(dividendsAxisY, Qt::AlignLeft);
+            yearDividendSeries->attachAxis(dividendsAxisY);
 
             chart->legend()->setVisible(true);
             chart->legend()->setAlignment(Qt::AlignBottom);
@@ -1010,6 +1221,24 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             chart->addSeries(sectorSeries);
             chart->setTitle("Sectors");
+            chart->legend()->hide();
+        }
+        break;
+
+        case STOCKCHART:
+        {
+            QPieSeries *stockSeries = getStockSeries(from, to);
+
+            if(stockSeries == nullptr)
+            {
+                delete chart;
+                chart = nullptr;
+
+                return nullptr;
+            }
+
+            chart->addSeries(stockSeries);
+            chart->setTitle("Stocks");
             chart->legend()->hide();
         }
         break;
@@ -1090,7 +1319,25 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
         }
         break;
 
+        case YEARDIVIDENDCHART:
+        {
+            view = new QChartView(chart);
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
+        }
+        break;
+
         case SECTORCHART:
+        {
+            view = new QChartView(chart);
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
+        }
+        break;
+
+        case STOCKCHART:
         {
             view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);

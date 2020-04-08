@@ -584,7 +584,22 @@ QGroupBox::title {
                    </item>
                    <item>
                     <property name="text">
+                     <string>Year dividends</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
                      <string>Sectors</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Stocks</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tree chart</string>
                     </property>
                    </item>
                   </widget>
@@ -1547,7 +1562,7 @@ min-height: 30px;
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="styleSheet">

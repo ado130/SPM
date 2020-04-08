@@ -17,7 +17,6 @@
 #include <QtCharts>
 
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -730,7 +729,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                 {
                     int ret = QMessageBox::warning(nullptr,
                                                    "Delete record",
-                                                   "Do you really want to delete selected record?",
+                                                   "Do you really want to delete the selected record?",
                                                    QMessageBox::Yes, QMessageBox::No);
 
                     if(ret == QMessageBox::Yes)
@@ -769,6 +768,9 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     table->resizeColumnsToContents();
 
+    //QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
     if(table->rowCount() > 5)
     {
         table->setMinimumHeight(table->rowHeight(0)*5);
@@ -779,12 +781,13 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     }
 
     int tableWidth = 0;
+
     for(int colTable = 0; colTable<table->columnCount(); ++colTable)
     {
         tableWidth += table->columnWidth(colTable);
     }
 
-    table->setMinimumWidth(tableWidth-50);
+    table->setMinimumWidth(tableWidth);
 
     QVBoxLayout *VB = new QVBoxLayout(stockDlg);
 
@@ -909,7 +912,7 @@ void MainWindow::on_pbShowGraph_clicked()
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
     VB->addWidget(chartView);
 
-    if(ui->cmGraphType->currentText() != "Dividends" && ui->cmGraphType->currentText() != "Sectors")
+    if(type != SECTORCHART && type != STOCKCHART && type != DIVIDENDCHART && type != YEARDIVIDENDCHART)
     {
         QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
         connect(zoomReset, &QPushButton::clicked, [chartView]( )
@@ -1925,6 +1928,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
             updateStockDataSlot(ISIN, lastLoadedTable);
             dataLoaded();
             emit refreshTickers(ticker);
+            setStatus(QString("Ticker %1 has been updated.").arg(ticker));
         }
     }
 }
@@ -2886,8 +2890,15 @@ void MainWindow::fillISINTable()
 
         QPushButton *pbUpdate = new QPushButton(ui->tableISIN);
         pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
-        connect(pbUpdate, &QPushButton::clicked, [this, a, isinList]()
+        connect(pbUpdate, &QPushButton::clicked, [this, a]()
                 {
+                    QVector<sISINDATA> isinList = database->getIsinList();  // we need to load it again, since the ticker might be added in the meantime
+
+                    if(isinList.count() < a)
+                    {
+                        return;
+                    }
+
                     QString ticker = isinList.at(a).ticker;
 
                     if(ticker.isEmpty())
@@ -2992,13 +3003,14 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 {
     if(column > 4) return;
 
-    QTableWidgetItem *item = ui->tableISIN->item(row, column);
+    QTableWidgetItem *clickedItem = ui->tableISIN->item(row, column);
 
-    if(!item) return;
+    if(!clickedItem) return;
 
-    QString previous = item->text();
+    QString previousText = clickedItem->text();
 
     QString header = "Input";
+
     switch(column)
     {
         case 0: header = "ISIN:"; break;
@@ -3009,16 +3021,16 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
     }
 
     bool ok;
-    QString text = QInputDialog::getText(this,
+    QString newText = QInputDialog::getText(this,
                                          "Change " + header,
                                          header,
                                          QLineEdit::Normal,
-                                         previous,
+                                         previousText,
                                          &ok);
 
-    if (ok && !text.isEmpty())
+    if (ok && !newText.isEmpty())
     {
-        item->setText(text);
+        clickedItem->setText(newText);
 
         QVector<sISINDATA> isinList = database->getIsinList();
         QString ISIN = ui->tableISIN->item(row, 0)->text();
@@ -3033,11 +3045,35 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
         {
             switch(column)
             {
-                case 0: it->ISIN = text; break;
-                case 1: it->ticker = text; break;
-                case 2: it->name = text; break;
-                case 3: it->sector = text; break;
-                case 4: it->industry = text; break;
+                case 0: it->ISIN = newText;
+                    break;
+
+                case 1:
+                {
+                    it->ticker = newText;
+
+                    if(previousText != newText)             // ticker was changed so it should be possible to update the data and not wait to the next day
+                    {
+                        it->lastUpdate = QDateTime();
+
+                        QTableWidgetItem *dateItem = ui->tableISIN->item(row, 5);
+
+                        if(dateItem != nullptr)
+                        {
+                            dateItem->setText("");
+                        }
+                    }
+                }
+                break;
+
+                case 2: it->name = newText;
+                    break;
+
+                case 3: it->sector = newText;
+                    break;
+
+                case 4: it->industry = newText;
+                    break;
             }
 
             database->setIsinList(isinList);
@@ -3056,7 +3092,7 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
             while(i.hasNext())
             {
                 i.next();
-                i.value().ticker = text;
+                i.value().ticker = newText;
             }
 
             stockList[ISIN] = vector;
@@ -3081,8 +3117,15 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
     {
         it->lastUpdate = QDateTime::currentDateTime();
 
+        it->sector = table.info.sector;
+        it->industry = table.info.industry;
+
+        database->setIsinList(isinList);
+
+        fillISINTable();
+
         // First time
-        if(it->sector.isEmpty() || it->industry.isEmpty())
+        /*if(it->sector.isEmpty() || it->industry.isEmpty())
         {
             it->sector = table.info.sector;
             it->industry = table.info.industry;
@@ -3095,7 +3138,7 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
         {
             database->setIsinList(isinList);
             fillISINTable();
-        }
+        }*/
 
         fillOverviewTable();
     }

@@ -27,6 +27,8 @@ private:
     QLineSeries *getDepositSeries(const QDate &from, const QDate &to, QChart *chart);
     QBarSeries *getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis, const QString &ISIN = QString());
     QPieSeries *getSectorSeries(const QDate &from, const QDate &to);
+    QPieSeries *getStockSeries(const QDate &from, const QDate &to);
+    QStackedBarSeries *getYearDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
 signals:
 };
 
