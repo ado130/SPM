@@ -11,6 +11,15 @@
    ! Important - Take note!
 =======================================================
 
+
+=== Client Release 1.1.1.0 16 Apr 2020
++ Added month dividend graph
+
+=== Client Release 1.1.0.0 8 Apr 2020
++ Added sector chart
++ Added year dividend chart
+- Fixed few bugs
+
 === Client Release 1.0.9.0 1 Feb 2020
 + Added ETF online info
 + Added chart tooltip

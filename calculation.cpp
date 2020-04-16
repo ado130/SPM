@@ -330,7 +330,7 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
 *  CHARTS
 *
 ********************************/
-QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to, QChart *chart)
+QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 {
     Q_ASSERT(stockData);
     Q_ASSERT(database);
@@ -419,34 +419,10 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to, Q
         depositSeries->append(QDateTime(from).toMSecsSinceEpoch(), 0);
     }
 
-    Callout *tooltip = new Callout(chart);
-
-    connect(depositSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
-            {
-                if (tooltip == nullptr)
-                {
-                    tooltip = new Callout(chart);
-                }
-
-                if (state)
-                {
-                    tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd MM yyyy")).arg(point.y()));
-                    tooltip->setAnchor(point);
-                    tooltip->setZValue(11);
-                    tooltip->updateGeometry();
-                    tooltip->show();
-                }
-                else
-                {
-                    tooltip->hide();
-                }
-            }
-            );
-
     return depositSeries;
 }
 
-QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to, QChart *chart)
+QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 {
     Q_ASSERT(stockData);
     Q_ASSERT(database);
@@ -535,30 +511,6 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to, 
     {
         investedSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
     }
-
-    Callout *tooltip = new Callout(chart);
-
-    connect(investedSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
-            {
-                if (tooltip == nullptr)
-                {
-                    tooltip = new Callout(chart);
-                }
-
-                if (state)
-                {
-                    tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd MM yyyy")).arg(point.y()));
-                    tooltip->setAnchor(point);
-                    tooltip->setZValue(11);
-                    tooltip->updateGeometry();
-                    tooltip->show();
-                }
-                else
-                {
-                    tooltip->hide();
-                }
-            }
-            );
 
     return investedSeries;
 }
@@ -811,6 +763,213 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     return dividendSeries;
 }
 
+QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
+{
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
+    StockDataType stockList = stockData->getStockData();
+
+    if(stockList.isEmpty())
+    {
+        return nullptr;
+    }
+
+    QHash<QString, QVector<QPair<QDate, double>> > dividends;
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+    QList<QString> keys = stockList.keys();
+
+
+    for(const QString &key : keys)
+    {
+        for(const sSTOCKDATA &stock : stockList.value(key))
+        {
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if( stock.stockName.toLower().contains("fundshare") ) continue;
+
+            if(stock.type == DIVIDEND)
+            {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
+                double price = 0.0;
+
+                price = database->getExchangePrice(rates, stock.price);
+
+                QString ticker = stock.ticker;
+                QDate date = stock.dateTime.date();
+
+                QVector<QPair<QDate, double>> vector = dividends.value(ticker);
+
+                vector.push_back(qMakePair(date, price));
+
+                dividends.insert(ticker, vector);
+            }
+        }
+    }
+
+    // Sort from min to max and find the min and max
+    QDate min;
+    QDate max;
+
+    QList<QString> divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
+
+    min = dividends.value(divKeys.first()).first().first;
+    max = dividends.value(divKeys.first()).first().first;
+
+    for (const QString &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<QDate, double> &a, QPair<QDate, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+
+        QDate localMin = vector.first().first;
+        QDate localMax = vector.last().first;
+
+        if(localMin < min)
+        {
+            min = localMin;
+        }
+
+        if(localMax > max)
+        {
+            max = localMax;
+        }
+    }
+
+    // Save categories - find all months between min and max date
+    QStringList categories;
+    QDate tmpMin = min;
+    QVector<QDate> dates;
+
+    while(tmpMin <= max)
+    {
+        QString month = tmpMin.toString("MMM");
+        month = month.left(1).toUpper() + month.mid(1);     // first char to upper
+
+        categories << month;
+        dates.push_back(tmpMin);
+
+        tmpMin = tmpMin.addMonths(1);
+    }
+
+
+    // Fill empty places between dates
+    QMutableHashIterator it(dividends);
+
+    while(it.hasNext())
+    {
+        it.next();
+
+        tmpMin = min;
+
+        auto vector = it.value();
+
+        for(const QDate &d : dates)
+        {
+            auto found = std::find_if(vector.begin(), vector.end(), [d] (QPair<QDate, double> &a)
+                                      {
+                                          return d.month() == a.first.month();
+                                      }
+                                      );
+
+            if(found == vector.end())
+            {
+                int index = dates.indexOf(d);
+                vector.insert(index, qMakePair(d, 0.0));
+            }
+        }
+
+        it.value() = vector;
+    }
+
+    // Set all sets, tickers and dates
+    QVector<QBarSet*> dividendsSets;
+    divKeys = dividends.keys();
+
+    for (const QString &key : divKeys)
+    {
+        QBarSet *bar = new QBarSet(key);
+
+        auto vector = dividends.value(key);
+
+        for (const QPair<QDate, double> &v : vector)
+        {
+            bar->append(v.second);
+        }
+
+        dividendsSets.push_back(bar);
+    }
+
+
+    QStackedBarSeries *dividendSeries = new QStackedBarSeries();
+    double maxDividendAxis = 0.0;
+
+    for(QBarSet *set : dividendsSets)
+    {
+        dividendSeries->append(set);
+
+        qreal sum = set->sum();
+
+        if(sum > maxDividendAxis)
+        {
+            maxDividendAxis = sum;
+        }
+    }
+
+
+    if(xAxis != nullptr)
+    {
+        *xAxis = categories;
+    }
+
+    if(maxYAxis != nullptr)
+    {
+        *maxYAxis = maxDividendAxis;
+    }
+
+    return dividendSeries;
+}
+
 QStackedBarSeries* Calculation::getYearDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
 {
     Q_ASSERT(stockData);
@@ -1045,7 +1204,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
     {
         case DEPOSITCHART:
         {
-            QLineSeries *depositSeries = getDepositSeries(from, to, chart);
+            QLineSeries *depositSeries = getDepositSeries(from, to);
 
             if(depositSeries == nullptr)
             {
@@ -1087,12 +1246,38 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             depositAxisY->setTitleText("Deposit " + currencySign);
             chart->addAxis(depositAxisY, Qt::AlignLeft);
             depositSeries->attachAxis(depositAxisY);
+
+
+
+            Callout *tooltip = new Callout(chart);
+
+            connect(depositSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
+                    {
+                        if (tooltip == nullptr)
+                        {
+                            tooltip = new Callout(chart);
+                        }
+
+                        if (state)
+                        {
+                            tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
+                            tooltip->setAnchor(point);
+                            tooltip->setZValue(11);
+                            tooltip->updateGeometry();
+                            tooltip->show();
+                        }
+                        else
+                        {
+                            tooltip->hide();
+                        }
+                    }
+                    );
         }
         break;
 
         case INVESTEDCHART:
         {
-            QLineSeries *investedSeries = getInvestedSeries(from, to, chart);
+            QLineSeries *investedSeries = getInvestedSeries(from, to);
 
             if(investedSeries == nullptr)
             {
@@ -1134,6 +1319,31 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             investedAxisY->setTitleText("Invested " + currencySign);
             chart->addAxis(investedAxisY, Qt::AlignLeft);
             investedSeries->attachAxis(investedAxisY);
+
+
+            Callout *tooltip = new Callout(chart);
+
+            connect(investedSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
+                    {
+                        if (tooltip == nullptr)
+                        {
+                            tooltip = new Callout(chart);
+                        }
+
+                        if (state)
+                        {
+                            tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
+                            tooltip->setAnchor(point);
+                            tooltip->setZValue(11);
+                            tooltip->updateGeometry();
+                            tooltip->show();
+                        }
+                        else
+                        {
+                            tooltip->hide();
+                        }
+                    }
+                    );
         }
         break;
 
@@ -1169,6 +1379,67 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             chart->legend()->setVisible(true);
             chart->legend()->setAlignment(Qt::AlignBottom);
+
+        }
+        break;
+
+        case MONTHDIVIDEND:
+        {
+            QStringList categories;
+            double maxDividendAxis;
+            QStackedBarSeries *dividendSeries = getMonthDividendSeries(from, to, &categories, &maxDividendAxis);
+
+            if(dividendSeries == nullptr)
+            {
+                delete chart;
+                chart = nullptr;
+
+                return nullptr;
+            }
+
+            chart->addSeries(dividendSeries);
+            chart->setTitle("Month dividends");
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            dividendSeries->attachAxis(axisX);
+
+            QValueAxis *dividendsAxisY = new QValueAxis();
+            dividendsAxisY->setLabelFormat("%i");
+            dividendsAxisY->setTitleText("Dividend " + currencySign);
+            //dividendsAxisY->setRange(0, static_cast<int>(maxDividendAxis*1.1));
+            chart->addAxis(dividendsAxisY, Qt::AlignLeft);
+            dividendSeries->attachAxis(dividendsAxisY);
+
+            chart->legend()->setVisible(true);
+            chart->legend()->setAlignment(Qt::AlignBottom);
+
+
+            Callout *tooltip = new Callout(chart);
+
+            connect(dividendSeries, &QStackedBarSeries::hovered, [tooltip, chart, dividendSeries, currencySign](bool status, int index, QBarSet *barset) mutable
+                    {
+                        if (tooltip == nullptr)
+                        {
+                            tooltip = new Callout(chart);
+                        }
+
+                        if (status)
+                        {
+                            tooltip->setText(QString("%1: %2%3").arg(barset->label()).arg(currencySign).arg(barset->at(index)));
+                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2, 0));
+                            tooltip->setZValue(11);
+                            tooltip->updateGeometry();
+                            tooltip->show();
+                        }
+                        else
+                        {
+                            tooltip->hide();
+                        }
+                    }
+                    );
         }
         break;
 
@@ -1204,6 +1475,31 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
             chart->legend()->setVisible(true);
             chart->legend()->setAlignment(Qt::AlignBottom);
+
+
+            Callout *tooltip = new Callout(chart);
+
+            connect(yearDividendSeries, &QStackedBarSeries::hovered, [tooltip, chart, yearDividendSeries](bool status, int index, QBarSet *barset) mutable
+                    {
+                        if (tooltip == nullptr)
+                        {
+                            tooltip = new Callout(chart);
+                        }
+
+                        if (status)
+                        {
+                            tooltip->setText(QString("Y: %1").arg(barset->at(index)));
+                            tooltip->setAnchor(QPointF(yearDividendSeries->barWidth()*index*2, 0));
+                            tooltip->setZValue(11);
+                            tooltip->updateGeometry();
+                            tooltip->show();
+                        }
+                        else
+                        {
+                            tooltip->hide();
+                        }
+                    }
+                    );
         }
         break;
 
@@ -1311,6 +1607,15 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
         break;
 
         case DIVIDENDCHART:
+        {
+            view = new QChartView(chart);
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
+        }
+        break;
+
+        case MONTHDIVIDEND:
         {
             view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);

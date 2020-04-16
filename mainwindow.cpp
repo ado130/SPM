@@ -596,6 +596,14 @@ void MainWindow::fillOverviewTable()
     }
 
     ui->tableOverview->resizeColumnsToContents();
+
+    for (int col = 0; col < ui->tableOverview->horizontalHeader()->count(); ++col)
+    {
+        if(col == 2)
+        {
+            ui->tableOverview->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
+        }
+    }
 }
 
 void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
@@ -769,7 +777,16 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     table->resizeColumnsToContents();
 
     //QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    for (int col = 0; col < table->horizontalHeader()->count(); ++col)
+    {
+        if(col == 0 || col == 5)
+        {
+            continue;
+        }
+
+        table->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
+    }
+
 
     if(table->rowCount() > 5)
     {
@@ -912,7 +929,7 @@ void MainWindow::on_pbShowGraph_clicked()
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
     VB->addWidget(chartView);
 
-    if(type != SECTORCHART && type != STOCKCHART && type != DIVIDENDCHART && type != YEARDIVIDENDCHART)
+    if(type != SECTORCHART && type != STOCKCHART)
     {
         QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
         connect(zoomReset, &QPushButton::clicked, [chartView]( )
@@ -1662,7 +1679,6 @@ void MainWindow::fillDegiroTable()
     }
     ui->tableDegiro->setSortingEnabled(true);
 
-    ui->tableDegiro->resizeColumnsToContents();
 
     for (int row = 0; row<ui->tableDegiro->rowCount(); ++row)
     {
@@ -1670,6 +1686,18 @@ void MainWindow::fillDegiroTable()
         {
             ui->tableDegiro->item(row, col)->setTextAlignment(Qt::AlignCenter);
         }
+    }
+
+    ui->tableDegiro->resizeColumnsToContents();
+
+    for (int col = 0; col < ui->tableDegiro->horizontalHeader()->count(); ++col)
+    {
+        if(col == 0 || col == 2 || col == 4 || col == 5)
+        {
+            continue;
+        }
+
+        ui->tableDegiro->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
     }
 }
 
@@ -2375,6 +2403,14 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
     st->getHiddenRows()->setText(QString("Hidden rows: %1").arg(hiddenRows));
 
     st->getScreenerTable()->resizeColumnsToContents();
+
+    for (int col = 0; col < st->getScreenerTable()->horizontalHeader()->count(); ++col)
+    {
+        if(st->getScreenerTable()->horizontalHeaderItem(col)->text() == "Stock name")
+        {
+            st->getScreenerTable()->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
+        }
+    }
 }
 
 void MainWindow::applyFilter(ScreenerTab *st)
@@ -2983,6 +3019,16 @@ void MainWindow::fillISINTable()
     }
 
     ui->tableISIN->resizeColumnsToContents();
+
+    for (int col = 0; col < ui->tableISIN->horizontalHeader()->count(); ++col)
+    {
+        if(col == 0 || col == 1 || col == 3 || col == 5 || col == 6 || col == 7)
+        {
+            continue;
+        }
+
+        ui->tableISIN->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
+    }
 }
 
 void MainWindow::eraseISIN(QString ISIN)
