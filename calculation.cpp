@@ -673,7 +673,9 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     {
         while(tmpMin <= max)
         {
-            QString month = tmpMin.toString("MMM");
+            //QString month = tmpMin.toString("MMM");
+            QLocale locale;
+            QString month = locale.toString(tmpMin, "MMM");
             month = month.left(1).toUpper() + month.mid(1);     // first char to upper
 
             categories << month;
@@ -883,7 +885,8 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
 
     while(tmpMin <= max)
     {
-        QString month = tmpMin.toString("MMM");
+        QLocale locale;
+        QString month = locale.toString(tmpMin, "MMM");
         month = month.left(1).toUpper() + month.mid(1);     // first char to upper
 
         categories << month;
