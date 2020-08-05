@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QDateTime>
 #include <QMap>
+#include <QHash>
 
 // x lines of y values of pair key-value
 typedef QVector<QPair<QString, QString> > TickerDataType;

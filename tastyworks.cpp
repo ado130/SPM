@@ -37,7 +37,7 @@ void Tastyworks::loadCSV(QString path, eDELIMETER delimeter)
     while (!file.atEnd())
     {
         QString line = file.readLine();
-        QStringList list = line.split(chDelimeter, QString::KeepEmptyParts);
+        QStringList list = line.split(chDelimeter, Qt::KeepEmptyParts);
 
         if(!isFirstLine)
         {

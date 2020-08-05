@@ -416,7 +416,7 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 
     if(depositSeries->pointsVector().count() == 1)
     {
-        depositSeries->append(QDateTime(from).toMSecsSinceEpoch(), 0);
+        depositSeries->append(QDateTime(from, QTime(0, 0, 0)).toMSecsSinceEpoch(), 0);
     }
 
     return depositSeries;
@@ -509,7 +509,7 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 
     if(investedSeries->pointsVector().count() == 1)
     {
-        investedSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1)).toMSecsSinceEpoch(), 0);
+        investedSeries->append(QDateTime(QDate(QDate::currentDate().year(), 1, 1), QTime(0, 0, 0)).toMSecsSinceEpoch(), 0);
     }
 
     return investedSeries;

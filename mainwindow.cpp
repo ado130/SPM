@@ -1476,7 +1476,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             record.name = table.info.stockName;
             record.sector = table.info.sector;
             record.industry = table.info.industry;
-            record.lastUpdate = QDateTime(QDate(2000, 2, 31));      // should always return invalid date
+            record.lastUpdate = QDateTime(QDate(2000, 2, 31), QTime(0, 0, 0));      // should always return invalid date
 
             isinList.push_back(record);
             database->setIsinList(isinList);
@@ -1580,7 +1580,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
                 sISINDATA record;
                 record.ISIN = ISIN;
                 record.name = stockName;
-                record.lastUpdate = QDateTime(QDate(2000, 2, 31));
+                record.lastUpdate = QDateTime(QDate(2000, 2, 31), QTime(0, 0, 0));
 
                 isinList.push_back(record);
             }
@@ -2855,7 +2855,7 @@ void MainWindow::on_pbISINAdd_clicked()
     record.sector = ui->leISINSector->text();
     record.ticker = ui->leISINTicker->text();
     record.industry = ui->leISINIndustry->text();
-    record.lastUpdate = QDateTime(QDate(2000, 2, 31));
+    record.lastUpdate = QDateTime(QDate(2000, 2, 31), QTime(0, 0, 0));
 
     QVector<sISINDATA> isin = database->getIsinList();
 
