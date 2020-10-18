@@ -886,7 +886,7 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
     while(tmpMin <= max)
     {
         QLocale locale;
-        QString month = locale.toString(tmpMin, "MMM");
+        QString month = locale.toString(tmpMin, "MMM") + " " + QString::number(tmpMin.year()-2000);
         month = month.left(1).toUpper() + month.mid(1);     // first char to upper
 
         categories << month;
@@ -911,7 +911,7 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
         {
             auto found = std::find_if(vector.begin(), vector.end(), [d] (QPair<QDate, double> &a)
                                       {
-                                          return d.month() == a.first.month();
+                                          return d.month() == a.first.month() && d.year() == a.first.year();
                                       }
                                       );
 
@@ -924,6 +924,30 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
 
         it.value() = vector;
     }
+
+
+    // Sort from min to max
+    divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
+
+    for (const QString &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<QDate, double> &a, QPair<QDate, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+    }
+
 
     // Set all sets, tickers and dates
     QVector<QBarSet*> dividendsSets;
