@@ -623,6 +623,7 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
         }
     }
 
+
     // Sort from min to max and find the min and max
     QDate min;
     QDate max;
@@ -664,6 +665,7 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
         }
     }
 
+
     // Save categories - find all months between min and max date
     QStringList categories;
     QDate tmpMin = min;
@@ -673,9 +675,8 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
     {
         while(tmpMin <= max)
         {
-            //QString month = tmpMin.toString("MMM");
             QLocale locale;
-            QString month = locale.toString(tmpMin, "MMM");
+            QString month = locale.toString(tmpMin, "MMM") + " " + QString::number(tmpMin.year()-2000);
             month = month.left(1).toUpper() + month.mid(1);     // first char to upper
 
             categories << month;
@@ -697,6 +698,7 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
         }
     }
 
+
     // Fill empty places between dates
     QMutableHashIterator it(dividends);
 
@@ -712,7 +714,8 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
         {
             auto found = std::find_if(vector.begin(), vector.end(), [d] (QPair<QDate, double> &a)
                                       {
-                                          return d.month() == a.first.month();
+                                          //return d.month() == a.first.month();
+                                          return d.month() == a.first.month() && d.year() == a.first.year();
                                       }
                                       );
 
@@ -725,6 +728,30 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
 
         it.value() = vector;
     }
+
+
+    // Sort from min to max and find the min and max
+    divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
+
+    for (const QString &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<QDate, double> &a, QPair<QDate, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+    }
+
 
     // Set all sets, ticker and date
     QVector<QBarSet*> dividendsSets;

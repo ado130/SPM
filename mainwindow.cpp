@@ -836,6 +836,8 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     if(chartView != nullptr)
     {
+        chartView->setRubberBand(QChartView::NoRubberBand);
+
         chartView->chart()->axes(Qt::Horizontal).first()->setTitleText(QString("Years"));
         chartView->chart()->axes(Qt::Vertical).first()->setTitleText(QString("Dividends (%1)").arg(currencySign));
 
