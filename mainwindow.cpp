@@ -2912,42 +2912,42 @@ void MainWindow::fillISINTable()
 
     ui->tableISIN->setSortingEnabled(false);
 
-    for(int a = 0; a<isinList.count(); ++a)
+    for(int row = 0; row<isinList.count(); ++row)
     {
-        ui->tableISIN->insertRow(a);
+        ui->tableISIN->insertRow(row);
 
-        ui->tableISIN->setItem(a, 0, new QTableWidgetItem(isinList.at(a).ISIN));
-        ui->tableISIN->setItem(a, 1, new QTableWidgetItem(isinList.at(a).ticker));
-        ui->tableISIN->setItem(a, 2, new QTableWidgetItem(isinList.at(a).name));
-        ui->tableISIN->setItem(a, 3, new QTableWidgetItem(isinList.at(a).sector));
-        ui->tableISIN->setItem(a, 4, new QTableWidgetItem(isinList.at(a).industry));
+        ui->tableISIN->setItem(row, 0, new QTableWidgetItem(isinList.at(row).ISIN));
+        ui->tableISIN->setItem(row, 1, new QTableWidgetItem(isinList.at(row).ticker));
+        ui->tableISIN->setItem(row, 2, new QTableWidgetItem(isinList.at(row).name));
+        ui->tableISIN->setItem(row, 3, new QTableWidgetItem(isinList.at(row).sector));
+        ui->tableISIN->setItem(row, 4, new QTableWidgetItem(isinList.at(row).industry));
 
         QTableWidgetItem *item = new QTableWidgetItem;
-        item->setData(Qt::EditRole, isinList.at(a).lastUpdate.date());
-        ui->tableISIN->setItem(a, 5, item);
+        item->setData(Qt::EditRole, isinList.at(row).lastUpdate.date());
+        ui->tableISIN->setItem(row, 5, item);
 
         QPushButton *pbUpdate = new QPushButton(ui->tableISIN);
         pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
-        connect(pbUpdate, &QPushButton::clicked, [this, a]()
+        connect(pbUpdate, &QPushButton::clicked, [this, row]()
                 {
                     QVector<sISINDATA> isinList = database->getIsinList();  // we need to load it again, since the ticker might be added in the meantime
 
-                    if(isinList.count() < a)
+                    if(isinList.count() < row)
                     {
                         return;
                     }
 
-                    QString ticker = isinList.at(a).ticker;
+                    QString ticker = isinList.at(row).ticker;
 
                     if(ticker.isEmpty())
                     {
-                        setStatus(QString("ISIN %1 does not have assigned the ticker!").arg(isinList.at(a).ISIN));
+                        setStatus(QString("ISIN %1 does not have assigned the ticker!").arg(isinList.at(row).ISIN));
                     }
                     else
                     {
                         QDateTime today = QDateTime::currentDateTime();
 
-                        if(today.date() == isinList.at(a).lastUpdate.date())
+                        if(today.date() == isinList.at(row).lastUpdate.date())
                         {
                             setStatus(QString("The ticker %1 was already updated today.").arg(ticker));
                         }
@@ -2959,7 +2959,7 @@ void MainWindow::fillISINTable()
 
                             QString request;
                             // ToDo: might not be correct, the current stock is ETF
-                            if(isinList.at(a).sector == "ETF")
+                            if(isinList.at(row).sector == "ETF")
                             {
                                 lastRequestSource = YAHOO;
                                 request = QString("https://finance.yahoo.com/quote/%1/").arg(ticker);
@@ -2977,29 +2977,29 @@ void MainWindow::fillISINTable()
 
                 );
 
-        ui->tableISIN->setItem(a, 6, new QTableWidgetItem());
-        ui->tableISIN->setCellWidget(a, 6, pbUpdate);
+        ui->tableISIN->setItem(row, 6, new QTableWidgetItem());
+        ui->tableISIN->setCellWidget(row, 6, pbUpdate);
 
 
         QPushButton *pbDelete = new QPushButton(ui->tableISIN);
         pbDelete->setStyleSheet("QPushButton {border-image:url(:/images/delete.png);}");
 
-        connect(pbDelete, &QPushButton::clicked, [this, a, isinList]()
+        connect(pbDelete, &QPushButton::clicked, [this, row, isinList]()
                 {
                     int ret = QMessageBox::warning(nullptr,
                                                    "Delete record",
-                                                   QString("Do you really want to delete %1?").arg(isinList.at(a).ISIN),
+                                                   QString("Do you really want to delete %1?").arg(isinList.at(row).ISIN),
                                                    QMessageBox::Yes, QMessageBox::No);
 
                     if(ret == QMessageBox::Yes)
                     {
-                        QTableWidgetItem *isinItem = ui->tableISIN->item(a, 0);
+                        QTableWidgetItem *isinItem = ui->tableISIN->item(row, 0);
 
                         if(isinItem)
                         {
                             QString ISIN = isinItem->text();
                             eraseISIN(ISIN);
-                            ui->tableISIN->removeRow(a);
+                            ui->tableISIN->removeRow(row);
                         }
                     }
                 }
@@ -3007,8 +3007,8 @@ void MainWindow::fillISINTable()
                 );
 
 
-        ui->tableISIN->setItem(a, 7, new QTableWidgetItem());
-        ui->tableISIN->setCellWidget(a, 7, pbDelete);
+        ui->tableISIN->setItem(row, 7, new QTableWidgetItem());
+        ui->tableISIN->setCellWidget(row, 7, pbDelete);
     }
     ui->tableISIN->setSortingEnabled(true);
 

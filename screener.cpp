@@ -57,65 +57,46 @@ sONLINEDATA Screener::finvizParse(QString data)
     int endB = data.indexOf("</body");
     QString body = data.mid(startB, endB-startB);
 
+    int startC = data.indexOf("fullview-title");
+    QString content = data.mid(startC, endB-startC);
 
-    int startT = body.indexOf("<table", 0);
+    int start1TR = content.indexOf("<tr", 0);
+    int start2TR = content.indexOf("<tr", start1TR+1);
 
-    int startNextTable = body.indexOf("<table", startT+1);
-
-    int start1TR = body.indexOf("<tr", startNextTable);
-    int start2TR = body.indexOf("<tr", start1TR+1);
-    int start3TR = body.indexOf("<tr", start2TR+1);
-    int start4TR = body.indexOf("<tr", start3TR+1);
-    int start5TR = body.indexOf("<tr", start4TR+1);
-    int start6TR = body.indexOf("<tr", start5TR+1);
-    int start7TR = body.indexOf("<tr", start6TR+1);
-    int start8TR = body.indexOf("<tr", start7TR+1);
-    int start9TR = body.indexOf("<tr", start8TR+1);
-    int start10TR = body.indexOf("<tr", start9TR+1);
-    int start11TR = body.indexOf("<tr", start10TR+1);
-    int start12TR = body.indexOf("<tr", start11TR+1);
-    int start13TR = body.indexOf("<tr", start12TR+1);
-    int start14TR = body.indexOf("<tr", start13TR+1);
-    int start15TR = body.indexOf("<tr", start14TR+1);
-    int start16TR = body.indexOf("<tr", start15TR+1);
-    int start17TR = body.indexOf("<tr", start16TR+1);
-    int start18TR = body.indexOf("<tr", start17TR+1);
-    int start19TR = body.indexOf("<tr", start18TR+1);
-
-    int st = body.indexOf("<b>", start18TR);
-    st = body.indexOf(">", st);
-    int en = body.indexOf("</b>", st);
-    QString tmp = body.mid(st+1, en-st-1);
+    int st = content.indexOf("<b>", start2TR);
+    st = content.indexOf(">", st);
+    int en = content.indexOf("</b>", st);
+    QString tmp = content.mid(st+1, en-st-1);
     info.stockName = tmp.replace("&amp;", "&");
 
-    int start20TR = body.indexOf("<tr", start19TR+1);
+    int start3TR = content.indexOf("<tr", start2TR+1);
 
-    st = body.indexOf("<a href", start19TR);
-    st = body.indexOf(">", st);
-    en = body.indexOf("</a>", st);
-    tmp = body.mid(st+1, en-st-1);
+    st = content.indexOf("<a href", start3TR);
+    st = content.indexOf(">", st);
+    en = content.indexOf("</a>", st);
+    tmp = content.mid(st+1, en-st-1);
     info.sector = tmp;
 
-    st = body.indexOf("<a href", en);
-    st = body.indexOf(">", st);
-    en = body.indexOf("</a>", st);
-    tmp = body.mid( st+1, en-st-1);
+    st = content.indexOf("<a href", en);
+    st = content.indexOf(">", st);
+    en = content.indexOf("</a>", st);
+    tmp = content.mid( st+1, en-st-1);
     info.industry = tmp.replace("&amp;", "&");
 
-    st = body.indexOf("<a href", en);
-    st = body.indexOf(">", st);
-    en = body.indexOf("</a>", st);
-    tmp = body.mid(st+1, en-st-1);
+    st = content.indexOf("<a href", en);
+    st = content.indexOf(">", st);
+    en = content.indexOf("</a>", st);
+    tmp = content.mid(st+1, en-st-1);
     info.country = tmp;
 
     table.info = info;
 
-    int start21TR = body.indexOf("<tr", start20TR+1);
+    int start21TR = content.indexOf("<tr", en+1);
 
-    int startInnerTable = body.indexOf("<table", start20TR);
-    int endInnderTable = body.indexOf("</table>", start21TR);
+    int startInnerTable = content.indexOf("<table", en);
+    int endInnderTable = content.indexOf("</table>", start21TR);
 
-    QStringList TRvalues = body.mid(startInnerTable, endInnderTable-startInnerTable).split("<tr");
+    QStringList TRvalues = content.mid(startInnerTable, endInnderTable-startInnerTable).split("<tr");
 
     for(const QString &TR : TRvalues)
     {
