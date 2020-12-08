@@ -13,6 +13,7 @@
 #include <QScreen>
 #include <QTableWidgetItem>
 #include <QTimer>
+#include <QPageSize>
 #include <QPrinter>
 #include <QtCharts>
 
@@ -69,16 +70,6 @@ MainWindow::MainWindow(QWidget *parent) :
                     point.y(),
                     database->getSetting().width,
                     database->getSetting().height);
-        /*setGeometry(
-            QStyle::alignedRect(
-                Qt::LeftToRight,
-                Qt::AlignCenter,
-                newSize,
-                QGuiApplication::screens().first()->availableGeometry()
-            )
-        );*/
-
-        //this->mapFromGlobal(QPoint(database->getSetting().xPos, database->getSetting().yPos));
     }
 
     // set status bar text
@@ -1011,11 +1002,17 @@ void MainWindow::on_pbPDFExport_clicked()
         fileName.append(".pdf");
     }
 
-    QVector<sPDFEXPORT> pdfData = prepareDataToExport();
+    const QDate from = ui->dePDFFrom->date();
+    const QDate to = ui->dePDFTo->date();
+
+    const double USD2CZK = ui->lePDFUSD2CZK->text().toDouble();
+    const double EUR2CZK = ui->lePDFEUR2CZK->text().toDouble();
+    const double GBP2CZK = ui->lePDFGBP2CZK->text().toDouble();
+    QVector<sPDFEXPORTDATA> pdfData = stockData->prepareDataToExport(from, to, USD2CZK, EUR2CZK, GBP2CZK);
 
     QPrinter printer(QPrinter::PrinterResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
     printer.setOutputFileName(fileName);
 
     QString text;
@@ -1041,7 +1038,7 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "    <table width=\"100%\" align=\"center\" cellspacing=\"0\" cellpadding=\"1\" border=\"1\">";
     text += "       <tbody>";
     text += "           <tr>";
-    text += "               <td align=\"center\" colspan=\"6\"><b>DAP tabuľka</b></td>";
+    text += "               <td align=\"center\" colspan=\"6\"><b>DAP tabulka dividenda</b></td>";
     text += "           </tr>";
     text += "           <tr>";
     text += "               <td align=\"center\"><b>Datum</b></td>";
@@ -1052,14 +1049,19 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "               <td align=\"center\"><b>Název</b></td>";
     text += "           </tr>";
 
-    for(const sPDFEXPORT &pdf : pdfData)
+    for(const sPDFEXPORTDATA &pdf : pdfData)
     {
+        if(pdf.type != DIVIDEND)
+        {
+            continue;
+        }
+
         text += "           <tr>";
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.date.toString("dd.MM.yyyy"));
-        text += QString("               <td align=\"center\">%1</td>").arg(pdf.paid);
-        text += QString("               <td align=\"center\">%1</td>").arg(pdf.price);
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.priceInOriginal);
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.priceInCZK);
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.tax);
-        text += QString("               <td align=\"center\">%1</td>").arg(QString::number( round((pdf.tax/pdf.price) * 100.0), 'f', 0));
+        text += QString("               <td align=\"center\">%1</td>").arg(QString::number( round((pdf.tax/pdf.priceInCZK) * 100.0), 'f', 0));
         text += QString("               <td align=\"center\">%1</td>").arg(pdf.name);
         text += "           </tr>";
     }
@@ -1067,6 +1069,58 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "       </tbody>";
     text += "   </table>";
 
+
+
+    /*
+    *       CP
+    */
+    text += "<br><br>";
+    text += "    <table width=\"100%\" align=\"center\" cellspacing=\"0\" cellpadding=\"1\" border=\"1\">";
+    text += "       <tbody>";
+    text += "           <tr>";
+    text += "               <td align=\"center\" colspan=\"4\"><b>DAP tabulka prodej CP</b></td>";
+    text += "           </tr>";
+    text += "           <tr>";
+    text += "               <td align=\"center\"><b>Datum</b></td>";
+    text += "               <td align=\"center\"><b>Zaplaceno<br>Měna výplaty</b></td>";
+    text += "               <td align=\"center\"><b>Zaplaceno<br>CZK</b></td>";
+    text += "               <td align=\"center\"><b>Název</b></td>";
+    text += "           </tr>";
+
+    double totalInCZK = 0.0;
+    for(const sPDFEXPORTDATA &pdf : pdfData)
+    {
+        if(pdf.type != SELL)
+        {
+            continue;
+        }
+
+        totalInCZK += pdf.priceInCZK;
+
+        text += "           <tr>";
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.date.toString("dd.MM.yyyy"));
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.priceInOriginal);
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.priceInCZK);
+        text += QString("               <td align=\"center\">%1</td>").arg(pdf.name);
+        text += "           </tr>";
+    }
+
+    text += "           <tr>";
+    text += QString("               <td align=\"center\">Spolu: </td>");
+    text += QString("               <td align=\"center\"> </td>");
+    text += QString("               <td align=\"center\">%1</td>").arg(totalInCZK);
+    text += QString("               <td align=\"center\"> </td>");
+    text += "           </tr>";
+
+    text += "       </tbody>";
+    text += "   </table>";
+
+    /*
+    *       TEXT
+    */
+    text += "<br><br>";
+    text += QString("Když je celková hodnota prodeje CP méně než 100 000, - Kč, neni třeba prodej uvádět do DP: §4 odst. 1 písm. w) Zákonu o dani.");
+    text += "<br><br>";
     text += "<br><br>";
     text += QString("Přepočet měn z USD do CZK byl proveden jednotným kurzem: 1 USD = %1 CZK").arg(ui->lePDFUSD2CZK->text());
     text += "<br>";
@@ -1084,109 +1138,8 @@ void MainWindow::on_pbPDFExport_clicked()
 
     QTextDocument doc;
     doc.setHtml(text);
-    doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc.setPageSize(printer.pageLayout().pageSize().size(QPageSize::Point)); // This is necessary if you want to hide the page number
     doc.print(&printer);
-}
-
-QVector<sPDFEXPORT> MainWindow::prepareDataToExport()
-{
-    StockDataType stockList = stockData->getStockData();
-
-    if(stockList.isEmpty())
-    {
-        return QVector<sPDFEXPORT>();
-    }
-
-    QVector<sPDFEXPORT> exportData;
-
-    QDate from = ui->dePDFFrom->date();
-    QDate to = ui->dePDFTo->date();
-
-    double USD2CZK = ui->lePDFUSD2CZK->text().toDouble();
-    double EUR2CZK = ui->lePDFEUR2CZK->text().toDouble();
-    double GBP2CZK = ui->lePDFGBP2CZK->text().toDouble();
-
-    bool isSellValueTest = stockData->getTotalSell(from, to, EUR2CZK, USD2CZK, GBP2CZK) > 100000 ? true : false;
-
-    QList<QString> keys = stockList.keys();
-
-    for(const QString &key : keys)
-    {
-        for(const sSTOCKDATA &deg : stockList.value(key))
-        {
-            if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
-
-            if( deg.stockName.toLower().contains("fundshare") ) continue;
-
-
-            if(deg.type == SELL)
-            {
-                if(isSellValueTest)      // more than 100000 CZK, so we have to do the tax
-                {
-
-                }
-                else                        // less than 100000 CZK, so check the time test
-                {
-
-                }
-            }
-            else if(deg.type == DIVIDEND)
-            {
-                sPDFEXPORT pdfRow;
-
-                switch(deg.currency)
-                {
-                    case USD:
-                        pdfRow.price = round(deg.price * USD2CZK);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * USD2CZK);
-                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("USD");
-                        break;
-                    case CZK:
-                        pdfRow.price = round(deg.price);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND));
-                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("CZK");
-                        break;
-                    case EUR:
-                        pdfRow.price = round(deg.price * EUR2CZK);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * EUR2CZK);
-                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("EUR");
-                        break;
-                    case GBP:
-                        pdfRow.price = round(deg.price * GBP2CZK);
-                        pdfRow.tax = round(stockData->getTax(key, deg.dateTime, DIVIDEND) * GBP2CZK);
-                        pdfRow.paid = QString("%1 %2").arg(deg.price).arg("GBP");
-                        break;
-                }
-
-                pdfRow.date = deg.dateTime;
-                pdfRow.name = deg.stockName;
-                pdfRow.tax = abs(pdfRow.tax);
-
-                // Find duplicates, then sum them or create new record
-                auto it = std::find_if(exportData.begin(), exportData.end(),
-                                [pdfRow]
-                                       (const sPDFEXPORT& pdf) -> bool { return ( (pdf.date.date() == pdfRow.date.date()) && (pdf.name == pdfRow.name) ); }
-                                       );
-
-                if(it != exportData.end())
-                {
-                    it->price += pdfRow.price;
-                    it->tax += pdfRow.tax;
-                }
-                else
-                {
-                    exportData.append(pdfRow);
-                }
-            }
-        }
-    }
-
-    std::sort(exportData.begin(), exportData.end(),
-              []
-                (sPDFEXPORT a, sPDFEXPORT b) {return a.date > b.date; }
-              );
-
-    return exportData;
 }
 
 void MainWindow::deOverviewYearChanged(const QDate &date)

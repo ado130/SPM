@@ -132,7 +132,6 @@ private:
      *  Overview tab
      */
     void setOverviewHeader();
-    QVector<sPDFEXPORT> prepareDataToExport();
 
     /**
      * @brief updateStockDataVector - set new "vector" for the specified ISIN

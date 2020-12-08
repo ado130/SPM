@@ -27,6 +27,7 @@ public:
     void saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table);
 
     QString getCachedISINParam(const QString &ISIN, const QString &param);
+    QVector<sPDFEXPORTDATA> prepareDataToExport(const QDate &from, const QDate &to, const double &USD2CZK, const double &EUR2CZK, const double &GBP2CZK);
 private:
     StockDataType stockData;
     QVector<QPair<QString, sONLINEDATA> > cachedStockData;

@@ -214,6 +214,129 @@ double StockData::getTotalSell(const QDate &from, const QDate &to, double EUR2CZ
     return price;
 }
 
+QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const QDate &to, const double &USD2CZK, const double &EUR2CZK, const double &GBP2CZK)
+{
+    StockDataType stockList = getStockData();
+
+    if(stockList.isEmpty())
+    {
+        return QVector<sPDFEXPORTDATA>();
+    }
+
+    QVector<sPDFEXPORTDATA> exportData;
+
+
+
+    bool isSellValueTest = getTotalSell(from, to, EUR2CZK, USD2CZK, GBP2CZK) > 100000 ? true : false;
+
+    QList<QString> keys = stockList.keys();
+
+    for(const QString &key : keys)
+    {
+        for(const sSTOCKDATA &deg : stockList.value(key))
+        {
+            if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
+
+            if( deg.stockName.toLower().contains("fundshare") ) continue;
+
+
+            if(deg.type == SELL)
+            {
+                sPDFEXPORTDATA pdfRow;
+                pdfRow.type = SELL;
+
+                if(isSellValueTest)      // more than 100000 CZK, so we have to do the tax
+                {
+
+                }
+                else                        // less than 100000 CZK, print all CP, however we do not have to do any tax
+                {
+                    switch(deg.currency)
+                    {
+                        case USD:
+                            pdfRow.priceInCZK = round(deg.price * USD2CZK) * deg.count;
+                            pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price * deg.count).arg("USD");
+                            break;
+                        case CZK:
+                            pdfRow.priceInCZK = round(deg.price) * deg.count;
+                            pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price * deg.count).arg("CZK");
+                            break;
+                        case EUR:
+                            pdfRow.priceInCZK = round(deg.price * EUR2CZK) * deg.count;
+                            pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price * deg.count).arg("EUR");
+                            break;
+                        case GBP:
+                            pdfRow.priceInCZK = round(deg.price * GBP2CZK) * deg.count;
+                            pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price * deg.count).arg("GBP");
+                            break;
+                    }
+
+                    pdfRow.date = deg.dateTime;
+                    pdfRow.name = deg.stockName;
+
+                    exportData.append(pdfRow);
+                }
+            }
+            else if(deg.type == DIVIDEND)
+            {
+                sPDFEXPORTDATA pdfRow;
+
+                pdfRow.type = DIVIDEND;
+
+                switch(deg.currency)
+                {
+                    case USD:
+                        pdfRow.priceInCZK = round(deg.price * USD2CZK);
+                        pdfRow.tax = round(getTax(key, deg.dateTime, DIVIDEND) * USD2CZK);
+                        pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price).arg("USD");
+                        break;
+                    case CZK:
+                        pdfRow.priceInCZK = round(deg.price);
+                        pdfRow.tax = round(getTax(key, deg.dateTime, DIVIDEND));
+                        pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price).arg("CZK");
+                        break;
+                    case EUR:
+                        pdfRow.priceInCZK = round(deg.price * EUR2CZK);
+                        pdfRow.tax = round(getTax(key, deg.dateTime, DIVIDEND) * EUR2CZK);
+                        pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price).arg("EUR");
+                        break;
+                    case GBP:
+                        pdfRow.priceInCZK = round(deg.price * GBP2CZK);
+                        pdfRow.tax = round(getTax(key, deg.dateTime, DIVIDEND) * GBP2CZK);
+                        pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price).arg("GBP");
+                        break;
+                }
+
+                pdfRow.date = deg.dateTime;
+                pdfRow.name = deg.stockName;
+                pdfRow.tax = abs(pdfRow.tax);
+
+                // Find duplicates, then sum them or create new record
+                auto it = std::find_if(exportData.begin(), exportData.end(),
+                                       [pdfRow]
+                                       (const sPDFEXPORTDATA& pdf) -> bool { return ( (pdf.date.date() == pdfRow.date.date()) && (pdf.name == pdfRow.name) ); }
+                                       );
+
+                if(it != exportData.end())
+                {
+                    it->priceInCZK += pdfRow.priceInCZK;
+                    it->tax += pdfRow.tax;
+                }
+                else
+                {
+                    exportData.append(pdfRow);
+                }
+            }
+        }
+    }
+
+    std::sort(exportData.begin(), exportData.end(),
+              []
+              (sPDFEXPORTDATA a, sPDFEXPORTDATA b) {return a.date > b.date; }
+              );
+
+    return exportData;
+}
 
 void StockData::setStockData(const StockDataType &value)
 {

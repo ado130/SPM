@@ -141,17 +141,6 @@ enum eCHARTTYPE
     ISINCHART
 };
 
-
-struct sPDFEXPORT
-{
-    QString paid;
-    QDateTime date;
-    double price;
-    double tax;
-    QString name;
-};
-
-
 enum eSTOCKEVENTTYPE
 {
     DEPOSIT = 0,
@@ -199,6 +188,16 @@ struct sNEWRECORD
     int count;
     double price;
     double fee;
+};
+
+struct sPDFEXPORTDATA
+{
+    QString priceInOriginal;
+    QDateTime date;
+    double priceInCZK;
+    double tax;
+    QString name;
+    eSTOCKEVENTTYPE type;
 };
 
 /**
