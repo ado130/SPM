@@ -11,6 +11,9 @@
    ! Important - Take note!
 =======================================================
 
+=== Client Release 1.1.4.0 8 Dec 2020
++ Improved PDF export
+
 === Client Release 1.1.3.0 2 Dec 2020
 - Fixed Finviz import
 
