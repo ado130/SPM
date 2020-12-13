@@ -150,7 +150,8 @@ enum eSTOCKEVENTTYPE
     FEE = 4,
     DIVIDEND = 5,
     TAX = 6,
-    TRANSACTIONFEE = 7
+    TRANSACTIONFEE = 7,
+    CURRENCYEXCHANGE = 8
 };
 
 enum eSTOCKSOURCE
@@ -172,7 +173,7 @@ struct sSTOCKDATA
 
     int count;
     double price;
-
+    double balance;
     double fee;         // dividend--tax; buy/sell--transactionfee
 
     eSTOCKSOURCE source;
@@ -215,6 +216,7 @@ struct sDEGIRORAW
     QString description;
     eCURRENCY currency;
     double price;
+    double balance;
 };
 
 struct sTASTYWORKSRAW

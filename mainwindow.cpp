@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qDebug() << QSslSocket::supportsSsl() << QSslSocket::sslLibraryBuildVersionString() << QSslSocket::sslLibraryVersionString();
 
-    if(!QSslSocket::supportsSsl())
+    if (!QSslSocket::supportsSsl())
     {
         QMessageBox::critical(this,
                               "SSL supports",
@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     /********************************
      * Geometry
     ********************************/
-    if(database->getSetting().width <= 0 || database->getSetting().height <= 0 || database->getSetting().xPos <= 0 || database->getSetting().yPos <= 0)
+    if (database->getSetting().width <= 0 || database->getSetting().height <= 0 || database->getSetting().xPos <= 0 || database->getSetting().yPos <= 0)
     {
         centerAndResize();
 
@@ -118,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->mainTab->setCurrentIndex(database->getSetting().lastOpenedTab);
 
     // Update the exchange rates
-    if(database->getSetting().lastExchangeRatesUpdate < QDate::currentDate())
+    if (database->getSetting().lastExchangeRatesUpdate < QDate::currentDate())
     {
         QApplication::setOverrideCursor(Qt::WaitCursor);
 
@@ -138,7 +138,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ********************************/
     setDegiroHeader();
 
-    if(database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
+    if (database->getSetting().degiroAutoLoad && degiro->getIsRAWFile())
     {
         fillDegiroTable();
     }
@@ -161,13 +161,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     currentScreenerIndex = database->getLastScreenerIndex();
 
-    if(currentScreenerIndex > -1)
+    if (currentScreenerIndex > -1)
     {
         QVector<sSCREENER> allData = screener->getAllScreenerData();
 
-        if(allData.count() > currentScreenerIndex)
+        if (allData.count() > currentScreenerIndex)
         {
-            for(int a = 0; a<allData.count(); ++a)
+            for (int a = 0; a<allData.count(); ++a)
             {
                 ScreenerTab *st = new ScreenerTab(this);
                 st->setScreenerData(allData.at(a));
@@ -191,12 +191,12 @@ MainWindow::MainWindow(QWidget *parent) :
     database->setLastScreenerIndex(currentScreenerIndex);
 
 
-    if(database->getEnabledScreenerParams().count() == 0 || screenerTabs.count() == 0)
+    if (database->getEnabledScreenerParams().count() == 0 || screenerTabs.count() == 0)
     {
         ui->pbAddTicker->setEnabled(false);
     }
 
-    if(database->getSetting().screenerAutoLoad)
+    if (database->getSetting().screenerAutoLoad)
     {
         ui->pbRefresh->click();
     }
@@ -337,9 +337,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
         if ( (key->key() == Qt::Key_Enter) || (key->key() == Qt::Key_Return) )
         {
-            if(obj == ui->leTicker)
+            if (obj == ui->leTicker)
             {
-                if(!ui->leTicker->text().isEmpty())
+                if (!ui->leTicker->text().isEmpty())
                 {
                     ui->pbAddTicker->click();
                 }
@@ -355,14 +355,14 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         }
         return true;
     }
-    else if(event->type() == QEvent::Resize)
+    else if (event->type() == QEvent::Resize)
     {
         sSETTINGS set = database->getSetting();
         set.width = this->geometry().width();
         set.height = this->geometry().height();
         database->setSettingSlot(set);
 
-        if(progressDialog)
+        if (progressDialog)
         {
             QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
                        QPoint(progressDialog->size().width(), progressDialog->size().height());
@@ -371,7 +371,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
         return true;
     }
-    else if(event->type() == QEvent::Move)
+    else if (event->type() == QEvent::Move)
     {
         sSETTINGS set = database->getSetting();
         QPoint point = this->mapToGlobal(QPoint(0, 0));
@@ -379,7 +379,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.yPos = point.y();
         database->setSettingSlot(set);
 
-        if(progressDialog)
+        if (progressDialog)
         {
             QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
                        QPoint(progressDialog->size().width(), progressDialog->size().height());
@@ -398,7 +398,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 {
     disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
 
-    if(!statusCode.contains("200"))
+    if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the update exchange rates request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the update exchange rates request! %1").arg(statusCode));
@@ -409,11 +409,11 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
         QJsonParseError error;
         QJsonDocument jsonDoc = QJsonDocument::fromJson(data, &error);
 
-        if(error.error == QJsonParseError::NoError)
+        if (error.error == QJsonParseError::NoError)
         {
             QJsonObject jsonObject = jsonDoc.object();
 
-            if(jsonObject["base"].toString() == "USD")
+            if (jsonObject["base"].toString() == "USD")
             {
                 QJsonObject rates = jsonObject["rates"].toObject();
 
@@ -426,7 +426,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
                 manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK,GBP");
             }
-            else if(jsonObject["base"].toString() == "EUR")
+            else if (jsonObject["base"].toString() == "EUR")
             {
                 QJsonObject rates = jsonObject["rates"].toObject();
 
@@ -440,7 +440,7 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
                 manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD,EUR,GBP");
             }
-            else if(jsonObject["base"].toString() == "CZK")
+            else if (jsonObject["base"].toString() == "CZK")
             {
                 QJsonObject rates = jsonObject["rates"].toObject();
 
@@ -473,7 +473,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 {
     disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
 
-    if(!statusCode.contains("200"))
+    if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the check version request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the check version request! %1").arg(statusCode));
@@ -482,7 +482,7 @@ void MainWindow::checkVersion(const QByteArray data, QString statusCode)
     {
         QString input = QString(data);
 
-        if(input.startsWith("Version:"))
+        if (input.startsWith("Version:"))
         {
             int start = input.indexOf(":");
             QString version = input.mid(start+1);
@@ -525,7 +525,7 @@ void MainWindow::fillOverviewTable()
 
     QVector<sOVERVIEWTABLE> table = calculation->getOverviewTable(from, to);
 
-    if(table.isEmpty())
+    if (table.isEmpty())
     {
         return;
     }
@@ -538,7 +538,7 @@ void MainWindow::fillOverviewTable()
     ui->tableOverview->setRowCount(0);
     ui->tableOverview->setSortingEnabled(false);
 
-    for(const sOVERVIEWTABLE &row : table)
+    for (const sOVERVIEWTABLE &row : qAsConst(table))
     {
         ui->tableOverview->insertRow(pos);
 
@@ -555,20 +555,20 @@ void MainWindow::fillOverviewTable()
         ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(row.totalOnlinePrice, 0, 'f', 2) + " " + currencySign));
         ui->tableOverview->setItem(pos, 11, new QTableWidgetItem(QString("%L1").arg(row.dividend, 0, 'f', 2) + " " + currencySign));
 
-        if(row.totalOnlinePrice > row.totalStockPrice)
+        if (row.totalOnlinePrice > row.totalStockPrice)
         {
             ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::green));
         }
-        else if(row.totalOnlinePrice < row.totalStockPrice)
+        else if (row.totalOnlinePrice < row.totalStockPrice)
         {
             ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::red));
         }
 
-        if(row.averageBuyPrice < row.onlineStockPrice)
+        if (row.averageBuyPrice < row.onlineStockPrice)
         {
             ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::green));
         }
-        else if(row.averageBuyPrice > row.onlineStockPrice)
+        else if (row.averageBuyPrice > row.onlineStockPrice)
         {
             ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::red));
         }
@@ -580,7 +580,7 @@ void MainWindow::fillOverviewTable()
 
     for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
     {
-        for(int col = 0; col<ui->tableOverview->columnCount(); ++col)
+        for (int col = 0; col<ui->tableOverview->columnCount(); ++col)
         {
             ui->tableOverview->item(row, col)->setTextAlignment(Qt::AlignCenter);
         }
@@ -590,7 +590,7 @@ void MainWindow::fillOverviewTable()
 
     for (int col = 0; col < ui->tableOverview->horizontalHeader()->count(); ++col)
     {
-        if(col == 2)
+        if (col == 2)
         {
             ui->tableOverview->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
         }
@@ -603,14 +603,14 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     QTableWidgetItem *rowItem = ui->tableOverview->item(row, 0);
 
-    if(!rowItem) return;
+    if (!rowItem) return;
 
     QString ISIN = rowItem->text();
 
     StockDataType stockList = stockData->getStockData();
     QVector<sSTOCKDATA> vector = stockList.value(ISIN);
 
-    if(vector.count() == 0) return;
+    if (vector.count() == 0) return;
 
     QDialog *stockDlg = new QDialog(this);
     stockDlg->setAttribute(Qt::WA_DeleteOnClose);
@@ -652,8 +652,13 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     int pos = 0;
     table->setSortingEnabled(false);
 
-    for(const sSTOCKDATA &stock : vector)
+    for (const sSTOCKDATA &stock : qAsConst(vector))
     {
+        if (stock.type == CURRENCYEXCHANGE)
+        {
+            continue;
+        }
+
         table->insertRow(pos);
 
         QTableWidgetItem *item = new QTableWidgetItem;
@@ -731,18 +736,18 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                                                    "Do you really want to delete the selected record?",
                                                    QMessageBox::Yes, QMessageBox::No);
 
-                    if(ret == QMessageBox::Yes)
+                    if (ret == QMessageBox::Yes)
                     {
                         int rowToDelete = table->currentRow();
 
                         auto it = stockList.find(ISIN);
 
-                        if(it != stockList.end())
+                        if (it != stockList.end())
                         {
                             QVector<sSTOCKDATA> vec = it.value();
                             vec.remove(rowToDelete);
 
-                            if(updateStockDataVector(ISIN, vec))
+                            if (updateStockDataVector(ISIN, vec))
                             {
                                 table->removeRow(rowToDelete);
                             }
@@ -759,9 +764,9 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     for (int rowTable = 0; rowTable<table->rowCount(); ++rowTable)
     {
-        for(int colTable = 0; colTable<table->columnCount(); ++colTable)
+        for (int colTable = 0; colTable<table->columnCount(); ++colTable)
         {
-            table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
+            //table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
         }
     }
 
@@ -770,7 +775,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     //QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
     for (int col = 0; col < table->horizontalHeader()->count(); ++col)
     {
-        if(col == 0 || col == 5)
+        if (col == 0 || col == 5)
         {
             continue;
         }
@@ -779,7 +784,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     }
 
 
-    if(table->rowCount() > 5)
+    if (table->rowCount() > 5)
     {
         table->setMinimumHeight(table->rowHeight(0)*5);
     }
@@ -790,7 +795,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     int tableWidth = 0;
 
-    for(int colTable = 0; colTable<table->columnCount(); ++colTable)
+    for (int colTable = 0; colTable<table->columnCount(); ++colTable)
     {
         tableWidth += table->columnWidth(colTable);
     }
@@ -825,7 +830,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     ************************/
     QChartView *chartView = calculation->getChartView(ISINCHART, vector.last().dateTime.date(), vector.first().dateTime.date(), ISIN);
 
-    if(chartView != nullptr)
+    if (chartView != nullptr)
     {
         chartView->setRubberBand(QChartView::NoRubberBand);
 
@@ -839,7 +844,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     stockDlg->setLayout(VB);
 
-    if(chartView != nullptr)
+    if (chartView != nullptr)
     {
         stockDlg->resize(table->horizontalHeader()->length()+table->verticalScrollBar()->width(),
                         table->verticalHeader()->length()+table->horizontalHeader()->height()+table->horizontalScrollBar()->height()+chartView->size().height());
@@ -861,7 +866,7 @@ bool MainWindow::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
 
     auto it = stockList.find(ISIN);
 
-    if(it != stockList.end())
+    if (it != stockList.end())
     {
         stockList[ISIN] = vector;
 
@@ -912,7 +917,7 @@ void MainWindow::on_pbShowGraph_clicked()
 
     QChartView *chartView = calculation->getChartView(type, from, to);
 
-    if(chartView == nullptr)
+    if (chartView == nullptr)
     {
         return;
     }
@@ -922,7 +927,7 @@ void MainWindow::on_pbShowGraph_clicked()
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
     VB->addWidget(chartView);
 
-    if(type != SECTORCHART && type != STOCKCHART)
+    if (type != SECTORCHART && type != STOCKCHART)
     {
         QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
         connect(zoomReset, &QPushButton::clicked, [chartView]( )
@@ -943,12 +948,12 @@ void MainWindow::on_pbShowGraph_clicked()
                                                                 "Save File",
                                                                 QString(),
                                                                 tr("PNG (*.png)"));
-                if(!fileName.isEmpty())
+                if (!fileName.isEmpty())
                 {
                     QPixmap p = chartView->grab();
                     QOpenGLWidget *glWidget  = chartView->findChild<QOpenGLWidget*>();
 
-                    if(glWidget)
+                    if (glWidget)
                     {
                         QPainter painter(&p);
                         QPoint d = glWidget->mapToGlobal(QPoint())-chartView->mapToGlobal(QPoint());
@@ -979,7 +984,7 @@ void MainWindow::on_pbPDFExport_clicked()
     QString customText;
     bool okCustom = false;
 
-    if(ui->cbPDFCustomText->isChecked())
+    if (ui->cbPDFCustomText->isChecked())
     {
         customText = QInputDialog::getMultiLineText(this,
                                                     tr("PDF export"),
@@ -995,7 +1000,7 @@ void MainWindow::on_pbPDFExport_clicked()
                                                     QString(),
                                                     "*.pdf");
 
-    if(fileName.isEmpty()) return;
+    if (fileName.isEmpty()) return;
 
     if (QFileInfo(fileName).suffix().isEmpty())
     {
@@ -1049,9 +1054,9 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "               <td align=\"center\"><b>Název</b></td>";
     text += "           </tr>";
 
-    for(const sPDFEXPORTDATA &pdf : pdfData)
+    for (const sPDFEXPORTDATA &pdf : qAsConst(pdfData))
     {
-        if(pdf.type != DIVIDEND)
+        if (pdf.type != DIVIDEND)
         {
             continue;
         }
@@ -1088,9 +1093,9 @@ void MainWindow::on_pbPDFExport_clicked()
     text += "           </tr>";
 
     double totalInCZK = 0.0;
-    for(const sPDFEXPORTDATA &pdf : pdfData)
+    for (const sPDFEXPORTDATA &pdf : qAsConst(pdfData))
     {
-        if(pdf.type != SELL)
+        if (pdf.type != SELL)
         {
             continue;
         }
@@ -1129,7 +1134,7 @@ void MainWindow::on_pbPDFExport_clicked()
     text += QString("Přepočet měn z GBP do CZK byl proveden jednotným kurzem: 1 EUR = %1 CZK").arg(ui->lePDFGBP2CZK->text());
     text += "<br><br>";
 
-    if(okCustom && !customText.isEmpty())
+    if (okCustom && !customText.isEmpty())
     {
         text += customText;
     }
@@ -1204,7 +1209,7 @@ void MainWindow::on_pbAddRecord_clicked()
     QStringList tickerWords;
     QVector<sISINDATA> isinList = database->getIsinList();
 
-    for(const sISINDATA &key : isinList)
+    for (const sISINDATA &key : qAsConst(isinList))
     {
         tickerWords << key.ticker;
         isinWords << key.ISIN;
@@ -1255,17 +1260,17 @@ void MainWindow::on_pbAddRecord_clicked()
     // Autocomplete ticker or isin if exists
     connect(leTicker, &QLineEdit::editingFinished, [leISIN, leTicker, this]()
             {
-                if(leISIN->text().isEmpty())
+                if (leISIN->text().isEmpty())
                 {
                     QVector<sISINDATA> isin = database->getIsinList();
 
-                    auto it = std::find_if(isin.begin(), isin.end(), [leTicker](sISINDATA a)
+                    auto it = std::find_if (isin.begin(), isin.end(), [leTicker](sISINDATA a)
                                            {
                                                return a.ticker == leTicker->text();
                                            }
                                            );
 
-                    if(it != isin.end())
+                    if (it != isin.end())
                     {
                         leISIN->setText(it->ISIN);
                     }
@@ -1275,17 +1280,17 @@ void MainWindow::on_pbAddRecord_clicked()
 
     connect(leISIN, &QLineEdit::editingFinished, [leISIN, leTicker, this]()
             {
-                if(leTicker->text().isEmpty())
+                if (leTicker->text().isEmpty())
                 {
                     QVector<sISINDATA> isin = database->getIsinList();
 
-                    auto it = std::find_if(isin.begin(), isin.end(), [leISIN](sISINDATA a)
+                    auto it = std::find_if (isin.begin(), isin.end(), [leISIN](sISINDATA a)
                                            {
                                                return a.ISIN == leISIN->text();
                                            }
                                            );
 
-                    if(it != isin.end())
+                    if (it != isin.end())
                     {
                         leTicker->setText(it->ticker);
                     }
@@ -1327,7 +1332,7 @@ void MainWindow::on_pbAddRecord_clicked()
     connect(pbSave, &QPushButton::clicked,
             [=]()
             {
-                if( leTicker->text().isEmpty() || leISIN->text().isEmpty() || leCount->text().isEmpty() || lePrice->text().isEmpty() || leFee->text().isEmpty() )
+                if ( leTicker->text().isEmpty() || leISIN->text().isEmpty() || leCount->text().isEmpty() || lePrice->text().isEmpty() || leFee->text().isEmpty() )
                 {
                     QMessageBox::critical(inputDlg,
                                           "Add record",
@@ -1374,7 +1379,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 {
     disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
 
-    if(!statusCode.contains("200"))
+    if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode).arg(lastRecord.ticker));
@@ -1393,7 +1398,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 
         sSTOCKDATA row2;
 
-        if(!qFuzzyIsNull(lastRecord.fee))
+        if (!qFuzzyIsNull(lastRecord.fee))
         {
             row2.dateTime = lastRecord.dateTime;
             row2.type = FEE;
@@ -1414,7 +1419,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
         QVector<sSTOCKDATA> vector = stockList[lastRecord.ISIN];
         vector.append(row1);
 
-        if(!qFuzzyIsNull(lastRecord.fee))
+        if (!qFuzzyIsNull(lastRecord.fee))
         {
             vector.append(row2);
         }
@@ -1422,7 +1427,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
         // The record is not in the ISIN list, so add it
         auto it = stockList.find(lastRecord.ISIN);
 
-        if(it == stockList.end())
+        if (it == stockList.end())
         {
             QVector<sISINDATA> isinList = database->getIsinList();
 
@@ -1462,7 +1467,7 @@ void MainWindow::loadDegiroCSVslot()
     QApplication::setOverrideCursor(Qt::WaitCursor);
     degiro->loadCSV(database->getSetting().degiroCSV, database->getSetting().degiroCSVdelimeter);
 
-    if(degiro->getIsRAWFile())
+    if (degiro->getIsRAWFile())
     {
         fillDegiroTable();
         fillOverviewSlot();
@@ -1493,13 +1498,13 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
         while (i.hasNext())
         {
-            if(i.next().source == DEGIRO)
+            if (i.next().source == DEGIRO)
             {
                 i.remove();
             }
         }
 
-        if(it.value().count() == 0)
+        if (it.value().count() == 0)
         {
             it.remove();
         }
@@ -1510,11 +1515,11 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
     QVector<sISINDATA> isinList = database->getIsinList();
     QList<QString> keys = newStockData.keys();
 
-    for(const QString &key : keys)
+    for (const QString &key : qAsConst(keys))
     {
         auto i = stockList.find(key);
 
-        if(i == stockList.end())
+        if (i == stockList.end())
         {
             stockList.insert(key, newStockData.value(key));
 
@@ -1522,15 +1527,15 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
             QString ISIN = newStockData.value(key).first().ISIN;
             QString stockName = newStockData.value(key).first().stockName;
 
-            if(ISIN.isEmpty() || stockName.isEmpty() || stockName.toLower().contains("fundshare")) continue;
+            if (ISIN.isEmpty() || stockName.isEmpty() || stockName.toLower().contains("fundshare")) continue;
 
-            auto iter = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
+            auto iter = std::find_if (isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
                                   {
                                       return a.ISIN == ISIN;
                                   }
                                   );
 
-            if(iter == isinList.end())
+            if (iter == isinList.end())
             {
                 sISINDATA record;
                 record.ISIN = ISIN;
@@ -1550,9 +1555,9 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
     // Assign tickers to ISIN
     QList<QString> isinKeys = stockList.keys();
 
-    for(const QString &key : isinKeys)
+    for (const QString &key : qAsConst(isinKeys))
     {
-        auto isinIt = std::find_if(isinList.begin(), isinList.end(), [key](sISINDATA a)
+        auto isinIt = std::find_if (isinList.begin(), isinList.end(), [key](sISINDATA a)
                                    {
                                        return a.ISIN == key;
                                    }
@@ -1560,7 +1565,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 
         QString ticker;
 
-        if(isinIt != isinList.end())
+        if (isinIt != isinList.end())
         {
             ticker = isinIt->ticker;
         }
@@ -1588,7 +1593,7 @@ void MainWindow::setDegiroDataSlot(StockDataType newStockData)
 void MainWindow::setDegiroHeader()
 {
     QStringList header;
-    header << "Date" << "Product" << "ISIN" << "Description" << "Currency" << "Value";
+    header << "Date" << "Product" << "ISIN" << "Description" << "Currency" << "Value" << "Balance";
     ui->tableDegiro->setColumnCount(header.count());
 
 
@@ -1607,7 +1612,7 @@ void MainWindow::fillDegiroTable()
 {
     QVector<sDEGIRORAW> degiroRawData = degiro->getRawData();
 
-    if(degiroRawData.isEmpty())
+    if (degiroRawData.isEmpty())
     {
         return;
     }
@@ -1615,7 +1620,7 @@ void MainWindow::fillDegiroTable()
     ui->tableDegiro->setRowCount(0);
 
     ui->tableDegiro->setSortingEnabled(false);
-    for(int a = 0; a<degiroRawData.count(); ++a)
+    for (int a = 0; a<degiroRawData.count(); ++a)
     {
         ui->tableDegiro->insertRow(a);
 
@@ -1631,13 +1636,17 @@ void MainWindow::fillDegiroTable()
         QTableWidgetItem *item2 = new QTableWidgetItem;
         item2->setData(Qt::EditRole, degiroRawData.at(a).price);
         ui->tableDegiro->setItem(a, 5, item2);
+
+        QTableWidgetItem *item3 = new QTableWidgetItem;
+        item3->setData(Qt::EditRole, degiroRawData.at(a).balance);
+        ui->tableDegiro->setItem(a, 6, item3);
     }
     ui->tableDegiro->setSortingEnabled(true);
 
 
     for (int row = 0; row<ui->tableDegiro->rowCount(); ++row)
     {
-        for(int col = 0; col<ui->tableDegiro->columnCount(); ++col)
+        for (int col = 0; col<ui->tableDegiro->columnCount(); ++col)
         {
             ui->tableDegiro->item(row, col)->setTextAlignment(Qt::AlignCenter);
         }
@@ -1647,7 +1656,7 @@ void MainWindow::fillDegiroTable()
 
     for (int col = 0; col < ui->tableDegiro->horizontalHeader()->count(); ++col)
     {
-        if(col == 0 || col == 2 || col == 4 || col == 5)
+        if (col == 0 || col == 2 || col == 4 || col == 5 || col == 6)
         {
             continue;
         }
@@ -1667,7 +1676,7 @@ void MainWindow::loadTastyworksCSVslot()
     QApplication::setOverrideCursor(Qt::WaitCursor);
     tastyworks->loadCSV(database->getSetting().tastyworksCSV, database->getSetting().tastyworksCSVdelimeter);
 
-    /*if(tastyworks->getIsRAWFile())
+    /*if (tastyworks->getIsRAWFile())
     {
         fillDegiroTable();
         fillOverviewSlot();
@@ -1708,7 +1717,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
 {
     disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
 
-    if(!statusCode.contains("200"))
+    if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the request! %1").arg(statusCode));
@@ -1721,12 +1730,12 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
 
         sSCREENERPARAM param;
 
-        if(lastRequestSource == FINVIZ)
+        if (lastRequestSource == FINVIZ)
         {
             QStringList infoData;
             infoData << "Ticker" << "Stock name" << "Sector" << "Industry" << "Country";
 
-            for(const QString &par : infoData)
+            for (const QString &par : qAsConst(infoData))
             {
                 param.name = par;
                 param.enabled = true;
@@ -1749,7 +1758,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
         param.enabled = false;
         screenerParams.push_back(param);
 
-        for(const QString &key : table.row.keys())
+        for (const QString &key : table.row.keys())
         {
             param.name = key;
             param.enabled = false;
@@ -1758,7 +1767,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
 
         database->setScreenerParams(screenerParams);
 
-        if(lastRequestSource == FINVIZ)
+        if (lastRequestSource == FINVIZ)
         {
             lastRequestSource = YAHOO;
             connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
@@ -1773,7 +1782,7 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
             emit updateScreenerParams(screenerParams);
             setStatus("Parameters have been loaded");
 
-            if(screenerTabs.count() != 0)
+            if (screenerTabs.count() != 0)
             {
                 ui->pbAddTicker->setEnabled(true);
             }
@@ -1785,7 +1794,7 @@ void MainWindow::setScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 {
     database->setScreenerParams(params);
 
-    for(int a = 0; a<screenerTabs.count(); ++a)
+    for (int a = 0; a<screenerTabs.count(); ++a)
     {
         setScreenerHeader(screenerTabs.at(a));
         fillScreenerTable(screenerTabs.at(a));
@@ -1794,7 +1803,7 @@ void MainWindow::setScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 
 void MainWindow::setScreenerHeader(ScreenerTab *st)
 {
-    if(!st) return;
+    if (!st) return;
 
     QTableWidget *tab = st->getScreenerTable();
 
@@ -1819,7 +1828,7 @@ void MainWindow::setScreenerHeader(ScreenerTab *st)
 
 void MainWindow::on_pbAddTicker_clicked()
 {
-    if(currentScreenerIndex == -1)
+    if (currentScreenerIndex == -1)
     {
         QMessageBox::warning(this,
                              "Screener",
@@ -1831,7 +1840,7 @@ void MainWindow::on_pbAddTicker_clicked()
         return;
     }
 
-    if(ui->leTicker->text().trimmed().isEmpty())
+    if (ui->leTicker->text().trimmed().isEmpty())
     {
         setStatus("The ticker field is empty!");
         return;
@@ -1849,7 +1858,7 @@ void MainWindow::on_pbAddTicker_clicked()
 
 void MainWindow::getData(const QByteArray data, QString statusCode)
 {
-    if(!statusCode.contains("200"))
+    if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
         setStatus(QString("There is something wrong with the request! %1").arg(statusCode));
@@ -1858,7 +1867,7 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
     {
         QString ticker = ui->leTicker->text().trimmed();
 
-        if(ticker.isEmpty()) // when the update came from ISIN table, the leTicker is empty so we need to assign the ticker
+        if (ticker.isEmpty()) // when the update came from ISIN table, the leTicker is empty so we need to assign the ticker
         {
             ticker = ui->tableISIN->item(ui->tableISIN->currentRow(), 1)->text();
         }
@@ -1878,12 +1887,12 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         }
 
 
-        for(const QString &key : table.row.keys())
+        for (const QString &key : table.row.keys())
         {
             lastLoadedTable.row.insert(key, table.row.value(key));
         }
 
-        if(lastRequestSource == FINVIZ)
+        if (lastRequestSource == FINVIZ)
         {
             lastRequestSource = YAHOO;
             QString request = QString("https://finance.yahoo.com/quote/%1/key-statistics").arg(ticker);
@@ -1896,13 +1905,13 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
             QString ISIN;
             QVector<sISINDATA> isinList = database->getIsinList();
 
-            auto it = std::find_if(isinList.begin(), isinList.end(),
+            auto it = std::find_if (isinList.begin(), isinList.end(),
                                    [ticker](sISINDATA a)
                                    {
                                        return a.ticker == ticker;
                                    } );
 
-            if(it != isinList.end())
+            if (it != isinList.end())
             {
                 ISIN = it->ISIN;
             }
@@ -1924,40 +1933,40 @@ void MainWindow::dataLoaded()
 
     QString ticker = ui->leTicker->text().trimmed();
 
-    if(ticker.isEmpty()) return;
+    if (ticker.isEmpty()) return;
 
     QStringList infoData;
     infoData << "Ticker" << "Stock name" << "Sector" << "Industry" << "Country";
 
     bool bParamFound = false;
 
-    for(int param = 0; param<screenerParams.count(); ++param)
+    for (int param = 0; param<screenerParams.count(); ++param)
     {
         bParamFound = false;
 
-        for(int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
+        for (int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
         {
-            for(int info = 0; info<infoData.count() && !bParamFound; ++info)
+            for (int info = 0; info<infoData.count() && !bParamFound; ++info)
             {
-                if(screenerParams.at(param).toLower() == infoData.at(info).toLower())
+                if (screenerParams.at(param).toLower() == infoData.at(info).toLower())
                 {
-                    if(infoData.at(info) == "Industry")
+                    if (infoData.at(info) == "Industry")
                     {
                         tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.industry));
                     }
-                    else if(infoData.at(info) == "Ticker")
+                    else if (infoData.at(info) == "Ticker")
                     {
                         tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.ticker));
                     }
-                    else if(infoData.at(info) == "Stock name")
+                    else if (infoData.at(info) == "Stock name")
                     {
                         tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.stockName));
                     }
-                    else if(infoData.at(info) == "Sector")
+                    else if (infoData.at(info) == "Sector")
                     {
                         tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.sector));
                     }
-                    else if(infoData.at(info) == "Country")
+                    else if (infoData.at(info) == "Country")
                     {
                         tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.country));
                     }
@@ -1971,13 +1980,13 @@ void MainWindow::dataLoaded()
 
     bParamFound = false;
 
-    for(int param = 0; param<screenerParams.count(); ++param)
+    for (int param = 0; param<screenerParams.count(); ++param)
     {
         bParamFound = false;
 
-        for(int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
+        for (int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
         {
-            if(lastLoadedTable.row.contains(screenerParams.at(param)))
+            if (lastLoadedTable.row.contains(screenerParams.at(param)))
             {
                 tickerLine.push_back(qMakePair(screenerParams.at(param), lastLoadedTable.row.value(screenerParams.at(param))));
 
@@ -1986,25 +1995,25 @@ void MainWindow::dataLoaded()
         }
     }
 
-    if(tickerLine.isEmpty()) return;
+    if (tickerLine.isEmpty()) return;
 
-    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+    if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
 
     sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
 
     int tickerOrder = findScreenerTicker(ticker);
 
-    if(tickerOrder == -2)
+    if (tickerOrder == -2)
     {
         return;
     }
-    else if(tickerOrder == -1)       // Ticker does not exist, so add it
+    else if (tickerOrder == -1)       // Ticker does not exist, so add it
     {
         currentScreenerData.screenerData.push_back(tickerLine);
 
         QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
-        if(currentScreenerIndex < allScreenerData.count())
+        if (currentScreenerIndex < allScreenerData.count())
         {
             allScreenerData[currentScreenerIndex] = currentScreenerData;
             screener->setAllScreenerData(allScreenerData);
@@ -2022,7 +2031,7 @@ void MainWindow::dataLoaded()
 
         QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
-        if(currentScreenerIndex < allScreenerData.count())
+        if (currentScreenerIndex < allScreenerData.count())
         {
             allScreenerData[currentScreenerIndex] = currentScreenerData;
             screener->setAllScreenerData(allScreenerData);
@@ -2034,19 +2043,19 @@ void MainWindow::dataLoaded()
 
         int currentRowInTable = -1;
 
-        if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+        if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
         ScreenerTab *tab = screenerTabs.at(currentScreenerIndex);
 
         // Check if the filter is enabled, if so, some tickers might be hidden, so find correct row in the table for our ticker
-        if(ui->cbFilter->isChecked())
+        if (ui->cbFilter->isChecked())
         {
             bool found = false;
 
-            for(int row = 0; row<tab->getScreenerTable()->rowCount() && !found; ++row)
+            for (int row = 0; row<tab->getScreenerTable()->rowCount() && !found; ++row)
             {
-                for(int col = 0; col<tab->getScreenerTable()->columnCount()-1 && !found; ++col)
+                for (int col = 0; col<tab->getScreenerTable()->columnCount()-1 && !found; ++col)
                 {
-                    if(tab->getScreenerTable()->item(row, col) && tab->getScreenerTable()->item(row, col)->text() == ui->leTicker->text())
+                    if (tab->getScreenerTable()->item(row, col) && tab->getScreenerTable()->item(row, col)->text() == ui->leTicker->text())
                     {
                         currentRowInTable = row;
                         found = true;
@@ -2060,26 +2069,26 @@ void MainWindow::dataLoaded()
             currentRowInTable = tickerOrder;
         }
 
-        if(currentRowInTable != -1)
+        if (currentRowInTable != -1)
         {
             int pos = 0;
 
-            for(int col = 0; col<currentScreenerData.screenerData.at(tickerOrder).count(); ++col)
+            for (int col = 0; col<currentScreenerData.screenerData.at(tickerOrder).count(); ++col)
             {
-                for(int param = 0; param<screenerParams.count(); ++param)
+                for (int param = 0; param<screenerParams.count(); ++param)
                 {
-                    if(currentScreenerData.screenerData.at(tickerOrder).at(col).first == screenerParams.at(param))
+                    if (currentScreenerData.screenerData.at(tickerOrder).at(col).first == screenerParams.at(param))
                     {
                         QString text = tickerLine.at(col).second;
 
-                        if(!tab->getScreenerTable()->item(currentRowInTable, param))      // the item does not exist, so create it
+                        if (!tab->getScreenerTable()->item(currentRowInTable, param))      // the item does not exist, so create it
                         {
                             QTableWidgetItem *item = new QTableWidgetItem;
 
                             bool ok;
                             double testNumber = text.toDouble(&ok);
 
-                            if(ok)
+                            if (ok)
                             {
                                 item->setData(Qt::EditRole, testNumber);
                             }
@@ -2093,9 +2102,9 @@ void MainWindow::dataLoaded()
                             tab->getScreenerTable()->setItem(currentRowInTable, param, item);
                             tab->getScreenerTable()->setSortingEnabled(true);
 
-                            for(const sFILTER &filter : filterList)
+                            for (const sFILTER &filter : qAsConst(filterList))
                             {
-                                if(filter.param == screenerParams.at(param))
+                                if (filter.param == screenerParams.at(param))
                                 {
                                     applyFilterOnItem(screenerTabs.at(currentScreenerIndex), item, filter);
                                 }
@@ -2105,13 +2114,13 @@ void MainWindow::dataLoaded()
                         {
                             QTableWidgetItem *item = tab->getScreenerTable()->item(currentRowInTable, param);
 
-                            if(item)
+                            if (item)
                             {
                                 item->setText(text);
 
-                                for(const sFILTER &filter : filterList)
+                                for (const sFILTER &filter : qAsConst(filterList))
                                 {
-                                    if(filter.param == screenerParams.at(param))
+                                    if (filter.param == screenerParams.at(param))
                                     {
                                         applyFilterOnItem(screenerTabs.at(currentScreenerIndex), item, filter);
                                     }
@@ -2133,15 +2142,15 @@ void MainWindow::dataLoaded()
 // Return a row for specific ticker
 int MainWindow::findScreenerTicker(QString ticker)
 {
-    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return -2;
+    if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return -2;
 
     sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
 
-    for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
+    for (int row = 0; row<currentScreenerData.screenerData.count(); ++row)
     {
-        for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+        for (int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
         {
-            if(currentScreenerData.screenerData.at(row).at(col).second == ticker)
+            if (currentScreenerData.screenerData.at(row).at(col).second == ticker)
             {
                 return row;
             }
@@ -2153,7 +2162,7 @@ int MainWindow::findScreenerTicker(QString ticker)
 
 void MainWindow::insertScreenerRow(TickerDataType tickerData)
 {
-    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+    if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
 
     ScreenerTab *st = screenerTabs.at(currentScreenerIndex);
 
@@ -2162,11 +2171,11 @@ void MainWindow::insertScreenerRow(TickerDataType tickerData)
 
     QStringList screenerParams = database->getEnabledScreenerParams();
 
-    for(int col = 0; col<tickerData.count(); ++col)
+    for (int col = 0; col<tickerData.count(); ++col)
     {
-        for(int param = 0; param<screenerParams.count(); ++param)
+        for (int param = 0; param<screenerParams.count(); ++param)
         {
-            if(tickerData.at(col).first == screenerParams.at(param))
+            if (tickerData.at(col).first == screenerParams.at(param))
             {
                 QString text = tickerData.at(col).second;
                 QTableWidgetItem *item = new QTableWidgetItem();
@@ -2174,7 +2183,7 @@ void MainWindow::insertScreenerRow(TickerDataType tickerData)
                 bool ok;
                 double testNumber = text.toDouble(&ok);
 
-                if(ok)
+                if (ok)
                 {
                     item->setData(Qt::EditRole, testNumber);
                 }
@@ -2188,9 +2197,9 @@ void MainWindow::insertScreenerRow(TickerDataType tickerData)
                 st->getScreenerTable()->setItem(row, param, item);
                 st->getScreenerTable()->setSortingEnabled(true);
 
-                for(const sFILTER &filter : filterList)
+                for (const sFILTER &filter : qAsConst(filterList))
                 {
-                    if(filter.param == screenerParams.at(param))
+                    if (filter.param == screenerParams.at(param))
                     {
                         applyFilterOnItem(st, item, filter);
                     }
@@ -2213,11 +2222,11 @@ void MainWindow::insertScreenerRow(TickerDataType tickerData)
 
 void MainWindow::fillScreenerTable(ScreenerTab *st)
 {
-    if(!st) return;
+    if (!st) return;
 
     sSCREENER currentScreenerData = st->getScreenerData();
 
-    if(currentScreenerData.screenerData.isEmpty()) return;
+    if (currentScreenerData.screenerData.isEmpty()) return;
 
     st->getScreenerTable()->setRowCount(0);
 
@@ -2226,15 +2235,15 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
     bool nextRow = false;
     int hiddenRows = 0;
 
-    for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
+    for (int row = 0; row<currentScreenerData.screenerData.count(); ++row)
     {
         st->getScreenerTable()->insertRow(row-hiddenRows);
 
-        for(int param = 0; param<screenerParams.count(); ++param)
+        for (int param = 0; param<screenerParams.count(); ++param)
         {
-            for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+            for (int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
             {
-                if(currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
+                if (currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
                 {
                     bool isFilter = false;
                     QString color;
@@ -2242,11 +2251,11 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
                     double val2 = 0.0;
                     eFILTER filterType = LOWER;
 
-                    if(ui->cbFilter->isChecked())
+                    if (ui->cbFilter->isChecked())
                     {
-                        for(const sFILTER &filter : filterList)
+                        for (const sFILTER &filter : qAsConst(filterList))
                         {
-                            if(filter.param == screenerParams.at(param))
+                            if (filter.param == screenerParams.at(param))
                             {
                                 color = filter.color;
                                 val1 = filter.val1;
@@ -2261,7 +2270,7 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
                     QString text = currentScreenerData.screenerData.at(row).at(col).second;
                     int percentSign = text.indexOf("%");
 
-                    if(percentSign != -1)
+                    if (percentSign != -1)
                     {
                         text = text.mid(0, percentSign);
                     }
@@ -2271,7 +2280,7 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
                     bool ok;
                     double testNumber = text.toDouble(&ok);
 
-                    if(ok)
+                    if (ok)
                     {
                         item->setData(Qt::EditRole, testNumber);
                     }
@@ -2282,14 +2291,14 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
 
                     item->setTextAlignment(Qt::AlignCenter);
 
-                    if(isFilter)
+                    if (isFilter)
                     {
                         switch (filterType)
                         {
                             case LOWER:
-                                if(text.toDouble() < val1)
+                                if (text.toDouble() < val1)
                                 {
-                                    if(color == "HIDE")
+                                    if (color == "HIDE")
                                     {
                                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
@@ -2300,9 +2309,9 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
                                 }
                                 break;
                             case HIGHER:
-                                if(text.toDouble() > val1)
+                                if (text.toDouble() > val1)
                                 {
-                                    if(color == "HIDE")
+                                    if (color == "HIDE")
                                     {
                                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
@@ -2313,9 +2322,9 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
                                 }
                                 break;
                             case BETWEEN:
-                                if(text.toDouble() > val1 && text.toDouble() < val2)
+                                if (text.toDouble() > val1 && text.toDouble() < val2)
                                 {
-                                    if(color == "HIDE")
+                                    if (color == "HIDE")
                                     {
                                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
                                         nextRow = true;
@@ -2347,7 +2356,7 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
         }
 
         nextRow:
-        if(nextRow)
+        if (nextRow)
         {
             qDebug() << "Row hidden";
             hiddenRows++;
@@ -2361,7 +2370,7 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
 
     for (int col = 0; col < st->getScreenerTable()->horizontalHeader()->count(); ++col)
     {
-        if(st->getScreenerTable()->horizontalHeaderItem(col)->text() == "Stock name")
+        if (st->getScreenerTable()->horizontalHeaderItem(col)->text() == "Stock name")
         {
             st->getScreenerTable()->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
         }
@@ -2370,7 +2379,7 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
 
 void MainWindow::applyFilter(ScreenerTab *st)
 {
-    if(!st) return;
+    if (!st) return;
 
     QTableWidget *tab = st->getScreenerTable();
     QStringList screenerParams = database->getEnabledScreenerParams();
@@ -2378,15 +2387,15 @@ void MainWindow::applyFilter(ScreenerTab *st)
 
     int hiddenRows = 0;
 
-    for(int row = 0; row<tab->rowCount(); ++row)
+    for (int row = 0; row<tab->rowCount(); ++row)
     {
-        for(int param = 0; param<screenerParams.count(); ++param)
+        for (int param = 0; param<screenerParams.count(); ++param)
         {
-            for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+            for (int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
             {
-                for(const sFILTER &filter : filterList)
+                for (const sFILTER &filter : qAsConst(filterList))
                 {
-                    if(filter.param == screenerParams.at(param) &&
+                    if (filter.param == screenerParams.at(param) &&
                             currentScreenerData.screenerData.at(row).at(col).first == screenerParams.at(param))
                     {
                         QTableWidgetItem *item = tab->item(row, param);
@@ -2407,7 +2416,7 @@ void MainWindow::applyFilter(ScreenerTab *st)
 
 int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILTER filter)
 {
-    if(!item || !st)
+    if (!item || !st)
     {
         return 0;
     }
@@ -2422,7 +2431,7 @@ int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILT
     QString text = item->text();
     int percentSign = text.indexOf("%");
 
-    if(percentSign != -1)
+    if (percentSign != -1)
     {
         text = text.mid(0, percentSign);
     }
@@ -2430,15 +2439,15 @@ int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILT
     bool ok;
     double testNumber = text.toDouble(&ok);
 
-    if(ok)
+    if (ok)
     {
         item->setData(Qt::EditRole, testNumber);
         switch (filterType)
         {
             case LOWER:
-                if(text.toDouble() < val1)
+                if (text.toDouble() < val1)
                 {
-                    if(color == "HIDE")
+                    if (color == "HIDE")
                     {
                         hiddenRows++;
                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
@@ -2454,9 +2463,9 @@ int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILT
                 }
                 break;
             case HIGHER:
-                if(text.toDouble() > val1)
+                if (text.toDouble() > val1)
                 {
-                    if(color == "HIDE")
+                    if (color == "HIDE")
                     {
                         hiddenRows++;
                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
@@ -2472,9 +2481,9 @@ int MainWindow::applyFilterOnItem(ScreenerTab *st, QTableWidgetItem *item, sFILT
                 }
                 break;
             case BETWEEN:
-                if(text.toDouble() > val1 && text.toDouble() < val2)
+                if (text.toDouble() > val1 && text.toDouble() < val2)
                 {
-                    if(color == "HIDE")
+                    if (color == "HIDE")
                     {
                         hiddenRows++;
                         st->getScreenerTable()->setRowCount(st->getScreenerTable()->rowCount()-1);
@@ -2526,7 +2535,7 @@ void MainWindow::on_pbNewScreener_clicked()
         setScreenerHeader(st);
         ui->tabScreener->setCurrentIndex(currentScreenerIndex);
 
-        if(screenerTabs.count() != 0)
+        if (screenerTabs.count() != 0)
         {
             ui->pbAddTicker->setEnabled(true);
         }
@@ -2540,9 +2549,9 @@ void MainWindow::on_pbDeleteScreener_clicked()
                          "Do you really want to delete the currect screener? This step cannot be undone!",
                          QMessageBox::Yes, QMessageBox::No);
 
-    if(ret == QMessageBox::Yes)
+    if (ret == QMessageBox::Yes)
     {
-        if(currentScreenerIndex < 0) return;
+        if (currentScreenerIndex < 0) return;
 
         QVector<sSCREENER> allData = screener->getAllScreenerData();
         allData.removeAt(currentScreenerIndex);
@@ -2554,7 +2563,7 @@ void MainWindow::on_pbDeleteScreener_clicked()
         currentScreenerIndex--;
         database->setLastScreenerIndex(currentScreenerIndex);
 
-        if(currentScreenerIndex > -1)
+        if (currentScreenerIndex > -1)
         {
             sSCREENER currentScreenerData;
             currentScreenerData = allData.at(currentScreenerIndex);
@@ -2565,7 +2574,7 @@ void MainWindow::on_pbDeleteScreener_clicked()
 
 void MainWindow::clickedScreenerTabSlot(int index)
 {
-    if(index < screenerTabs.count())
+    if (index < screenerTabs.count())
     {
         currentScreenerIndex = index;
         database->setLastScreenerIndex(currentScreenerIndex);
@@ -2590,7 +2599,7 @@ void MainWindow::on_cbFilter_clicked(bool checked)
     ui->pbFilter->setEnabled(checked);
     filterList = database->getFilterList();
 
-    for(int a = 0; a<screenerTabs.count(); ++a)
+    for (int a = 0; a<screenerTabs.count(); ++a)
     {
         fillScreenerTable(screenerTabs.at(a));
     }
@@ -2601,7 +2610,7 @@ void MainWindow::setFilterSlot(QVector<sFILTER> list)
     database->setFilterList(list);
     filterList = list;
 
-    for(int a = 0; a<screenerTabs.count(); ++a)
+    for (int a = 0; a<screenerTabs.count(); ++a)
     {
         applyFilter(screenerTabs.at(a));
     }
@@ -2610,17 +2619,17 @@ void MainWindow::setFilterSlot(QVector<sFILTER> list)
 
 void MainWindow::on_pbRefresh_clicked()
 {
-    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+    if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
 
     currentTickers.clear();
 
     sSCREENER currentScreenerData = screenerTabs.at(currentScreenerIndex)->getScreenerData();
 
-    for(const TickerDataType &scr : currentScreenerData.screenerData)
+    for (const TickerDataType &scr : qAsConst(currentScreenerData.screenerData))
     {
-        for(int a = 0; a<scr.count(); ++a)
+        for (int a = 0; a<scr.count(); ++a)
         {
-            if(scr.at(a).first == "Ticker")
+            if (scr.at(a).first == "Ticker")
             {
                 currentTickers << scr.at(a).second;
                 break;
@@ -2628,7 +2637,7 @@ void MainWindow::on_pbRefresh_clicked()
         }
     }
 
-    if(!currentTickers.isEmpty())
+    if (!currentTickers.isEmpty())
     {
         createProgressDialog(0, currentTickers.count());
 
@@ -2643,11 +2652,11 @@ void MainWindow::refreshTickersSlot(QString ticker)
 {
     int pos = currentTickers.indexOf(ticker);
 
-    if(pos == -1)   // error
+    if (pos == -1)   // error
     {
         disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
-        if(progressDialog)
+        if (progressDialog)
         {
             disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
             updateProgressDialog(pos+1);
@@ -2656,9 +2665,9 @@ void MainWindow::refreshTickersSlot(QString ticker)
 
         setStatus("An error appeard during the refresh");
     }
-    else if(pos == (currentTickers.count() - 1))  // last
+    else if (pos == (currentTickers.count() - 1))  // last
     {
-        if(progressDialog)
+        if (progressDialog)
         {
             disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
             updateProgressDialog(pos+1);
@@ -2669,7 +2678,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
     }
     else
     {
-        if(progressDialog)
+        if (progressDialog)
         {
             updateProgressDialog(pos+1);
         }
@@ -2685,7 +2694,7 @@ void MainWindow::refreshTickersCanceled()
 {
     disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
-    if(progressDialog)
+    if (progressDialog)
     {
         disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
         updateProgressDialog(currentTickers.count());
@@ -2696,7 +2705,7 @@ void MainWindow::refreshTickersCanceled()
 
 void MainWindow::createProgressDialog(int min, int max)
 {
-    if(progressDialog) return;
+    if (progressDialog) return;
 
     progressDialog = new QProgressDialog("Operation in progress", "Cancel", min, max, this);
     connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
@@ -2741,7 +2750,7 @@ void MainWindow::updateProgressDialog(int val)
 
 void MainWindow::on_pbDeleteTickers_clicked()
 {    
-    if(currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
+    if (currentScreenerIndex >= screenerTabs.count() || currentScreenerIndex < 0) return;
 
     currentTickers.clear();
 
@@ -2751,25 +2760,25 @@ void MainWindow::on_pbDeleteTickers_clicked()
     QStringList screenerParams = database->getEnabledScreenerParams();
     QString ticker;
 
-    for(int tableRow = 0; tableRow<tab->getScreenerTable()->rowCount(); ++tableRow)
+    for (int tableRow = 0; tableRow<tab->getScreenerTable()->rowCount(); ++tableRow)
     {
-        if(tab->getScreenerTable()->item(tableRow, tab->getScreenerTable()->columnCount()-1)->checkState() == Qt::Checked)
+        if (tab->getScreenerTable()->item(tableRow, tab->getScreenerTable()->columnCount()-1)->checkState() == Qt::Checked)
         {
-            for(int row = 0; row<currentScreenerData.screenerData.count(); ++row)
+            for (int row = 0; row<currentScreenerData.screenerData.count(); ++row)
             {
-                for(int param = 0; param<screenerParams.count(); ++param)
+                for (int param = 0; param<screenerParams.count(); ++param)
                 {
-                    if(screenerParams.at(param) == "Ticker")
+                    if (screenerParams.at(param) == "Ticker")
                     {
-                        for(int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
+                        for (int col = 0; col<currentScreenerData.screenerData.at(row).count(); ++col)
                         {
-                            if(currentScreenerData.screenerData.at(row).at(col).second == tab->getScreenerTable()->item(tableRow, param)->text())
+                            if (currentScreenerData.screenerData.at(row).at(col).second == tab->getScreenerTable()->item(tableRow, param)->text())
                             {
                                 currentScreenerData.screenerData.removeAt(row);
 
                                 QVector<sSCREENER> allScreenerData = screener->getAllScreenerData();
 
-                                if(currentScreenerIndex < allScreenerData.count())
+                                if (currentScreenerIndex < allScreenerData.count())
                                 {
                                     allScreenerData[currentScreenerIndex] = currentScreenerData;
                                     screener->setAllScreenerData(allScreenerData);
@@ -2802,7 +2811,7 @@ void MainWindow::on_pbAlert_clicked()
 ********************************/
 void MainWindow::on_pbISINAdd_clicked()
 {
-    if( ui->leISINISIN->text().isEmpty() || ui->leISINName->text().isEmpty() || ui->leISINSector->text().isEmpty() || ui->leISINTicker->text().isEmpty() || ui->leISINIndustry->text().isEmpty() ) return;
+    if ( ui->leISINISIN->text().isEmpty() || ui->leISINName->text().isEmpty() || ui->leISINSector->text().isEmpty() || ui->leISINTicker->text().isEmpty() || ui->leISINIndustry->text().isEmpty() ) return;
 
     sISINDATA record;
     record.ISIN = ui->leISINISIN->text();
@@ -2814,14 +2823,14 @@ void MainWindow::on_pbISINAdd_clicked()
 
     QVector<sISINDATA> isin = database->getIsinList();
 
-    auto it = std::find_if(isin.begin(), isin.end(),
+    auto it = std::find_if (isin.begin(), isin.end(),
                            [record](sISINDATA a)
                            {
                                return a.ISIN == record.ISIN;
                            }
                            );
 
-    if(it != isin.end())
+    if (it != isin.end())
     {
         isin.push_back(record);
         database->setIsinList(isin);
@@ -2856,7 +2865,7 @@ void MainWindow::fillISINTable()
 {
     QVector<sISINDATA> isinList = database->getIsinList();
 
-    if(isinList.isEmpty())
+    if (isinList.isEmpty())
     {
         return;
     }
@@ -2865,7 +2874,7 @@ void MainWindow::fillISINTable()
 
     ui->tableISIN->setSortingEnabled(false);
 
-    for(int row = 0; row<isinList.count(); ++row)
+    for (int row = 0; row<isinList.count(); ++row)
     {
         ui->tableISIN->insertRow(row);
 
@@ -2885,14 +2894,14 @@ void MainWindow::fillISINTable()
                 {
                     QVector<sISINDATA> isinList = database->getIsinList();  // we need to load it again, since the ticker might be added in the meantime
 
-                    if(isinList.count() < row)
+                    if (isinList.count() < row)
                     {
                         return;
                     }
 
                     QString ticker = isinList.at(row).ticker;
 
-                    if(ticker.isEmpty())
+                    if (ticker.isEmpty())
                     {
                         setStatus(QString("ISIN %1 does not have assigned the ticker!").arg(isinList.at(row).ISIN));
                     }
@@ -2900,7 +2909,7 @@ void MainWindow::fillISINTable()
                     {
                         QDateTime today = QDateTime::currentDateTime();
 
-                        if(today.date() == isinList.at(row).lastUpdate.date())
+                        if (today.date() == isinList.at(row).lastUpdate.date())
                         {
                             setStatus(QString("The ticker %1 was already updated today.").arg(ticker));
                         }
@@ -2912,7 +2921,7 @@ void MainWindow::fillISINTable()
 
                             QString request;
                             // ToDo: might not be correct, the current stock is ETF
-                            if(isinList.at(row).sector == "ETF")
+                            if (isinList.at(row).sector == "ETF")
                             {
                                 lastRequestSource = YAHOO;
                                 request = QString("https://finance.yahoo.com/quote/%1/").arg(ticker);
@@ -2944,11 +2953,11 @@ void MainWindow::fillISINTable()
                                                    QString("Do you really want to delete %1?").arg(isinList.at(row).ISIN),
                                                    QMessageBox::Yes, QMessageBox::No);
 
-                    if(ret == QMessageBox::Yes)
+                    if (ret == QMessageBox::Yes)
                     {
                         QTableWidgetItem *isinItem = ui->tableISIN->item(row, 0);
 
-                        if(isinItem)
+                        if (isinItem)
                         {
                             QString ISIN = isinItem->text();
                             eraseISIN(ISIN);
@@ -2967,7 +2976,7 @@ void MainWindow::fillISINTable()
 
     for (int row = 0; row<ui->tableISIN->rowCount(); ++row)
     {
-        for(int col = 0; col<ui->tableISIN->columnCount(); ++col)
+        for (int col = 0; col<ui->tableISIN->columnCount(); ++col)
         {
             ui->tableISIN->item(row, col)->setTextAlignment(Qt::AlignCenter);
         }
@@ -2977,7 +2986,7 @@ void MainWindow::fillISINTable()
 
     for (int col = 0; col < ui->tableISIN->horizontalHeader()->count(); ++col)
     {
-        if(col == 0 || col == 1 || col == 3 || col == 5 || col == 6 || col == 7)
+        if (col == 0 || col == 1 || col == 3 || col == 5 || col == 6 || col == 7)
         {
             continue;
         }
@@ -2990,7 +2999,7 @@ void MainWindow::eraseISIN(QString ISIN)
 {
     QVector<sISINDATA> isinList = database->getIsinList();
 
-    isinList.erase(std::remove_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA x)
+    isinList.erase(std::remove_if (isinList.begin(), isinList.end(), [ISIN](sISINDATA x)
                                   {
                                       return x.ISIN == ISIN;
                                   }
@@ -3002,11 +3011,11 @@ void MainWindow::eraseISIN(QString ISIN)
 
 void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 {
-    if(column > 4) return;
+    if (column > 4) return;
 
     QTableWidgetItem *clickedItem = ui->tableISIN->item(row, column);
 
-    if(!clickedItem) return;
+    if (!clickedItem) return;
 
     QString previousText = clickedItem->text();
 
@@ -3036,13 +3045,13 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
         QVector<sISINDATA> isinList = database->getIsinList();
         QString ISIN = ui->tableISIN->item(row, 0)->text();
 
-        auto it = std::find_if(isinList.begin(), isinList.end(),
+        auto it = std::find_if (isinList.begin(), isinList.end(),
                                [ISIN](sISINDATA a)
                                {
                                    return a.ISIN == ISIN;
                                } );
 
-        if(it != isinList.end())
+        if (it != isinList.end())
         {
             switch(column)
             {
@@ -3053,13 +3062,13 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
                 {
                     it->ticker = newText;
 
-                    if(previousText != newText)             // ticker was changed so it should be possible to update the data and not wait to the next day
+                    if (previousText != newText)             // ticker was changed so it should be possible to update the data and not wait to the next day
                     {
                         it->lastUpdate = QDateTime();
 
                         QTableWidgetItem *dateItem = ui->tableISIN->item(row, 5);
 
-                        if(dateItem != nullptr)
+                        if (dateItem != nullptr)
                         {
                             dateItem->setText("");
                         }
@@ -3082,7 +3091,7 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 
 
         // The ticker has been updated, so check all stockData and assign ticker to the ISIN value
-        if(column == 1)
+        if (column == 1)
         {
             StockDataType stockList = stockData->getStockData();
 
@@ -3108,13 +3117,13 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
 {
     QVector<sISINDATA> isinList = database->getIsinList();
 
-    auto it = std::find_if(isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
+    auto it = std::find_if (isinList.begin(), isinList.end(), [ISIN](sISINDATA a)
                         {
                             return ISIN == a.ISIN;
                         }
                         );
 
-    if(it != isinList.end())
+    if (it != isinList.end())
     {
         it->lastUpdate = QDateTime::currentDateTime();
 
@@ -3126,7 +3135,7 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
         fillISINTable();
 
         // First time
-        /*if(it->sector.isEmpty() || it->industry.isEmpty())
+        /*if (it->sector.isEmpty() || it->industry.isEmpty())
         {
             it->sector = table.info.sector;
             it->industry = table.info.industry;

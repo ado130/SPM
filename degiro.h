@@ -22,14 +22,14 @@ signals:
 
 private:
     QVector<sDEGIRORAW> rawData;
-    bool isRAWFile;
+    bool isRAWFileLoaded;
     sSETTINGS settings;
 
     bool loadRawData();
     void saveRawData();
     QStringList parseLine(QString line, char delimeter);
 
-    StockDataType mergeEventAndFee(StockDataType &data);
+    StockDataType mergeFeeWithEvent(StockDataType &data);
 };
 
 QDataStream& operator<<(QDataStream& out, const sDEGIRORAW& param);

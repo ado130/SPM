@@ -10,6 +10,8 @@
    * Changed or Information
    ! Important - Take note!
 =======================================================
+=== Client Release 1.1.4.0 8 Dec 2020
+- Fixed portfolio overview
 
 === Client Release 1.1.4.0 8 Dec 2020
 + Improved PDF export

@@ -8,7 +8,7 @@
 
 DeGiro::DeGiro(sSETTINGS set, QObject *parent) : QObject(parent), settings(set)
 {
-    isRAWFile = loadRawData();
+    isRAWFileLoaded = loadRawData();
 }
 
 void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
@@ -109,6 +109,16 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         }
 
 
+        val = list.at(10);
+        val.replace(",", ".");
+        degiroRaw.balance = val.toDouble(&ok);
+
+        if(!ok)
+        {
+            degiroRaw.balance = 0.0;
+        }
+
+
         rawData.push_back(degiroRaw);
 
 
@@ -160,6 +170,10 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
 
             degData.count = degiroRaw.description.mid(start + 1, end-start-1).toInt();
         }
+        else if(degiroRaw.description.toLower().contains("fx"))
+        {
+            degData.type = CURRENCYEXCHANGE;
+        }
         else
         {
             found = false;
@@ -182,6 +196,8 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
             {
                 degData.price = degiroRaw.price;
             }
+
+            degData.balance = degiroRaw.balance;
 
 
             QVector<sSTOCKDATA> vector = stockData[degiroRaw.ISIN];
@@ -218,11 +234,11 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
 
     if(rawData.count() > 0)
     {
-        stockData = mergeEventAndFee(stockData);
+        stockData = mergeFeeWithEvent(stockData);
 
         emit setDegiroData(stockData);
         saveRawData();
-        isRAWFile = true;
+        isRAWFileLoaded = true;
     }
 }
 
@@ -254,31 +270,31 @@ QStringList DeGiro::parseLine(QString line, char delimeter)
     return list;
 }
 
-StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
+StockDataType DeGiro::mergeFeeWithEvent(StockDataType &data)
 {
     QList<QString> keys = data.keys();
 
-    for(const QString &key : keys)
+    for (const QString &key : keys)
     {
         QVector<sSTOCKDATA> vector = data.value(key);
         auto vectorEnd = vector.end();
 
         for (auto it = vector.begin(); it != vectorEnd; ++it)
         {
-            if(it->type == TRANSACTIONFEE || it->type == FEE || it->type == TAX)
+            if (it->type == TRANSACTIONFEE || it->type == FEE || it->type == TAX || it->type == CURRENCYEXCHANGE || it->type == DEPOSIT)
             {
                 continue;
             }
 
             auto exists = std::find_if(vector.begin(), vector.end(), [it] (sSTOCKDATA &s)
                                        {
-                                           return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                           return ( (s.dateTime == it->dateTime) && (s.type != it->type) && (s.type != CURRENCYEXCHANGE) );
                                        }
                                        );
 
             bool bFound = false;
 
-            while(exists != vector.end())
+            while (exists != vector.end())
             {
                 double feeInUSD = 0.0;
 
@@ -316,7 +332,7 @@ StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
 
                 exists = std::find_if(++exists, vector.end(), [it] (sSTOCKDATA &s)
                                       {
-                                          return ( (s.dateTime == it->dateTime) && (s.type != it->type) );
+                                          return ( (s.dateTime == it->dateTime) && (s.type != it->type) && (s.type != CURRENCYEXCHANGE) );
                                       }
                                       );
 
@@ -326,12 +342,10 @@ StockDataType DeGiro::mergeEventAndFee(StockDataType &data)
             if(bFound)
             {
                 vector.erase( std::remove_if(vector.begin(), vector.end(), [it] (sSTOCKDATA &s)
-                                          {
-                                                qDebug() <<it->dateTime;
-                                                qDebug() <<s.dateTime;
+                                            {
                                               return ( (s.dateTime == it->dateTime) &&
                                                         (s.type == TRANSACTIONFEE || s.type == FEE || s.type == TAX) );
-                                          }
+                                            }
                                             ), vector.end()
                              );
 
@@ -385,7 +399,7 @@ void DeGiro::saveRawData()
 
 bool DeGiro::getIsRAWFile() const
 {
-    return isRAWFile;
+    return isRAWFileLoaded;
 }
 
 
@@ -397,6 +411,7 @@ QDataStream &operator<<(QDataStream &out, const sDEGIRORAW &param)
     out << param.description;
     out << static_cast<int>(param.currency);
     out << param.price;
+    out << param.balance;
 
     return out;
 }
@@ -413,6 +428,7 @@ QDataStream &operator>>(QDataStream &in, sDEGIRORAW &param)
     param.currency = static_cast<eCURRENCY>(buffer);
 
     in >> param.price;
+    in >> param.balance;
 
     return in;
 }

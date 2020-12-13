@@ -90,11 +90,20 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
     eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
+    double balance = 0.0;
+    QDateTime lastDate = stockList.values().first().first().dateTime;
+
     for(const QString &key : keys)
     {
         for(const sSTOCKDATA &stock : stockList.value(key))
         {
             if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if(stock.currency == EUR && stock.dateTime >= lastDate)
+            {
+                balance = stock.balance;
+                lastDate = stock.dateTime;
+            }
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
@@ -149,10 +158,11 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
                 break;
 
                 case SELL:
+                {
                     sell += database->getExchangePrice(rates, stock.price) * stock.count;
                     transFees += database->getExchangePrice(rates, stock.fee);
-
-                    break;
+                }
+                break;
 
                 case DIVIDEND:
                 {
@@ -195,7 +205,8 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
         info.DY = ((dividends-divTax)/(invested-sell))*100.0;
     }
 
-    info.account = (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal);
+    //info.account = (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal);
+    info.account = balance;
     info.portfolio = getPortfolioValue(from, to);
 
     if(!qFuzzyIsNull(deposit))

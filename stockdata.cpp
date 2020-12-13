@@ -1,5 +1,6 @@
 #include "stockdata.h"
 
+#include <cmath>
 #include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
@@ -394,48 +395,6 @@ void StockData::saveStockData()
     }
 }
 
-QDataStream &operator<<(QDataStream &out, const sSTOCKDATA &param)
-{
-    out << param.dateTime;
-    out << param.ticker;
-    out << param.ISIN;
-    out << param.stockName;
-    out << static_cast<int>(param.type);
-    out << static_cast<int>(param.currency);
-    out << param.count;
-    out << param.price;
-    out << param.fee;
-    out << static_cast<int>(param.source);
-
-    return out;
-}
-
-QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
-{
-    in >> param.dateTime;
-    in >> param.ticker;
-    in >> param.ISIN;
-    in >> param.stockName;
-
-    int buffer1;
-    in >> buffer1;
-    param.type = static_cast<eSTOCKEVENTTYPE>(buffer1);
-
-    int buffer2;
-    in >> buffer2;
-    param.currency = static_cast<eCURRENCY>(buffer2);
-
-    in >> param.count;
-    in >> param.price;
-    in >> param.fee;
-
-    int buffer3;
-    in >> buffer3;
-    param.source = static_cast<eSTOCKSOURCE>(buffer3);
-
-    return in;
-}
-
 QString StockData::getCachedISINParam(const QString &ISIN, const QString &param)
 {
     auto it = std::find_if(cachedStockData.begin(), cachedStockData.end(), [ISIN](QPair<QString, sONLINEDATA> a)
@@ -593,4 +552,48 @@ void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &tabl
     file.write(doc.toJson(QJsonDocument::Indented));
 
     file.close();
+}
+
+QDataStream &operator<<(QDataStream &out, const sSTOCKDATA &param)
+{
+    out << param.dateTime;
+    out << param.ticker;
+    out << param.ISIN;
+    out << param.stockName;
+    out << static_cast<int>(param.type);
+    out << static_cast<int>(param.currency);
+    out << param.count;
+    out << param.price;
+    out << param.balance;
+    out << param.fee;
+    out << static_cast<int>(param.source);
+
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, sSTOCKDATA &param)
+{
+    in >> param.dateTime;
+    in >> param.ticker;
+    in >> param.ISIN;
+    in >> param.stockName;
+
+    int buffer1;
+    in >> buffer1;
+    param.type = static_cast<eSTOCKEVENTTYPE>(buffer1);
+
+    int buffer2;
+    in >> buffer2;
+    param.currency = static_cast<eCURRENCY>(buffer2);
+
+    in >> param.count;
+    in >> param.price;
+    in >> param.balance;
+    in >> param.fee;
+
+    int buffer3;
+    in >> buffer3;
+    param.source = static_cast<eSTOCKSOURCE>(buffer3);
+
+    return in;
 }
