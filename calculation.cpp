@@ -1035,6 +1035,229 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
     return dividendSeries;
 }
 
+QBarSeries* Calculation::getMonthCompareDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
+{
+    Q_ASSERT(stockData);
+    Q_ASSERT(database);
+
+    StockDataType stockList = stockData->getStockData();
+
+    if(stockList.isEmpty())
+    {
+        return nullptr;
+    }
+
+    //    year              month  price
+    QHash<int, QVector<QPair<int, double>> > dividends;
+    eCURRENCY selectedCurrency = database->getSetting().currency;
+    QList<QString> keys = stockList.keys();
+
+
+    for(const QString &key : keys)
+    {
+        for(const sSTOCKDATA &stock : stockList.value(key))
+        {
+            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+
+            if( stock.stockName.toLower().contains("fundshare") ) continue;
+
+            if(stock.type == DIVIDEND)
+            {
+                QString rates;
+                eCURRENCY currencyFrom = stock.currency;
+
+                switch(currencyFrom)
+                {
+                    case USD: rates = "USD";
+                        break;
+                    case CZK: rates = "CZK";
+                        break;
+                    case EUR: rates = "EUR";
+                        break;
+                    case GBP: rates = "GBP";
+                        break;
+                }
+
+                rates += "2";
+
+                switch(selectedCurrency)
+                {
+                    case USD: rates += "USD";
+                        break;
+                    case CZK: rates += "CZK";
+                        break;
+                    case EUR: rates += "EUR";
+                        break;
+                    case GBP: rates += "GBP";
+                        break;
+                }
+
+                double price = 0.0;
+
+                price = database->getExchangePrice(rates, stock.price);
+
+                QDate date = stock.dateTime.date();
+
+                qDebug() << date.month();
+
+                QVector<QPair<int, double>> vector = dividends.value(date.year());
+                auto found = std::find_if(vector.begin(), vector.end(), [date] (QPair<int, double> &a)
+                                          {
+                                              return date.month() == a.first;
+                                          }
+                                          );
+
+                if(found != vector.end())
+                {
+                    found->second += price;
+                }
+                else
+                {
+                    vector.push_back(qMakePair(date.month(), price));
+                }
+
+                dividends.insert(date.year(), vector);
+            }
+        }
+    }
+
+    // Sort from min to max and find the min and max
+    QList<int> divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
+
+    for (const int &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<int, double> &a, QPair<int, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+    }
+
+    // Save categories - find all months between min and max date
+    QStringList categories;
+    QDate tmpMonth = QDate(2020, 1, 1);
+    QVector<QDate> dates;
+
+    for(quint8 m = 1; m < 13; ++m)
+    {
+        QLocale locale;
+        QString month = locale.toString(tmpMonth, "MMMM");
+        month = month.left(1).toUpper() + month.mid(1);     // first char to upper
+
+        categories << month;
+
+        tmpMonth = tmpMonth.addMonths(1);
+    }
+
+
+    // Fill empty places between dates
+    QMutableHashIterator it(dividends);
+
+    while(it.hasNext())
+    {
+        it.next();
+
+        auto vector = it.value();
+
+        for(quint8 m = 1; m<13; ++m)
+        {
+            auto found = std::find_if(vector.begin(), vector.end(), [m] (QPair<int, double> &a)
+                                      {
+                                          return m == a.first;
+                                      }
+                                      );
+
+            if(found == vector.end())
+            {
+                vector.insert(m, qMakePair(m, 0.0));
+            }
+        }
+
+        it.value() = vector;
+    }
+
+
+    // Sort from min to max
+    divKeys = dividends.keys();
+
+    if(divKeys.count() == 0)
+    {
+        return nullptr;
+    }
+
+    for (const int &key : divKeys)
+    {
+        auto vector = dividends.value(key);
+
+        std::sort(vector.begin(), vector.end(),
+                  [] (QPair<int, double> &a, QPair<int, double> &b)
+                  {
+                      return a.first < b.first;
+                  }
+                  );
+
+        dividends[key] = vector;
+    }
+
+
+    // Set all sets, tickers and dates
+    QVector<QBarSet*> dividendsSets;
+    divKeys = dividends.keys();
+
+    for (const int &key : divKeys)
+    {
+        QBarSet *bar = new QBarSet(QString::number(key));
+
+        auto vector = dividends.value(key);
+
+        for (const QPair<int, double> &v : vector)
+        {
+            bar->append(v.second);
+        }
+
+        dividendsSets.push_back(bar);
+    }
+
+
+    QBarSeries *dividendSeries = new QBarSeries();
+    double maxDividendAxis = 0.0;
+
+    for(QBarSet *set : dividendsSets)
+    {
+        dividendSeries->append(set);
+
+        qreal sum = set->sum();
+
+        if(sum > maxDividendAxis)
+        {
+            maxDividendAxis = sum;
+        }
+    }
+
+
+    if(xAxis != nullptr)
+    {
+        *xAxis = categories;
+    }
+
+    if(maxYAxis != nullptr)
+    {
+        *maxYAxis = maxDividendAxis;
+    }
+
+    return dividendSeries;
+}
+
 QStackedBarSeries* Calculation::getYearDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis)
 {
     Q_ASSERT(stockData);
@@ -1508,6 +1731,65 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
         }
         break;
 
+        case MONTHCOMPAREDIVDEND:
+        {
+            QStringList categories;
+            double maxDividendAxis;
+            QBarSeries *dividendSeries = getMonthCompareDividendSeries(from, to, &categories, &maxDividendAxis);
+
+            if(dividendSeries == nullptr)
+            {
+                delete chart;
+                chart = nullptr;
+
+                return nullptr;
+            }
+
+            chart->addSeries(dividendSeries);
+            chart->setTitle("Month dividends");
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            dividendSeries->attachAxis(axisX);
+
+            QValueAxis *dividendsAxisY = new QValueAxis();
+            dividendsAxisY->setLabelFormat("%i");
+            dividendsAxisY->setTitleText("Dividend " + currencySign);
+            chart->addAxis(dividendsAxisY, Qt::AlignLeft);
+            dividendSeries->attachAxis(dividendsAxisY);
+
+            chart->legend()->setVisible(true);
+            chart->legend()->setAlignment(Qt::AlignBottom);
+
+
+            Callout *tooltip = new Callout(chart);
+
+            connect(dividendSeries, &QStackedBarSeries::hovered, [tooltip, chart, dividendSeries, currencySign](bool status, int index, QBarSet *barset) mutable
+                    {
+                        if (tooltip == nullptr)
+                        {
+                            tooltip = new Callout(chart);
+                        }
+
+                        if (status)
+                        {
+                            tooltip->setText(QString("%1: %2%3").arg(barset->label()).arg(currencySign).arg(barset->at(index)));
+                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2, 0));
+                            tooltip->setZValue(11);
+                            tooltip->updateGeometry();
+                            tooltip->show();
+                        }
+                        else
+                        {
+                            tooltip->hide();
+                        }
+                    }
+                    );
+        }
+        break;
+
         case YEARDIVIDENDCHART:
         {
             QStringList categories;
@@ -1681,6 +1963,15 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
         break;
 
         case MONTHDIVIDEND:
+        {
+            view = new QChartView(chart);
+            view->setRenderHint(QPainter::Antialiasing);
+            view->setMinimumSize(512, 512);
+            view->setRubberBand(QChartView::HorizontalRubberBand);
+        }
+        break;
+
+        case MONTHCOMPAREDIVDEND:
         {
             view = new QChartView(chart);
             view->setRenderHint(QPainter::Antialiasing);

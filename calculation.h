@@ -27,10 +27,10 @@ private:
     QLineSeries *getDepositSeries(const QDate &from, const QDate &to);
     QBarSeries *getDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis, const QString &ISIN = QString());
     QStackedBarSeries *getMonthDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
+    QBarSeries *getMonthCompareDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
     QStackedBarSeries *getYearDividendSeries(const QDate &from, const QDate &to, QStringList *xAxis, double *maxYAxis);
     QPieSeries *getSectorSeries(const QDate &from, const QDate &to);
     QPieSeries *getStockSeries(const QDate &from, const QDate &to);
-
 signals:
 };
 
