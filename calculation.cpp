@@ -400,8 +400,6 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
 
                 QDate date = stock.dateTime.date();
 
-                qDebug() << date.month();
-
                 QVector<QPair<int, double>> vector = dividends.value(date.year());
                 auto found = std::find_if(vector.begin(), vector.end(), [date] (QPair<int, double> &a)
                                           {
@@ -434,7 +432,7 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
 
     for (const int &key : divKeys)
     {
-        auto vector = dividends.value(key);
+        QVector<QPair<int, double>> vector = dividends.value(key);
 
         std::sort(vector.begin(), vector.end(),
                   [] (QPair<int, double> &a, QPair<int, double> &b)
@@ -447,13 +445,13 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
     }
 
     // Fill empty places between dates
-    QMutableHashIterator it(dividends);
+    QMutableMapIterator it(dividends);
 
     while(it.hasNext())
     {
         it.next();
 
-        auto vector = it.value();
+        QVector<QPair<int, double>> vector = it.value();
 
         for(quint8 m = 1; m<13; ++m)
         {
@@ -482,7 +480,7 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
 
     for (const int &key : divKeys)
     {
-        auto vector = dividends.value(key);
+        QVector<QPair<int, double>> vector = dividends.value(key);
 
         std::sort(vector.begin(), vector.end(),
                   [] (QPair<int, double> &a, QPair<int, double> &b)

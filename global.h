@@ -11,7 +11,7 @@
 typedef QVector<QPair<QString, QString> >               TickerDataType;
 typedef QVector<TickerDataType>                         ScreenerDataType;
 typedef QMap<QString, std::function<double(double)> >   ExchangeRatesFunctions;
-typedef QHash<int, QVector<QPair<int, double>> >        MonthDividendDataType;
+typedef QMap<int, QVector<QPair<int, double>> >         MonthDividendDataType;
 
 #define STOCKFILE           "/stock.bin"
 #define ISINFILE            "/isin.bin"

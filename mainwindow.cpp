@@ -907,7 +907,10 @@ void MainWindow::on_pbShowGraph_clicked()
     QWidget *chartWidget = new QWidget(this, Qt::Tool);
 
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
-    VB->addWidget(chartView);
+
+    QHBoxLayout *HBchart = new QHBoxLayout();
+    HBchart->addWidget(chartView);
+    VB->addLayout(HBchart);
 
     if (type != SECTORCHART && type != STOCKCHART)
     {
@@ -918,9 +921,9 @@ void MainWindow::on_pbShowGraph_clicked()
                 }
                 );
 
-        QHBoxLayout *HB = new QHBoxLayout();
-        HB->addWidget(zoomReset);
-        VB->addLayout(HB);
+        QHBoxLayout *HBzoom = new QHBoxLayout();
+        HBzoom->addWidget(zoomReset);
+        VB->addLayout(HBzoom);
     }        
 
     QPushButton *makeImageBtn = new QPushButton("Save PNG", chartWidget);
@@ -949,9 +952,9 @@ void MainWindow::on_pbShowGraph_clicked()
             }
             );
 
-    QHBoxLayout *HB = new QHBoxLayout();
-    HB->addWidget(makeImageBtn);
-    VB->addLayout(HB);
+    QHBoxLayout *HBimage = new QHBoxLayout();
+    HBimage->addWidget(makeImageBtn);
+    VB->addLayout(HBimage);
 
     if (type == MONTHCOMPAREDIVDEND)
     {
