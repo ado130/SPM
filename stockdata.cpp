@@ -350,6 +350,21 @@ StockDataType StockData::getStockData() const
     return stockData;
 }
 
+bool StockData::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
+{
+    auto it = stockData.find(ISIN);
+
+    if (it != stockData.end())
+    {
+        stockData[ISIN] = vector;
+        saveStockData();
+
+        return true;
+    }
+
+    return false;
+}
+
 double StockData::getTax(const QString &ticker, const QDateTime &date, const eSTOCKEVENTTYPE &type)
 {
     QVector<sSTOCKDATA> vector = stockData.value(ticker);

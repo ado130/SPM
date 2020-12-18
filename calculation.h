@@ -18,6 +18,7 @@ public:
     double getPortfolioValue(const QDate &from, const QDate &to);
     sOVERVIEWINFO getOverviewInfo(const QDate &from, const QDate &to);
     QChartView *getChartView(const eCHARTTYPE &type, const QDate &from, const QDate &to, const QString &ISIN = QString());
+    MonthDividendDataType getMonthDividendData(const QDate &from, const QDate &to);
 private:
     Database *database;
     StockData *stockData;

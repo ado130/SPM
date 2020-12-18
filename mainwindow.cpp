@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     screener = std::make_unique<Screener> (this);
     stockData = std::make_unique<StockData> (this);
     calculation = std::make_unique<Calculation> (database.get(), stockData.get(), this);
-    progressDialog = nullptr;
+    refreshProgressDlg = nullptr;
 
     connect(degiro.get(), &DeGiro::setDegiroData, this, &MainWindow::setDegiroDataSlot);
 
@@ -362,11 +362,11 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.height = this->geometry().height();
         database->setSettingSlot(set);
 
-        if (progressDialog)
+        if (refreshProgressDlg)
         {
             QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
-                       QPoint(progressDialog->size().width(), progressDialog->size().height());
-            progressDialog->move(p);
+                       QPoint(refreshProgressDlg->size().width(), refreshProgressDlg->size().height());
+            refreshProgressDlg->move(p);
         }
 
         return true;
@@ -379,11 +379,11 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         set.yPos = point.y();
         database->setSettingSlot(set);
 
-        if (progressDialog)
+        if (refreshProgressDlg)
         {
             QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
-                       QPoint(progressDialog->size().width(), progressDialog->size().height());
-            progressDialog->move(p);
+                       QPoint(refreshProgressDlg->size().width(), refreshProgressDlg->size().height());
+            refreshProgressDlg->move(p);
         }
 
         return true;
@@ -505,7 +505,6 @@ void MainWindow::setOverviewHeader()
     ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->setRowCount(0);
-    ui->tableOverview->setColumnCount(header.count());
 
     ui->tableOverview->horizontalHeader()->setVisible(true);
     ui->tableOverview->verticalHeader()->setVisible(true);
@@ -747,7 +746,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
                             QVector<sSTOCKDATA> vec = it.value();
                             vec.remove(rowToDelete);
 
-                            if (updateStockDataVector(ISIN, vec))
+                            if (stockData->updateStockDataVector(ISIN, vec))
                             {
                                 table->removeRow(rowToDelete);
                             }
@@ -764,9 +763,9 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     for (int rowTable = 0; rowTable<table->rowCount(); ++rowTable)
     {
-        for (int colTable = 0; colTable<table->columnCount(); ++colTable)
+        for (int colTable = 0; colTable<table->columnCount()-1; ++colTable)
         {
-            //table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
+            table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
         }
     }
 
@@ -859,25 +858,6 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 }
 
 
-
-bool MainWindow::updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector)
-{
-    StockDataType stockList = stockData->getStockData();
-
-    auto it = stockList.find(ISIN);
-
-    if (it != stockList.end())
-    {
-        stockList[ISIN] = vector;
-
-        stockData->setStockData(stockList);
-
-        return true;
-    }
-
-    return false;
-}
-
 void MainWindow::fillOverviewSlot()
 {
     QDate from = ui->deOverviewFrom->date();
@@ -922,6 +902,8 @@ void MainWindow::on_pbShowGraph_clicked()
         return;
     }
 
+
+
     QWidget *chartWidget = new QWidget(this, Qt::Tool);
 
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
@@ -941,8 +923,8 @@ void MainWindow::on_pbShowGraph_clicked()
         VB->addLayout(HB);
     }        
 
-    QPushButton *makeImage = new QPushButton("Save PNG", chartWidget);
-    connect(makeImage, &QPushButton::clicked, [chartView, chartWidget]()
+    QPushButton *makeImageBtn = new QPushButton("Save PNG", chartWidget);
+    connect(makeImageBtn, &QPushButton::clicked, [chartView, chartWidget]()
             {
                 QString fileName = QFileDialog::getSaveFileName(chartWidget,
                                                                 "Save File",
@@ -968,14 +950,115 @@ void MainWindow::on_pbShowGraph_clicked()
             );
 
     QHBoxLayout *HB = new QHBoxLayout();
-    HB->addWidget(makeImage);
+    HB->addWidget(makeImageBtn);
     VB->addLayout(HB);
+
+    if (type == MONTHCOMPAREDIVDEND)
+    {
+        const MonthDividendDataType dividends = calculation->getMonthDividendData(from, to);
+
+        QTableWidget *table = new QTableWidget(chartWidget);
+        table->setStyleSheet(""
+                             "QTableWidget {"
+                             "  border: 2px solid #8f8f91;"
+                             "  border-radius: 6px;"
+                             "  background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f6f7fa, stop: 1 #dadbde);"
+                             "  selection-background-color: gray;"
+                             "  alternate-background-color: #dadbde;\n"
+                             "}"
+                             "");
+
+
+        QStringList header;
+        header << "Month/Year";
+
+        for(quint8 a = 0; a<dividends.keys().count(); ++a)
+        {
+            header << QString::number(dividends.keys().at(a));
+        }
+
+        table->setColumnCount(header.count());
+
+        table->setRowCount(13);
+        table->setColumnCount(header.count());
+
+        table->horizontalHeader()->setVisible(true);
+        table->verticalHeader()->setVisible(false);
+
+        table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        table->setSelectionMode(QAbstractItemView::SingleSelection);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        table->setShowGrid(true);
+
+        table->setHorizontalHeaderLabels(header);
+
+        QString currencySign = database->getCurrencySign(database->getSetting().currency);
+
+        table->setSortingEnabled(false);
+
+        QList<int> divKeys = dividends.keys();
+
+        QLocale locale;
+        QDate tmpMonth = QDate(2020, 1, 1);
+
+        for (quint8 row = 0; row<12; ++row)
+        {
+            table->setItem(row, 0, new QTableWidgetItem(locale.toString(tmpMonth, "MMMM")));
+            tmpMonth = tmpMonth.addMonths(1);
+        }
+
+        table->setItem(12, 0, new QTableWidgetItem("Total"));
+
+        int col = 1;
+
+        for (const int &key : divKeys)
+        {
+            QVector<QPair<int, double>> vector = dividends.value(key);
+
+            double total = 0.0;
+            for (const auto &item : qAsConst(vector))
+            {
+                table->setItem(item.first-1, col, new QTableWidgetItem(currencySign + QString::number(item.second)));
+                total += item.second;
+            }
+
+            table->setItem(12, col, new QTableWidgetItem(currencySign + QString::number(total)));
+            col++;
+        }
+        table->setSortingEnabled(true);
+
+        for (int rowTable = 0; rowTable<table->rowCount(); ++rowTable)
+        {
+            for (int colTable = 0; colTable<table->columnCount(); ++colTable)
+            {
+                table->item(rowTable, colTable)->setTextAlignment(Qt::AlignCenter);
+            }
+        }
+
+        table->resizeColumnsToContents();
+
+        table->setMinimumHeight(table->rowHeight(0)*14);
+
+        int tableWidth = 0;
+
+        for (int colTable = 0; colTable<table->columnCount(); ++colTable)
+        {
+            tableWidth += table->columnWidth(colTable);
+        }
+
+        table->setMinimumWidth(tableWidth);
+
+        QHBoxLayout *HBTable = new QHBoxLayout();
+        HBTable->addWidget(table);
+        VB->addLayout(HBTable);
+    }
+
 
     chartWidget->setLayout(VB);
     chartWidget->activateWindow();
     chartWidget->setParent(this);
     chartWidget->setAttribute(Qt::WA_DeleteOnClose);
-    chartWidget->resize(1024, 512);
+    chartWidget->resize(1024, 768);
     chartWidget->setVisible(true);
 }
 
@@ -1625,7 +1708,7 @@ void MainWindow::fillDegiroTable()
         ui->tableDegiro->insertRow(a);
 
         QTableWidgetItem *item1 = new QTableWidgetItem;
-        item1->setData(Qt::EditRole, degiroRawData.at(a).dateTime.date()); // data.at(a).dateTime.toString("dd.MM.yyyy")
+        item1->setData(Qt::EditRole, degiroRawData.at(a).dateTime.date());
         ui->tableDegiro->setItem(a, 0, item1);
 
         ui->tableDegiro->setItem(a, 1, new QTableWidgetItem(degiroRawData.at(a).product));
@@ -2358,7 +2441,6 @@ void MainWindow::fillScreenerTable(ScreenerTab *st)
         nextRow:
         if (nextRow)
         {
-            qDebug() << "Row hidden";
             hiddenRows++;
             nextRow = false;
         }
@@ -2656,20 +2738,20 @@ void MainWindow::refreshTickersSlot(QString ticker)
     {
         disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
-        if (progressDialog)
+        if (refreshProgressDlg)
         {
-            disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+            disconnect(refreshProgressDlg, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
             updateProgressDialog(pos+1);
-            progressDialog->close();
+            refreshProgressDlg->close();
         }
 
         setStatus("An error appeard during the refresh");
     }
     else if (pos == (currentTickers.count() - 1))  // last
     {
-        if (progressDialog)
+        if (refreshProgressDlg)
         {
-            disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+            disconnect(refreshProgressDlg, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
             updateProgressDialog(pos+1);
         }
 
@@ -2678,7 +2760,7 @@ void MainWindow::refreshTickersSlot(QString ticker)
     }
     else
     {
-        if (progressDialog)
+        if (refreshProgressDlg)
         {
             updateProgressDialog(pos+1);
         }
@@ -2694,9 +2776,9 @@ void MainWindow::refreshTickersCanceled()
 {
     disconnect(this, &MainWindow::refreshTickers, this, &MainWindow::refreshTickersSlot);
 
-    if (progressDialog)
+    if (refreshProgressDlg)
     {
-        disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+        disconnect(refreshProgressDlg, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
         updateProgressDialog(currentTickers.count());
     }
 
@@ -2705,23 +2787,23 @@ void MainWindow::refreshTickersCanceled()
 
 void MainWindow::createProgressDialog(int min, int max)
 {
-    if (progressDialog) return;
+    if (refreshProgressDlg) return;
 
-    progressDialog = new QProgressDialog("Operation in progress", "Cancel", min, max, this);
-    connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
+    refreshProgressDlg = new QProgressDialog("Operation in progress", "Cancel", min, max, this);
+    connect(refreshProgressDlg, &QProgressDialog::canceled, this, &MainWindow::refreshTickersCanceled);
 
-    progressDialog->setWindowFlags(Qt::WindowStaysOnTopHint);
-    progressDialog->setAttribute(Qt::WA_DeleteOnClose);
-    progressDialog->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
-    progressDialog->setParent(this);
-    progressDialog->resize(400, 50);
-    progressDialog->adjustSize();
-    progressDialog->setMinimumDuration(0);
-    progressDialog->setWindowModality(Qt::NonModal);
-    progressDialog->setValue(0);
+    refreshProgressDlg->setWindowFlags(Qt::WindowStaysOnTopHint);
+    refreshProgressDlg->setAttribute(Qt::WA_DeleteOnClose);
+    refreshProgressDlg->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    refreshProgressDlg->setParent(this);
+    refreshProgressDlg->resize(400, 50);
+    refreshProgressDlg->adjustSize();
+    refreshProgressDlg->setMinimumDuration(0);
+    refreshProgressDlg->setWindowModality(Qt::NonModal);
+    refreshProgressDlg->setValue(0);
 
 
-    QPropertyAnimation *animFade = new QPropertyAnimation(progressDialog, "windowOpacity");
+    QPropertyAnimation *animFade = new QPropertyAnimation(refreshProgressDlg, "windowOpacity");
     animFade->setDuration(1000);
     animFade->setEasingCurve(QEasingCurve::Linear);
     animFade->setStartValue(0.0);
@@ -2729,12 +2811,12 @@ void MainWindow::createProgressDialog(int min, int max)
 
 
     QPoint p = mapToGlobal(QPoint(size().width(), size().height())) -
-               QPoint(progressDialog->size().width(), progressDialog->size().height());
+               QPoint(refreshProgressDlg->size().width(), refreshProgressDlg->size().height());
 
-    QPropertyAnimation *animMove = new QPropertyAnimation(progressDialog, "pos");
+    QPropertyAnimation *animMove = new QPropertyAnimation(refreshProgressDlg, "pos");
     animMove->setDuration(1000);
     animMove->setEasingCurve(QEasingCurve::OutQuad);
-    animMove->setStartValue(QPointF(p.x(), p.y() + progressDialog->size().height()));
+    animMove->setStartValue(QPointF(p.x(), p.y() + refreshProgressDlg->size().height()));
     animMove->setEndValue(p);
 
     animFade->start(QAbstractAnimation::DeleteWhenStopped);
@@ -2743,9 +2825,9 @@ void MainWindow::createProgressDialog(int min, int max)
 
 void MainWindow::updateProgressDialog(int val)
 {
-    Q_ASSERT(progressDialog);
+    Q_ASSERT(refreshProgressDlg);
 
-    progressDialog->setValue(val);
+    refreshProgressDlg->setValue(val);
 }
 
 void MainWindow::on_pbDeleteTickers_clicked()

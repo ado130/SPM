@@ -10,6 +10,9 @@
    * Changed or Information
    ! Important - Take note!
 =======================================================
+=== Client Release 1.1.6.0 18 Dec 2020
+* Dividend data chart improving
+
 === Client Release 1.1.5.0 17 Dec 2020
 + Added dividend chart
 

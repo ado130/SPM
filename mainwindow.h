@@ -103,7 +103,7 @@ private:
     std::unique_ptr<StockData> stockData;
     std::unique_ptr<Tastyworks> tastyworks;
 
-    QPointer<QProgressDialog> progressDialog;
+    QPointer<QProgressDialog> refreshProgressDlg;
 
     eSCREENSOURCE lastRequestSource;
 
@@ -132,14 +132,6 @@ private:
      *  Overview tab
      */
     void setOverviewHeader();
-
-    /**
-     * @brief updateStockDataVector - set new "vector" for the specified ISIN
-     * @param ISIN -
-     * @param vector - vector to be replaced
-     * @return true if ISIN exists or false
-     */
-    bool updateStockDataVector(QString ISIN, QVector<sSTOCKDATA> vector);
 
     /*
      *  DeGiro tab
