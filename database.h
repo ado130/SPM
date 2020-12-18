@@ -38,7 +38,7 @@ public:
     QVector<sISINDATA> getIsinList() const;
     void setIsinList(const QVector<sISINDATA> &value);
 
-    double getExchangePrice(QString rates, double price);
+    double getExchangePrice(const eCURRENCY &rates, const double &price);
     ExchangeRatesFunctions getExchangeRatesFuncMap() const;
 
 signals:

@@ -78,7 +78,7 @@ QTabBar::close-button {
 </string>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabOverviewMain">
          <attribute name="title">
@@ -659,7 +659,7 @@ QGroupBox::title {
 }</string>
               </property>
               <property name="title">
-               <string>Table</string>
+               <string>Custom record</string>
               </property>
               <widget class="QPushButton" name="pbAddRecord">
                <property name="geometry">

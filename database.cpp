@@ -198,8 +198,36 @@ QDataStream &operator>>(QDataStream &in, sSCREENERPARAM &param)
     return in;
 }
 
-double Database::getExchangePrice(QString rates, double price)
+double Database::getExchangePrice(const eCURRENCY &currencyFrom, const double &price)
 {
+    QString rates;
+
+    switch(currencyFrom)
+    {
+        case USD: rates = "USD";
+            break;
+        case CZK: rates = "CZK";
+            break;
+        case EUR: rates = "EUR";
+            break;
+        case GBP: rates = "GBP";
+            break;
+    }
+
+    rates += "2";
+
+    switch(setting.currency)
+    {
+        case USD: rates += "USD";
+            break;
+        case CZK: rates += "CZK";
+            break;
+        case EUR: rates += "EUR";
+            break;
+        case GBP: rates += "GBP";
+            break;
+    }
+
     return exchangeRatesFuncMap[rates](price);
 }
 

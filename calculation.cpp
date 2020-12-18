@@ -14,18 +14,6 @@ double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 
     QList<QString> keys = stockList.keys();
 
-    QString rates;
-    switch(database->getSetting().currency)
-    {
-        case USD: rates = "USD2USD";
-            break;
-        case CZK: rates = "USD2CZK";
-            break;
-        case EUR: rates = "USD2EUR";
-            break;
-        case GBP: rates = "USD2GBP";
-            break;
-    }
 
     double portfolioValue = 0.0;
 
@@ -55,7 +43,7 @@ double Calculation::getPortfolioValue(const QDate &from, const QDate &to)
 
         if(!cachedPrice.isEmpty())
         {
-            onlineStockPrice = database->getExchangePrice(rates, cachedPrice.toDouble());
+            onlineStockPrice = database->getExchangePrice(USD, cachedPrice.toDouble());
             totalOnlinePrice = onlineStockPrice*totalCount;
         }
 
@@ -86,8 +74,6 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
     double dividends = 0.0;
     double divTax = 0.0;
     double fees = 0.0;
-
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
     double balance = 0.0;
@@ -107,73 +93,44 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 
             if( stock.stockName.toLower().contains("fundshare") ) continue;
 
-            QString rates;
-            eCURRENCY currencyFrom = stock.currency;
-
-            switch(currencyFrom)
-            {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-            }
-
-            rates += "2";
-
-            switch(selectedCurrency)
-            {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-            }
-
             switch(stock.type)
             {
                 case DEPOSIT:
                 {
-                    deposit += database->getExchangePrice(rates, stock.price);
+                    deposit += database->getExchangePrice(stock.currency, stock.price);
                 }
                 break;
 
                 case WITHDRAWAL:
                 {
-                    withdrawal += database->getExchangePrice(rates, stock.price);
+                    withdrawal += database->getExchangePrice(stock.currency, stock.price);
                 }
                 break;
 
                 case BUY:
                 {
-                    invested += database->getExchangePrice(rates, stock.price) * stock.count;
-                    transFees += database->getExchangePrice(rates, stock.fee);
+                    invested += database->getExchangePrice(stock.currency, stock.price) * stock.count;
+                    transFees += database->getExchangePrice(stock.currency, stock.fee);
                 }
                 break;
 
                 case SELL:
                 {
-                    sell += database->getExchangePrice(rates, stock.price) * stock.count;
-                    transFees += database->getExchangePrice(rates, stock.fee);
+                    sell += database->getExchangePrice(stock.currency, stock.price) * stock.count;
+                    transFees += database->getExchangePrice(stock.currency, stock.fee);
                 }
                 break;
 
                 case DIVIDEND:
                 {
-                    dividends += database->getExchangePrice(rates, stock.price);
-                    divTax += database->getExchangePrice(rates, stock.fee);
+                    dividends += database->getExchangePrice(stock.currency, stock.price);
+                    divTax += database->getExchangePrice(stock.currency, stock.fee);
                 }
                 break;
 
                 case FEE:
                 {
-                    fees += database->getExchangePrice(rates, stock.price);
+                    fees += database->getExchangePrice(stock.currency, stock.price);
                 }
                 break;
             }
@@ -206,12 +163,12 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
     }
 
     //info.account = (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal);
-    info.account = balance;
+    info.account = database->getExchangePrice(EUR, balance);
     info.portfolio = getPortfolioValue(from, to);
 
     if(!qFuzzyIsNull(deposit))
     {
-        info.performance = ((info.portfolio+dividends-divTax-fees-transFees)/deposit)*100.0;
+        info.performance = ((info.portfolio+dividends-divTax-fees-transFees)/deposit)*100.0 - 100.0;
     }
     else
     {
@@ -242,19 +199,6 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
                   return a < b;
               }
               );
-
-    QString rates;
-    switch(database->getSetting().currency)
-    {
-        case USD: rates = "USD2USD";
-            break;
-        case CZK: rates = "USD2CZK";
-            break;
-        case EUR: rates = "USD2EUR";
-            break;
-        case GBP: rates = "USD2GBP";
-            break;
-    }
 
     for(const QString &key : keys)
     {
@@ -302,7 +246,7 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
 
         if(!cachedPrice.isEmpty())
         {
-            row.onlineStockPrice = database->getExchangePrice(rates, cachedPrice.toDouble());
+            row.onlineStockPrice = database->getExchangePrice(USD, cachedPrice.toDouble());
             row.totalOnlinePrice = row.onlineStockPrice*totalCount;
         }
         else
@@ -351,9 +295,7 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
         return dividends;
     }
 
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
-
 
     for(const QString &key : keys)
     {
@@ -366,37 +308,10 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
             if(stock.type == DIVIDEND)
             {
                 QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                    case USD: rates = "USD";
-                        break;
-                    case CZK: rates = "CZK";
-                        break;
-                    case EUR: rates = "EUR";
-                        break;
-                    case GBP: rates = "GBP";
-                        break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                    case USD: rates += "USD";
-                        break;
-                    case CZK: rates += "CZK";
-                        break;
-                    case EUR: rates += "EUR";
-                        break;
-                    case GBP: rates += "GBP";
-                        break;
-                }
 
                 double price = 0.0;
 
-                price = database->getExchangePrice(rates, stock.price);
+                price = database->getExchangePrice(stock.currency, stock.price);
 
                 QDate date = stock.dateTime.date();
 
@@ -654,7 +569,6 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             depositSeries->attachAxis(depositAxisY);
 
 
-
             Callout *tooltip = new Callout(chart);
 
             connect(depositSeries, &QLineSeries::hovered, [tooltip, chart](const QPointF &point, bool state) mutable
@@ -666,7 +580,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
                         if (state)
                         {
-                            tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
+                            tooltip->setText(QString("X: %1 \nY: %L2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
                             tooltip->setAnchor(point);
                             tooltip->setZValue(11);
                             tooltip->updateGeometry();
@@ -738,7 +652,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
 
                         if (state)
                         {
-                            tooltip->setText(QString("X: %1 \nY: %2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
+                            tooltip->setText(QString("X: %1 \nY: %L2 ").arg(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(point.x())).toString("dd.MM.yyyy")).arg(point.y()));
                             tooltip->setAnchor(point);
                             tooltip->setZValue(11);
                             tooltip->updateGeometry();
@@ -768,7 +682,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             }
 
             chart->addSeries(dividendSeries);
-            chart->setTitle("Dividends");
+            chart->setTitle("Brutto dividends");
             chart->setAnimationOptions(QChart::SeriesAnimations);
 
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
@@ -804,7 +718,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             }
 
             chart->addSeries(dividendSeries);
-            chart->setTitle("Month dividends");
+            chart->setTitle("Month brutto dividends");
             chart->setAnimationOptions(QChart::SeriesAnimations);
 
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
@@ -835,7 +749,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
                         if (status)
                         {
                             tooltip->setText(QString("%1: %2%3").arg(barset->label()).arg(currencySign).arg(barset->at(index)));
-                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2, 0));
+                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2 - 0.5*dividendSeries->barWidth(), 0));
                             tooltip->setZValue(11);
                             tooltip->updateGeometry();
                             tooltip->show();
@@ -864,7 +778,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             }
 
             chart->addSeries(dividendSeries);
-            chart->setTitle("Month dividends");
+            chart->setTitle("Month brutto dividends");
             chart->setAnimationOptions(QChart::SeriesAnimations);
 
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
@@ -894,7 +808,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
                         if (status)
                         {
                             tooltip->setText(QString("%1: %2%3").arg(barset->label()).arg(currencySign).arg(barset->at(index)));
-                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2, 0));
+                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2 - 0.5*dividendSeries->barWidth(), 0));
                             tooltip->setZValue(11);
                             tooltip->updateGeometry();
                             tooltip->show();
@@ -923,7 +837,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
             }
 
             chart->addSeries(yearDividendSeries);
-            chart->setTitle("Year dividends");
+            chart->setTitle("Year brutto dividends");
             chart->setAnimationOptions(QChart::SeriesAnimations);
 
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
@@ -1054,7 +968,6 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 
     double deposit = 0.0;
     QLineSeries *depositSeries = new QLineSeries();
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
@@ -1067,37 +980,7 @@ QLineSeries* Calculation::getDepositSeries(const QDate &from, const QDate &to)
 
             if(stock.type == DEPOSIT)
             {
-                QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-                }
-
-                deposit += database->getExchangePrice(rates, stock.price);
-
+                deposit += database->getExchangePrice(stock.currency, stock.price);
                 depositSeries->append(stock.dateTime.toMSecsSinceEpoch(), deposit);
             }
         }
@@ -1146,7 +1029,6 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 
     double invested = 0.0;
     QLineSeries *investedSeries = new QLineSeries();
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
@@ -1159,38 +1041,7 @@ QLineSeries* Calculation::getInvestedSeries(const QDate &from, const QDate &to)
 
             if(stock.type == BUY)
             {
-                QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-                }
-
-
-                invested += database->getExchangePrice(rates, (-1.0)*stock.price) * stock.count;
-
+                invested += database->getExchangePrice(stock.currency, (-1.0)*stock.price) * stock.count;
                 investedSeries->append(stock.dateTime.toMSecsSinceEpoch(), invested);
             }
         }
@@ -1239,7 +1090,6 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
 
     QHash<QString, QVector<QPair<QDate, double>> > dividends;
     double maxDividendAxis = 0.0;
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
     if(!ISIN.isEmpty())
@@ -1258,38 +1108,9 @@ QBarSeries* Calculation::getDividendSeries(const QDate &from, const QDate &to, Q
 
             if(stock.type == DIVIDEND)
             {
-                QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                    case USD: rates = "USD";
-                        break;
-                    case CZK: rates = "CZK";
-                        break;
-                    case EUR: rates = "EUR";
-                        break;
-                    case GBP: rates = "GBP";
-                        break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                    case USD: rates += "USD";
-                        break;
-                    case CZK: rates += "CZK";
-                        break;
-                    case EUR: rates += "EUR";
-                        break;
-                    case GBP: rates += "GBP";
-                        break;
-                }
-
                 double price = 0.0;
 
-                price = database->getExchangePrice(rates, stock.price);
+                price = database->getExchangePrice(stock.currency, stock.price);
 
                 if(price > maxDividendAxis)
                 {
@@ -1515,9 +1336,7 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
     }
 
     QHash<QString, QVector<QPair<QDate, double>> > dividends;
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
-
 
     for(const QString &key : keys)
     {
@@ -1529,38 +1348,9 @@ QStackedBarSeries* Calculation::getMonthDividendSeries(const QDate &from, const 
 
             if(stock.type == DIVIDEND)
             {
-                QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                    case USD: rates = "USD";
-                        break;
-                    case CZK: rates = "CZK";
-                        break;
-                    case EUR: rates = "EUR";
-                        break;
-                    case GBP: rates = "GBP";
-                        break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                    case USD: rates += "USD";
-                        break;
-                    case CZK: rates += "CZK";
-                        break;
-                    case EUR: rates += "EUR";
-                        break;
-                    case GBP: rates += "GBP";
-                        break;
-                }
-
                 double price = 0.0;
 
-                price = database->getExchangePrice(rates, stock.price);
+                price = database->getExchangePrice(stock.currency, stock.price);
 
                 QString ticker = stock.ticker;
                 QDate date = stock.dateTime.date();
@@ -1822,7 +1612,6 @@ QStackedBarSeries* Calculation::getYearDividendSeries(const QDate &from, const Q
 
     QVector<QPair<double, int> > dividends;     // price, year
     double maxDividendAxis = 0.0;
-    eCURRENCY selectedCurrency = database->getSetting().currency;
     QList<QString> keys = stockList.keys();
 
     for(const QString &key : keys)
@@ -1835,38 +1624,9 @@ QStackedBarSeries* Calculation::getYearDividendSeries(const QDate &from, const Q
 
             if(stock.type == DIVIDEND)
             {
-                QString rates;
-                eCURRENCY currencyFrom = stock.currency;
-
-                switch(currencyFrom)
-                {
-                case USD: rates = "USD";
-                    break;
-                case CZK: rates = "CZK";
-                    break;
-                case EUR: rates = "EUR";
-                    break;
-                case GBP: rates = "GBP";
-                    break;
-                }
-
-                rates += "2";
-
-                switch(selectedCurrency)
-                {
-                case USD: rates += "USD";
-                    break;
-                case CZK: rates += "CZK";
-                    break;
-                case EUR: rates += "EUR";
-                    break;
-                case GBP: rates += "GBP";
-                    break;
-                }
-
                 double price = 0.0;
 
-                price = database->getExchangePrice(rates, stock.price);
+                price = database->getExchangePrice(stock.currency, stock.price);
 
                 if(price > maxDividendAxis)
                 {

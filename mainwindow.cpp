@@ -529,9 +529,7 @@ void MainWindow::fillOverviewTable()
         return;
     }
 
-    QString currencySign = database->getCurrencySign(database->getSetting().currency);
-
-
+    const QString currencySign = database->getCurrencySign(database->getSetting().currency);
     int pos = 0;
 
     ui->tableOverview->setRowCount(0);
@@ -604,7 +602,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     if (!rowItem) return;
 
-    QString ISIN = rowItem->text();
+    const QString ISIN = rowItem->text();
 
     StockDataType stockList = stockData->getStockData();
     QVector<sSTOCKDATA> vector = stockList.value(ISIN);
@@ -645,8 +643,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     table->setHorizontalHeaderLabels(header);
 
-    eCURRENCY selectedCurrency = database->getSetting().currency;
-    QString currencySign = database->getCurrencySign(database->getSetting().currency);
+    const QString currencySign = database->getCurrencySign(database->getSetting().currency);
 
     int pos = 0;
     table->setSortingEnabled(false);
@@ -664,41 +661,11 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
         item->setData(Qt::EditRole, stock.dateTime.date());
         table->setItem(pos, 0, item);
 
-
-        QString rates;
-        eCURRENCY currencyFrom = stock.currency;
-
-        switch(currencyFrom)
-        {
-            case USD: rates = "USD";
-                break;
-            case CZK: rates = "CZK";
-                break;
-            case EUR: rates = "EUR";
-                break;
-            case GBP: rates = "GBP";
-                break;
-        }
-
-        rates += "2";
-
-        switch(selectedCurrency)
-        {
-            case USD: rates += "USD";
-                break;
-            case CZK: rates += "CZK";
-                break;
-            case EUR: rates += "EUR";
-                break;
-            case GBP: rates += "GBP";
-                break;
-        }
-
         double price = 0.0;
         double fee = 0.0;
 
-        price = database->getExchangePrice(rates, stock.price) * stock.count;
-        fee = database->getExchangePrice(rates, stock.fee);
+        price = database->getExchangePrice(stock.currency, stock.price) * stock.count;
+        fee = database->getExchangePrice(stock.currency, stock.fee);
 
         switch(stock.type)
         {
@@ -902,9 +869,7 @@ void MainWindow::on_pbShowGraph_clicked()
         return;
     }
 
-
-
-    QWidget *chartWidget = new QWidget(this, Qt::Tool);
+    QWidget *chartWidget = new QWidget(this, Qt::Dialog);
 
     QVBoxLayout *VB = new QVBoxLayout(chartWidget);
 
@@ -912,9 +877,32 @@ void MainWindow::on_pbShowGraph_clicked()
     HBchart->addWidget(chartView);
     VB->addLayout(HBchart);
 
+    const QString pbStyle = "QPushButton {                                                                  \
+                                border: 2px solid #8f8f91;                                                  \
+                                border-radius: 6px;                                                         \
+                                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,               \
+                                stop: 0 #f6f7fa, stop: 1 #dadbde);                                          \
+                                min-width: 80px;                                                            \
+                                min-height: 20px;                                                           \
+                            }                                                                               \
+                                                                                                            \
+                            QPushButton:pressed {                                                           \
+                                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,               \
+                                stop: 0 #dadbde, stop: 1 #f6f7fa);                                          \
+                            }                                                                               \
+                                                                                                            \
+                            QPushButton:flat {                                                              \
+                                border: none;                                                               \
+                            }                                                                               \
+                                                                                                            \
+                            QPushButton:default {                                                           \
+                                border-color: navy;                                                         \
+                            }";
+
     if (type != SECTORCHART && type != STOCKCHART)
     {
         QPushButton *zoomReset = new QPushButton("Zoom reset", chartWidget);
+        zoomReset->setStyleSheet(pbStyle);
         connect(zoomReset, &QPushButton::clicked, [chartView]( )
                 {
                     chartView->chart()->zoomReset();
@@ -927,6 +915,7 @@ void MainWindow::on_pbShowGraph_clicked()
     }        
 
     QPushButton *makeImageBtn = new QPushButton("Save PNG", chartWidget);
+    makeImageBtn->setStyleSheet(pbStyle);
     connect(makeImageBtn, &QPushButton::clicked, [chartView, chartWidget]()
             {
                 QString fileName = QFileDialog::getSaveFileName(chartWidget,
