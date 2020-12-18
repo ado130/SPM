@@ -22,5 +22,9 @@
         <file alias="save.png">icons/icons8-save-100.png</file>
         <file alias="delete.png">icons/icons8-delete-bin-100.png</file>
         <file alias="update.png">icons/icons8-update-100.png</file>
+        <file alias="overview.png">icons/icons8-ratings-100.png</file>
+        <file alias="degiro.png">icons/icon-iphone-degiro.png</file>
+        <file alias="list.png">icons/icons8-summary-list-100.png</file>
+        <file alias="screener.png">icons/icons8-general-ledger-100.png</file>
     </qresource>
 </RCC>

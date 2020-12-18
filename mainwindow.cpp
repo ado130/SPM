@@ -1029,8 +1029,6 @@ void MainWindow::on_pbShowGraph_clicked()
 
         table->resizeColumnsToContents();
 
-        table->setMinimumHeight(table->rowHeight(0)*14);
-
         int tableWidth = 0;
 
         for (int colTable = 0; colTable<table->columnCount(); ++colTable)
@@ -1039,6 +1037,8 @@ void MainWindow::on_pbShowGraph_clicked()
         }
 
         table->setMinimumWidth(tableWidth);
+        table->setFixedHeight(table->verticalHeader()->length() + table->horizontalHeader()->height() + 5);
+        table->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
         QHBoxLayout *HBTable = new QHBoxLayout();
         HBTable->addWidget(table);

@@ -426,89 +426,10 @@ QChartView* Calculation::getChartView(const eCHARTTYPE &type, const QDate &from,
         return nullptr;
     }
 
-    switch(type)
-    {
-    case DEPOSITCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case INVESTEDCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case DIVIDENDCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case MONTHDIVIDEND:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case MONTHCOMPAREDIVDEND:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case YEARDIVIDENDCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case SECTORCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case STOCKCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-
-    case ISINCHART:
-    {
-        view = new QChartView(chart);
-        view->setRenderHint(QPainter::Antialiasing);
-        view->setMinimumSize(512, 512);
-        view->setRubberBand(QChartView::HorizontalRubberBand);
-    }
-    break;
-    }
+    view = new QChartView(chart);
+    view->setRenderHint(QPainter::Antialiasing);
+    view->setRubberBand(QChartView::HorizontalRubberBand);
+    view->setMinimumSize(512, 256);
 
     return view;
 }
