@@ -74,14 +74,14 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
     double dividends = 0.0;
     double divTax = 0.0;
     double fees = 0.0;
-    QList<QString> keys = stockList.keys();
+    QList<QString> isinList = stockList.keys();
 
     double balance = 0.0;
     QDateTime lastDate = stockList.values().first().first().dateTime;
 
-    for(const QString &key : keys)
+    for(const QString &ISIN : isinList)
     {
-        for(const sSTOCKDATA &stock : stockList.value(key))
+        for(const sSTOCKDATA &stock : stockList.value(ISIN))
         {
             if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
@@ -109,7 +109,7 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 
                 case BUY:
                 {
-                    invested += database->getExchangePrice(stock.currency, stock.price) * stock.count;
+                    //invested += database->getExchangePrice(stock.currency, stock.price) * stock.count;
                     transFees += database->getExchangePrice(stock.currency, stock.fee);
                 }
                 break;
@@ -134,6 +134,14 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
                 }
                 break;
             }
+        }
+
+        int totalCount = stockData->getTotalCount(ISIN, from, to);
+
+        if(totalCount > 0 || database->getSetting().showSoldPositions)
+        {
+            double tmp = stockData->getTotalPrice(ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
+            invested += tmp;
         }
     }
 
@@ -378,7 +386,7 @@ MonthDividendDataType Calculation::getMonthDividendData(const QDate &from, const
 
             if(found == vector.end())
             {
-                vector.insert(m, qMakePair(m, 0.0));
+                vector.insert(m-1, qMakePair(m, 0.0));
             }
         }
 
@@ -729,7 +737,7 @@ QChart *Calculation::getChart(const eCHARTTYPE &type, const QDate &from, const Q
                         if (status)
                         {
                             tooltip->setText(QString("%1: %2%3").arg(barset->label()).arg(currencySign).arg(barset->at(index)));
-                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2 - 0.5*dividendSeries->barWidth(), 0));
+                            tooltip->setAnchor(QPointF(dividendSeries->barWidth()*index*2, 0));
                             tooltip->setZValue(11);
                             tooltip->updateGeometry();
                             tooltip->show();

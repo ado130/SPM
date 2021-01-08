@@ -552,22 +552,36 @@ void MainWindow::fillOverviewTable()
         ui->tableOverview->setItem(pos, 10, new QTableWidgetItem(QString("%L1").arg(row.totalOnlinePrice, 0, 'f', 2) + " " + currencySign));
         ui->tableOverview->setItem(pos, 11, new QTableWidgetItem(QString("%L1").arg(row.dividend, 0, 'f', 2) + " " + currencySign));
 
+        QLinearGradient greenGradient(-400, -400, 400, 400);
+        greenGradient.setColorAt(0, QColor(124, 252, 0));
+        greenGradient.setColorAt(0.27, QColor(0,100,0));
+        greenGradient.setColorAt(0.44, QColor(124, 252, 0));
+        greenGradient.setColorAt(0.76, QColor(0,100,0));
+        greenGradient.setColorAt(1, QColor(124, 252, 0));
+
+        QLinearGradient redGradient(-400, -400, 400, 400);
+        redGradient.setColorAt(0, QColor(255, 0, 0));
+        redGradient.setColorAt(0.27, QColor(220,20,60));
+        redGradient.setColorAt(0.44, QColor(255, 0, 0));
+        redGradient.setColorAt(0.76, QColor(220,20,60));
+        redGradient.setColorAt(1, QColor(255, 0, 0));
+
         if (row.totalOnlinePrice > row.totalStockPrice)
         {
-            ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::green));
+            ui->tableOverview->item(pos, 10)->setBackground(greenGradient);
         }
         else if (row.totalOnlinePrice < row.totalStockPrice)
         {
-            ui->tableOverview->item(pos, 10)->setBackground(QColor(Qt::red));
+            ui->tableOverview->item(pos, 10)->setBackground(redGradient);
         }
 
         if (row.averageBuyPrice < row.onlineStockPrice)
         {
-            ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::green));
+            ui->tableOverview->item(pos, 6)->setBackground(greenGradient);
         }
         else if (row.averageBuyPrice > row.onlineStockPrice)
         {
-            ui->tableOverview->item(pos, 6)->setBackground(QColor(Qt::red));
+            ui->tableOverview->item(pos, 6)->setBackground(redGradient);
         }
 
         pos++;
@@ -1924,7 +1938,7 @@ void MainWindow::on_pbAddTicker_clicked()
     QString ticker = ui->leTicker->text().trimmed();
     ui->leTicker->setText(ticker.toUpper());
 
-    lastLoadedTable.row.clear();
+    lastLoadedTableData.row.clear();
     lastRequestSource = FINVIZ;
     connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
     QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
@@ -1954,17 +1968,16 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
             case FINVIZ:
                 table = screener->finvizParse(QString(data));
                 table.info.ticker = ticker;
-                lastLoadedTable.info = table.info;
+                lastLoadedTableData.info = table.info;
                 break;
             case YAHOO:
                 table = screener->yahooParse(QString(data));
                 break;
         }
 
-
         for (const QString &key : table.row.keys())
         {
-            lastLoadedTable.row.insert(key, table.row.value(key));
+            lastLoadedTableData.row.insert(key, table.row.value(key));
         }
 
         if (lastRequestSource == FINVIZ)
@@ -1991,8 +2004,8 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
                 ISIN = it->ISIN;
             }
 
-            stockData->saveOnlineStockInfo(ISIN, lastLoadedTable);
-            updateStockDataSlot(ISIN, lastLoadedTable);
+            stockData->saveOnlineStockInfo(ISIN, lastLoadedTableData);
+            updateStockDataSlot(ISIN, lastLoadedTableData);
             dataLoaded();
             emit refreshTickers(ticker);
             setStatus(QString("Ticker %1 has been updated.").arg(ticker));
@@ -2019,7 +2032,7 @@ void MainWindow::dataLoaded()
     {
         bParamFound = false;
 
-        for (int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
+        for (int table = 0; table<lastLoadedTableData.row.count() && !bParamFound; ++table)
         {
             for (int info = 0; info<infoData.count() && !bParamFound; ++info)
             {
@@ -2027,23 +2040,23 @@ void MainWindow::dataLoaded()
                 {
                     if (infoData.at(info) == "Industry")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.industry));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTableData.info.industry));
                     }
                     else if (infoData.at(info) == "Ticker")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.ticker));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTableData.info.ticker));
                     }
                     else if (infoData.at(info) == "Stock name")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.stockName));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTableData.info.stockName));
                     }
                     else if (infoData.at(info) == "Sector")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.sector));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTableData.info.sector));
                     }
                     else if (infoData.at(info) == "Country")
                     {
-                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTable.info.country));
+                        tickerLine.push_back(qMakePair(infoData.at(info), lastLoadedTableData.info.country));
                     }
 
                     bParamFound = true;
@@ -2059,11 +2072,11 @@ void MainWindow::dataLoaded()
     {
         bParamFound = false;
 
-        for (int table = 0; table<lastLoadedTable.row.count() && !bParamFound; ++table)
+        for (int table = 0; table<lastLoadedTableData.row.count() && !bParamFound; ++table)
         {
-            if (lastLoadedTable.row.contains(screenerParams.at(param)))
+            if (lastLoadedTableData.row.contains(screenerParams.at(param)))
             {
-                tickerLine.push_back(qMakePair(screenerParams.at(param), lastLoadedTable.row.value(screenerParams.at(param))));
+                tickerLine.push_back(qMakePair(screenerParams.at(param), lastLoadedTableData.row.value(screenerParams.at(param))));
 
                 bParamFound = true;
             }
@@ -2989,12 +3002,12 @@ void MainWindow::fillISINTable()
                         }
                         else
                         {
-                            lastLoadedTable.row.clear();
+                            lastLoadedTableData.row.clear();
 
                             connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
                             QString request;
-                            // ToDo: might not be correct, the current stock is ETF
+
                             if (isinList.at(row).sector == "ETF")
                             {
                                 lastRequestSource = YAHOO;
@@ -3201,29 +3214,15 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
     {
         it->lastUpdate = QDateTime::currentDateTime();
 
-        it->sector = table.info.sector;
-        it->industry = table.info.industry;
+        if(it->sector != "ETF")
+        {
+            it->sector = table.info.sector;
+            it->industry = table.info.industry;
+        }
 
         database->setIsinList(isinList);
 
         fillISINTable();
-
-        // First time
-        /*if (it->sector.isEmpty() || it->industry.isEmpty())
-        {
-            it->sector = table.info.sector;
-            it->industry = table.info.industry;
-
-            database->setIsinList(isinList);
-
-            fillISINTable();
-        }
-        else
-        {
-            database->setIsinList(isinList);
-            fillISINTable();
-        }*/
-
         fillOverviewTable();
     }
 }

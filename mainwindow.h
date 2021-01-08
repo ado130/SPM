@@ -111,7 +111,7 @@ private:
      * @brief temporaryLoadedTable
      * @details sTABLE for last loaded ticker
      */
-    sONLINEDATA lastLoadedTable;
+    sONLINEDATA lastLoadedTableData;
 
     QVector<ScreenerTab*> screenerTabs;
     int currentScreenerIndex;

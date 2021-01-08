@@ -1626,7 +1626,7 @@ QMenuBar::item:pressed
    </property>
    <widget class="QMenu" name="menuFIle">
     <property name="title">
-     <string>FIle</string>
+     <string>File</string>
     </property>
     <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
