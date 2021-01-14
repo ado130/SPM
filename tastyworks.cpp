@@ -140,7 +140,7 @@ QVector<sTASTYWORKSRAW> Tastyworks::getRawData() const
 
 bool Tastyworks::loadRawData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + TASTYWORKSRAWFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + TASTYWORKSRAWFILE);
 
     if(qFile.exists())
     {
@@ -158,7 +158,7 @@ bool Tastyworks::loadRawData()
 
 void Tastyworks::saveRawData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + TASTYWORKSRAWFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + TASTYWORKSRAWFILE);
 
     if (qFile.open(QIODevice::WriteOnly))
     {

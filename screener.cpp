@@ -12,7 +12,7 @@ Screener::Screener(QObject *parent) : QObject(parent)
 
 void Screener::saveAllScreenerData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + SCREENERALLDATA);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + SCREENERALLDATA);
 
     if (qFile.open(QIODevice::WriteOnly))
     {
@@ -24,7 +24,7 @@ void Screener::saveAllScreenerData()
 
 void Screener::loadAllScreenerData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + SCREENERALLDATA);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + SCREENERALLDATA);
 
     if(qFile.exists())
     {

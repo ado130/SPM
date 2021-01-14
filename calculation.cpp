@@ -200,41 +200,51 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
         return table;
     }
 
-    QList<QString> keys = stockList.keys();
-    std::sort(keys.begin(), keys.end(),
+    QList<QString> isinList = stockList.keys();
+    std::sort(isinList.begin(), isinList.end(),
               [](QString a, QString b)
               {
                   return a < b;
               }
               );
 
-    for(const QString &key : keys)
+    for(const QString &ISIN : isinList)
     {
-        if( key.isEmpty() || stockList.value(key).count() == 0 ) continue;
+        if( ISIN.isEmpty() || stockList.value(ISIN).count() == 0 ) continue;
 
-        sSTOCKDATA stock = stockList.value(key).first();
+        //sSTOCKDATA stock = stockList.value(key).first();
+        auto values = stockList.value(ISIN);
+        auto stock = std::find_if(values.begin(), values.end(), [](sSTOCKDATA data)
+                     {
+                         return data.type == BUY;
+                     });
 
-        if(stock.stockName.toLower().contains("fundshare") ) continue;
+        if(stock == values.end())
+        {
+            continue;
+        }
+
+        if(stock->stockName.toLower().contains("fundshare") ) continue;
 
         sOVERVIEWTABLE row;
 
         // Check the total count
-        int totalCount = stockData->getTotalCount(stock.ISIN, from, to);
+        int totalCount = stockData->getTotalCount(ISIN, from, to);
 
         if(totalCount <= 0 && !database->getSetting().showSoldPositions) continue;
 
         row.totalCount = totalCount;
 
-        row.ISIN = stock.ISIN;
-        row.ticker = stock.ticker;
-        row.stockName = stock.stockName;
+        row.ISIN = ISIN;
+        row.ticker = stock->ticker;
+        row.stockName = stock->stockName;
 
         // Find sector
         const QVector<sISINDATA> isinList = database->getIsinList();
 
-        auto it = std::find_if(isinList.begin(), isinList.end(), [stock](sISINDATA a)
+        auto it = std::find_if(isinList.begin(), isinList.end(), [&ISIN](sISINDATA a)
                                {
-                                   return stock.ISIN == a.ISIN;
+                                   return ISIN == a.ISIN;
                                }
                                );
 
@@ -244,17 +254,18 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
         }
 
         // Get cached price and calculate total online price
-        QString cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Price");
+        QString cachedPrice = stockData->getCachedISINParam(ISIN, "Price");
 
         if(cachedPrice.isEmpty())
         {
             // ToDo the return price might be in EUR or USD or whatever
-            cachedPrice = stockData->getCachedISINParam(stock.ISIN, "Previous Close");
+            cachedPrice = stockData->getCachedISINParam(ISIN, "Previous Close");
         }
 
         if(!cachedPrice.isEmpty())
         {
-            row.onlineStockPrice = database->getExchangePrice(USD, cachedPrice.toDouble());
+            //row.onlineStockPrice = database->getExchangePrice(USD, cachedPrice.toDouble());
+            row.onlineStockPrice = database->getExchangePrice(stock->currency, cachedPrice.toDouble());
             row.totalOnlinePrice = row.onlineStockPrice*totalCount;
         }
         else
@@ -263,11 +274,11 @@ QVector<sOVERVIEWTABLE> Calculation::getOverviewTable(const QDate &from, const Q
             row.totalOnlinePrice = 0.0;
         }
 
-        row.totalStockPrice = stockData->getTotalPrice(stock.ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
+        row.totalStockPrice = stockData->getTotalPrice(ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
         row.averageBuyPrice = row.totalStockPrice/totalCount;
 
-        row.totalFee = stockData->getTotalFee(stock.ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
-        row.dividend = stockData->getReceivedDividend(stock.ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
+        row.totalFee = stockData->getTotalFee(ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
+        row.dividend = stockData->getReceivedDividend(ISIN, from, to, database->getSetting().currency, database->getExchangeRatesFuncMap());
 
 
         table.push_back(row);

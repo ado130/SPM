@@ -34,18 +34,28 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
             chDelimeter = '.'; break;
     }
 
+    isRAWFileLoaded = false;
+
     bool isFirstLine = false;
 
     while (!file.atEnd())
     {
         QString line = file.readLine();
-        QStringList list = parseLine(line, chDelimeter);
 
         if(!isFirstLine)
         {
+            if(line.split(chDelimeter).count() != 12)
+            {
+                qDebug() << "Wrong input file!";
+                return;
+            }
+
             isFirstLine = true;
             continue;
         }
+
+        QStringList list = parseLine(line, chDelimeter);
+
 
         QDate d = QDate::fromString(list.at(0), "dd-MM-yyyy");
         QTime t = QTime::fromString(list.at(1), "hh:mm");
@@ -369,7 +379,7 @@ QVector<sDEGIRORAW> DeGiro::getRawData() const
 
 bool DeGiro::loadRawData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIRORAWFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + DEGIRORAWFILE);
 
     if(qFile.exists())
     {
@@ -387,7 +397,7 @@ bool DeGiro::loadRawData()
 
 void DeGiro::saveRawData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + DEGIRORAWFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + DEGIRORAWFILE);
 
     if (qFile.open(QIODevice::WriteOnly))
     {

@@ -382,7 +382,7 @@ double StockData::getTax(const QString &ticker, const QDateTime &date, const eST
 
 bool StockData::loadStockData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + STOCKFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + STOCKFILE);
 
     if(qFile.exists())
     {
@@ -400,7 +400,7 @@ bool StockData::loadStockData()
 
 void StockData::saveStockData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + STOCKFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + STOCKFILE);
 
     if (qFile.open(QIODevice::WriteOnly))
     {
@@ -431,7 +431,7 @@ QString StockData::getCachedISINParam(const QString &ISIN, const QString &param)
 
 void StockData::loadOnlineStockInfo()
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/cache/";
 
     QDir dir(path);
 
@@ -548,7 +548,7 @@ void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &tabl
 
     QJsonDocument doc(obj);
 
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/cache/";
 
     QDir dir(path);
 

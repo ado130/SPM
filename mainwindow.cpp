@@ -1551,10 +1551,10 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 *
 ********************************/
 
-void MainWindow::loadDegiroCSVslot()
+void MainWindow::loadDegiroCSVslot(const QString &path, const eDELIMETER &delimeter)
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    degiro->loadCSV(database->getSetting().degiroCSV, database->getSetting().degiroCSVdelimeter);
+    degiro->loadCSV(path, delimeter);
 
     if (degiro->getIsRAWFile())
     {

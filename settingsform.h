@@ -49,7 +49,7 @@ signals:
     void setScreenerParams(QVector<sSCREENERPARAM> params);
     void loadOnlineParameters();
 
-    void loadDegiroCSV();
+    void loadDegiroCSV(const QString &path, const eDELIMETER &delimeter);
     void loadTastyworksCSV();
 
     void fillOverview();

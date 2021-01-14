@@ -67,6 +67,7 @@ private:
 
     bool loadIsinData();
     void saveIsinData();
+    bool copyDirectoryFiles(const QString &fromDir, const QString &toDir, const bool &coverFileIfExist, const bool &removeOldFiles);
 };
 
 QDataStream& operator<<(QDataStream& out, const sSCREENERPARAM& param);

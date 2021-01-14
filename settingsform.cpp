@@ -120,17 +120,33 @@ void SettingsForm::updateScreenerParamsSlot(QVector<sSCREENERPARAM> params)
 
 void SettingsForm::on_pbDegiroPath_clicked()
 {
+    QString path = QCoreApplication::applicationDirPath();
+
+    const QString currentPath = ui->leDegiroCSV->text();
+
+    if(!currentPath.isEmpty())
+    {
+        QDir dir = QFileInfo(currentPath).absoluteDir();
+        path = dir.absolutePath();
+    }
+
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open CSV File"),
-                                                    QCoreApplication::applicationDirPath(),
+                                                    path,
                                                     tr("CSV files (*.csv)"));
 
-    ui->leDegiroCSV->setText(fileName);
-    setting.degiroCSV = fileName;
+    if(!fileName.isEmpty())
+    {
+        ui->leDegiroCSV->setText(fileName);
+        setting.degiroCSV = fileName;
+    }
 }
 
 void SettingsForm::on_pbDegiroLoadCSV_clicked()
 {
-    emit loadDegiroCSV();
+    const QString currentPath = ui->leDegiroCSV->text();
+    const eDELIMETER delimeter = static_cast<eDELIMETER>(ui->cmDegiroCSV->currentIndex());
+
+    emit loadDegiroCSV(currentPath, delimeter);
 }
 
 void SettingsForm::on_pbTastyworksPath_clicked()

@@ -36,7 +36,7 @@ public Q_SLOTS:
     void parseOnlineParameters(const QByteArray data, QString statusCode);
     void loadOnlineParametersSlot();
     void setScreenerParamsSlot(QVector<sSCREENERPARAM> params);
-    void loadDegiroCSVslot();
+    void loadDegiroCSVslot(const QString &path, const eDELIMETER &delimeter);
     void loadTastyworksCSVslot();
     void setStatus(QString text);
     void setFilterSlot(QVector<sFILTER> list);

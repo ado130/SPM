@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDate>
+#include <QFileInfo>
 #include <QTime>
 #include <QDateTime>
 #include <QDir>
@@ -11,19 +12,37 @@
 
 Database::Database(QObject *parent) : QObject(parent)
 {
-    QString writablePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString writablePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
     if(writablePath.isEmpty())
     {
         qFatal("Cannot determine settings storage location");
     }
 
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    QDir localDir(writablePath);
 
-    if(!dir.exists())
+    if(!localDir.exists())
     {
-        dir.mkpath(".");
+        localDir.mkpath(".");
     }
+
+
+    // Copy content of old directory (Roaming in AppData) into local folder (Local in AppData)
+    QDir roamingDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+
+    if(roamingDir.exists())
+    {
+        bool b = copyDirectoryFiles(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation),
+                                    writablePath,
+                                    true,
+                                    true);
+
+        if(b)
+        {
+            roamingDir.removeRecursively();
+        }
+    }
+
 
     /*
      * Fill exchange rates function
@@ -56,7 +75,7 @@ Database::Database(QObject *parent) : QObject(parent)
 
 void Database::loadConfig()
 {
-    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE, QSettings::IniFormat);
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + CONFIGFILE, QSettings::IniFormat);
     setting.degiroCSV = settings.value("DeGiro/path", "").toString();
     setting.degiroCSVdelimeter = static_cast<eDELIMETER>(settings.value("DeGiro/delimeter", 0).toInt());
     setting.degiroAutoLoad = settings.value("DeGiro/Dautoload", false).toBool();
@@ -106,7 +125,7 @@ void Database::loadConfig()
 
 void Database::saveConfig()
 {
-    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + CONFIGFILE, QSettings::IniFormat);
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + CONFIGFILE, QSettings::IniFormat);
     settings.setValue("DeGiro/path", setting.degiroCSV);
     settings.setValue("DeGiro/delimeter", setting.degiroCSVdelimeter);
     settings.setValue("DeGiro/Dautoload", setting.degiroAutoLoad);
@@ -155,7 +174,7 @@ void Database::saveConfig()
 
 void Database::loadScreenParams()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + SCREENERPARAMSFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + SCREENERPARAMSFILE);
 
     if(qFile.exists())
     {
@@ -172,7 +191,7 @@ void Database::loadScreenParams()
 
 void Database::saveScreenerParams()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + SCREENERPARAMSFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + SCREENERPARAMSFILE);
 
     if (qFile.open(QIODevice::WriteOnly))
     {
@@ -340,7 +359,7 @@ void Database::setFilterList(const QVector<sFILTER> &value)
 
 void Database::loadFilterList()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + FILTERLISTFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + FILTERLISTFILE);
 
     if(qFile.exists())
     {
@@ -355,7 +374,7 @@ void Database::loadFilterList()
 
 void Database::saveFilterList()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + FILTERLISTFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + FILTERLISTFILE);
     if (qFile.open(QIODevice::WriteOnly))
     {
         QDataStream out(&qFile);
@@ -403,7 +422,7 @@ void Database::setIsinList(const QVector<sISINDATA> &value)
 
 bool Database::loadIsinData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + ISINFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + ISINFILE);
 
     if(qFile.exists())
     {
@@ -421,7 +440,7 @@ bool Database::loadIsinData()
 
 void Database::saveIsinData()
 {
-    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + ISINFILE);
+    QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + ISINFILE);
 
     if (qFile.open(QIODevice::WriteOnly))
     {
@@ -453,4 +472,52 @@ QDataStream &operator>>(QDataStream &in, sISINDATA &param)
     in >> param.lastUpdate;
 
     return in;
+}
+
+bool Database::copyDirectoryFiles(const QString &fromDir, const QString &toDir, const bool &coverFileIfExist, const bool &removeOldFiles)
+{
+    QDir sourceDir(fromDir);
+    QDir targetDir(toDir);
+    if(!targetDir.exists()){    /* if directory don't exists, build it */
+        if(!targetDir.mkdir(targetDir.absolutePath()))
+            return false;
+    }
+
+    QFileInfoList fileInfoList = sourceDir.entryInfoList();
+    //foreach(QFileInfo fileInfo, fileInfoList)
+    for(const QFileInfo &fileInfo : fileInfoList)
+    {
+        if(fileInfo.fileName() == "." || fileInfo.fileName() == "..")
+            continue;
+
+        if(fileInfo.isDir())    /* if it is directory, copy recursively*/
+        {
+            if(!copyDirectoryFiles(fileInfo.filePath(),
+                targetDir.filePath(fileInfo.fileName()),
+                coverFileIfExist,
+                removeOldFiles))
+                return false;
+        }
+        else
+        {
+            if(coverFileIfExist && targetDir.exists(fileInfo.fileName()))       /* if coverFileIfExist == true, remove old file in target dir */
+            {
+                targetDir.remove(fileInfo.fileName());
+            }
+
+            // files copy
+            if(!QFile::copy(fileInfo.filePath(),
+                targetDir.filePath(fileInfo.fileName())))
+            {
+                    return false;
+            }
+
+            if(removeOldFiles && sourceDir.exists(fileInfo.fileName()))         /* if removeOldFiles == true, remove old file in source dir */
+            {
+                sourceDir.remove(fileInfo.fileName());
+            }
+        }
+    }
+
+    return true;
 }
