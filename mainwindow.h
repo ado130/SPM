@@ -98,10 +98,10 @@ private:
     std::unique_ptr<Calculation> calculation;
     std::unique_ptr<Database> database;
     std::unique_ptr<DeGiro> degiro;
-    std::unique_ptr<DownloadManager> manager;
+    std::unique_ptr<Tastyworks> tastyworks;
+    std::unique_ptr<DownloadManager> downloadManager;
     std::unique_ptr<Screener> screener;
     std::unique_ptr<StockData> stockData;
-    std::unique_ptr<Tastyworks> tastyworks;
 
     QPointer<QProgressDialog> refreshProgressDlg;
 

@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
                               QMessageBox::Ok);
     }
 
-    manager = std::make_unique<DownloadManager> (this);
+    downloadManager = std::make_unique<DownloadManager> (this);
     database = std::make_unique<Database> (this);
     degiro = std::make_unique<DeGiro> (database->getSetting(), this);
     tastyworks = std::make_unique<Tastyworks> (this);
@@ -122,8 +122,8 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QApplication::setOverrideCursor(Qt::WaitCursor);
 
-        connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
-        manager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK,GBP");
+        connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
+        downloadManager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK,GBP");
     }
 
     /********************************
@@ -161,7 +161,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     currentScreenerIndex = database->getLastScreenerIndex();
 
-    if (currentScreenerIndex > -1)
+    //if (currentScreenerIndex > -1)
     {
         QVector<sSCREENER> allData = screener->getAllScreenerData();
 
@@ -200,6 +200,14 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         ui->pbRefresh->click();
     }
+
+
+
+    QTimer::singleShot(1000, [this]()
+                       {
+                            connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
+                            downloadManager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
+                       });
 
 
     ui->leTicker->installEventFilter(this);
@@ -396,7 +404,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
+    disconnect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
 
     if (!statusCode.contains("200"))
     {
@@ -423,8 +431,8 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 set.USD2GBP = rates["GBP"].toDouble();
                 database->setSettingSlot(set);
 
-                connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
-                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK,GBP");
+                connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
+                downloadManager.get()->execute("https://api.exchangeratesapi.io/latest?base=EUR&symbols=USD,CZK,GBP");
             }
             else if (jsonObject["base"].toString() == "EUR")
             {
@@ -437,8 +445,8 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
                 database->setSettingSlot(set);
 
 
-                connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
-                manager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD,EUR,GBP");
+                connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
+                downloadManager.get()->execute("https://api.exchangeratesapi.io/latest?base=CZK&symbols=USD,EUR,GBP");
             }
             else if (jsonObject["base"].toString() == "CZK")
             {
@@ -465,13 +473,13 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 
 void MainWindow::on_actionCheck_version_triggered()
 {
-    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
-    manager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
+    connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
+    downloadManager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
 }
 
 void MainWindow::checkVersion(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
+    disconnect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
 
     if (!statusCode.contains("200"))
     {
@@ -1442,8 +1450,8 @@ void MainWindow::on_pbAddRecord_clicked()
 
                     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-                    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
-                    manager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
+                    connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
+                    downloadManager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
                 }
             }
             );
@@ -1466,7 +1474,7 @@ void MainWindow::on_pbAddRecord_clicked()
 
 void MainWindow::addRecord(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
+    disconnect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
 
     if (!statusCode.contains("200"))
     {
@@ -1798,13 +1806,13 @@ void MainWindow::loadOnlineParametersSlot()
     screenerParams.clear();
     database->setScreenerParams(screenerParams);
 
-    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
-    manager.get()->execute("https://finviz.com/quote.ashx?t=T");
+    connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
+    downloadManager.get()->execute("https://finviz.com/quote.ashx?t=T");
 }
 
 void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode)
 {
-    disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
+    disconnect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
 
     if (!statusCode.contains("200"))
     {
@@ -1859,8 +1867,8 @@ void MainWindow::parseOnlineParameters(const QByteArray data, QString statusCode
         if (lastRequestSource == FINVIZ)
         {
             lastRequestSource = YAHOO;
-            connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
-            manager.get()->execute("https://finance.yahoo.com/quote/T/key-statistics");
+            connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::parseOnlineParameters);
+            downloadManager.get()->execute("https://finance.yahoo.com/quote/T/key-statistics");
         }
         else        // end
         {       
@@ -1940,9 +1948,9 @@ void MainWindow::on_pbAddTicker_clicked()
 
     lastLoadedTableData.row.clear();
     lastRequestSource = FINVIZ;
-    connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
+    connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
     QString request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
-    manager->execute(request);
+    downloadManager->execute(request);
 }
 
 void MainWindow::getData(const QByteArray data, QString statusCode)
@@ -1984,11 +1992,11 @@ void MainWindow::getData(const QByteArray data, QString statusCode)
         {
             lastRequestSource = YAHOO;
             QString request = QString("https://finance.yahoo.com/quote/%1/key-statistics").arg(ticker);
-            manager->execute(request);
+            downloadManager->execute(request);
         }
         else    // end
         {
-            disconnect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
+            disconnect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
             QString ISIN;
             QVector<sISINDATA> isinList = database->getIsinList();
@@ -3004,7 +3012,7 @@ void MainWindow::fillISINTable()
                         {
                             lastLoadedTableData.row.clear();
 
-                            connect(manager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
+                            connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::getData);
 
                             QString request;
 
@@ -3019,7 +3027,7 @@ void MainWindow::fillISINTable()
                                 request = QString("https://finviz.com/quote.ashx?t=%1").arg(ticker);
                             }
 
-                            manager->execute(request);
+                            downloadManager->execute(request);
                         }
                     }
                 }

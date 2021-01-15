@@ -10,6 +10,13 @@
    * Changed or Information
    ! Important - Take note!
 =======================================================
+=== Client Release 1.1.9.0 15 Jan 2021
+* Minor changes, code refactoring
+
+=== Client Release 1.1.8.0 14 Jan 2021
+- Fixed DeGiro CSV file import
+- Fixed overview info
+
 === Client Release 1.1.7.0 8 Jan 2021
 - Fixed overview info
 
