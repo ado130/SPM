@@ -1624,11 +1624,15 @@ QMenuBar::item:pressed
 	color: #fff;
 }</string>
    </property>
-   <widget class="QMenu" name="menuFIle">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionCSV_Import"/>
+    <addaction name="actionCSV_Export"/>
+    <addaction name="separator"/>
     <addaction name="actionSettings"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -1640,7 +1644,7 @@ QMenuBar::item:pressed
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionCheck_version"/>
    </widget>
-   <addaction name="menuFIle"/>
+   <addaction name="menuFile"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -1695,6 +1699,9 @@ QStatusBar::item
    <property name="text">
     <string>Settings</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionExit">
    <property name="icon">
@@ -1703,6 +1710,9 @@ QStatusBar::item
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -1721,6 +1731,30 @@ QStatusBar::item
    </property>
    <property name="text">
     <string>Check version</string>
+   </property>
+  </action>
+  <action name="actionCSV_Import">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/csvimport.png</normaloff>:/images/csvimport.png</iconset>
+   </property>
+   <property name="text">
+    <string>CSV Import</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="actionCSV_Export">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/images/csvexport.png</normaloff>:/images/csvexport.png</iconset>
+   </property>
+   <property name="text">
+    <string>CSV Export</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
  </widget>

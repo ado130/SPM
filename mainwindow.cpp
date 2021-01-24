@@ -1,8 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "settingsform.h"
 
+#include "customcsvimportform.h"
 #include "filterform.h"
+#include "settingsform.h"
 
 #include <QDebug>
 #include <QDesktopWidget>
@@ -319,6 +320,18 @@ void MainWindow::on_actionSettings_triggered()
     connect(dlg, &SettingsForm::fillOverview, this, &MainWindow::fillOverviewTable);
     connect(this, &MainWindow::updateScreenerParams, dlg, &SettingsForm::updateScreenerParamsSlot);
     dlg->open();
+}
+
+void MainWindow::on_actionCSV_Import_triggered()
+{
+    CustomCSVImportForm *dlg = new CustomCSVImportForm(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->open();
+}
+
+void MainWindow::on_actionCSV_Export_triggered()
+{
+
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()

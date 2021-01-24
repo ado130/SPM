@@ -85,6 +85,10 @@ private slots:
 
     void on_pbUpdate_clicked();
 
+    void on_actionCSV_Import_triggered();
+
+    void on_actionCSV_Export_triggered();
+
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);

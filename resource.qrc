@@ -26,5 +26,7 @@
         <file alias="degiro.png">icons/icon-iphone-degiro.png</file>
         <file alias="list.png">icons/icons8-summary-list-100.png</file>
         <file alias="screener.png">icons/icons8-general-ledger-100.png</file>
+        <file alias="csvexport.png">icons/icons8-export-csv-100.png</file>
+        <file alias="csvimport.png">icons/icons8-import-csv-100.png</file>
     </qresource>
 </RCC>

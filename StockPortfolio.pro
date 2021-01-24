@@ -45,6 +45,7 @@ CONFIG += c++17
 SOURCES += \
         calculation.cpp \
         callout.cpp \
+        customcsvimportform.cpp \
         database.cpp \
         degiro.cpp \
         downloadmanager.cpp \
@@ -61,6 +62,7 @@ SOURCES += \
 HEADERS += \
         calculation.h \
         callout.h \
+        customcsvimportform.h \
         database.h \
         degiro.h \
         downloadmanager.h \
@@ -75,6 +77,7 @@ HEADERS += \
         tastyworks.h
 
 FORMS += \
+        customcsvimportform.ui \
         filterform.ui \
         mainwindow.ui \
         screenerform.ui \
