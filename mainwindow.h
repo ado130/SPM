@@ -89,6 +89,8 @@ private slots:
 
     void on_actionCSV_Export_triggered();
 
+    void on_cbHideValues_toggled(bool checked);
+
 signals:
     void updateScreenerParams(QVector<sSCREENERPARAM> params);
     void refreshTickers(QString ticker);
@@ -183,5 +185,34 @@ private:
     void createProgressDialog(int min, int max);
     void updateProgressDialog(int val);
 };
+
+
+
+class MyLineEdit : public QLineEdit
+{
+    Q_OBJECT
+
+public:
+    explicit MyLineEdit(const QString &contents, QWidget *parent = nullptr) : QLineEdit(contents, parent)
+    {
+        QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
+        shadowEffect->setBlurRadius(25.0);
+        shadowEffect->setColor(palette().color(QPalette::Shadow));
+        shadowEffect->setOffset(0.0);
+
+        setGraphicsEffect(shadowEffect);
+    }
+
+    explicit MyLineEdit(QWidget *parent = nullptr) : QLineEdit(parent)
+    {
+        QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
+        shadowEffect->setBlurRadius(25.0);
+        shadowEffect->setColor(palette().color(QPalette::Shadow));
+        shadowEffect->setOffset(0.0);
+
+        setGraphicsEffect(shadowEffect);
+    }
+};
+
 
 #endif // MAINWINDOW_H

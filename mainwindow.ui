@@ -80,7 +80,7 @@ QTabBar::close-button {
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -188,6 +188,13 @@ QGroupBox::title {
                </property>
               </spacer>
              </item>
+             <item>
+              <widget class="QCheckBox" name="cbHideValues">
+               <property name="text">
+                <string>Hide</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -203,7 +210,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leDeposit">
+              <widget class="MyLineEdit" name="leDeposit">
                <property name="toolTip">
                 <string>Deposited money</string>
                </property>
@@ -225,7 +232,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leWithdrawal">
+              <widget class="MyLineEdit" name="leWithdrawal">
                <property name="toolTip">
                 <string>Withdrawn money</string>
                </property>
@@ -247,7 +254,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leInvested">
+              <widget class="MyLineEdit" name="leInvested">
                <property name="toolTip">
                 <string>Invested money</string>
                </property>
@@ -271,7 +278,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leTransactionFee">
+              <widget class="MyLineEdit" name="leTransactionFee">
                <property name="toolTip">
                 <string>Transaction fees</string>
                </property>
@@ -293,7 +300,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leFees">
+              <widget class="MyLineEdit" name="leFees">
                <property name="toolTip">
                 <string>Account fees</string>
                </property>
@@ -315,7 +322,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePortfolio">
+              <widget class="MyLineEdit" name="lePortfolio">
                <property name="toolTip">
                 <string>Portfolio value</string>
                </property>
@@ -337,7 +344,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePerformance">
+              <widget class="MyLineEdit" name="lePerformance">
                <property name="toolTip">
                 <string>(Portfolio value + netto div - fees) / Deposit</string>
                </property>
@@ -363,7 +370,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leSell">
+              <widget class="MyLineEdit" name="leSell">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -382,7 +389,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leDividends">
+              <widget class="MyLineEdit" name="leDividends">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -401,7 +408,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leDivTax">
+              <widget class="MyLineEdit" name="leDivTax">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -420,7 +427,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leDY">
+              <widget class="MyLineEdit" name="leDY">
                <property name="toolTip">
                 <string>Dividends / (Invested - Sold)</string>
                </property>
@@ -442,7 +449,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="leAccount">
+              <widget class="MyLineEdit" name="leAccount">
                <property name="toolTip">
                 <string>Deposit + Netto dividends + Sold - Invested - Fees - Withdrawal</string>
                </property>
@@ -801,7 +808,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePDFEUR2CZK">
+              <widget class="MyLineEdit" name="lePDFEUR2CZK">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -827,7 +834,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePDFUSD2CZK">
+              <widget class="MyLineEdit" name="lePDFUSD2CZK">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -853,7 +860,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePDFGBP2CZK">
+              <widget class="MyLineEdit" name="lePDFGBP2CZK">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -879,7 +886,7 @@ QGroupBox::title {
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lePDFName">
+              <widget class="MyLineEdit" name="lePDFName">
                <property name="styleSheet">
                 <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -971,7 +978,7 @@ QGroupBox::title {
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QLineEdit" name="leTicker">
+             <widget class="MyLineEdit" name="leTicker">
               <property name="maximumSize">
                <size>
                 <width>99</width>
@@ -1360,7 +1367,7 @@ QTabBar::close-button {
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_23">
             <item>
-             <widget class="QLineEdit" name="leISINISIN">
+             <widget class="MyLineEdit" name="leISINISIN">
               <property name="styleSheet">
                <string notr="true">QLineEdit {
 min-height: 30px;
@@ -1381,7 +1388,7 @@ min-height: 30px;
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_24">
             <item>
-             <widget class="QLineEdit" name="leISINTicker">
+             <widget class="MyLineEdit" name="leISINTicker">
               <property name="styleSheet">
                <string notr="true">QLineEdit {
 min-height: 30px;
@@ -1402,7 +1409,7 @@ min-height: 30px;
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_25">
             <item>
-             <widget class="QLineEdit" name="leISINName">
+             <widget class="MyLineEdit" name="leISINName">
               <property name="styleSheet">
                <string notr="true">QLineEdit {
 min-height: 30px;
@@ -1423,7 +1430,7 @@ min-height: 30px;
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_26">
             <item>
-             <widget class="QLineEdit" name="leISINSector">
+             <widget class="MyLineEdit" name="leISINSector">
               <property name="styleSheet">
                <string notr="true">QLineEdit {
 min-height: 30px;
@@ -1444,7 +1451,7 @@ min-height: 30px;
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_27">
             <item>
-             <widget class="QLineEdit" name="leISINIndustry">
+             <widget class="MyLineEdit" name="leISINIndustry">
               <property name="styleSheet">
                <string notr="true">QLineEdit {
 min-height: 30px;
@@ -1570,7 +1577,7 @@ min-height: 30px;
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="leStatus">
+       <widget class="MyLineEdit" name="leStatus">
         <property name="styleSheet">
          <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -1759,6 +1766,13 @@ QStatusBar::item
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>MyLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>mainwindow.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resource.qrc"/>
  </resources>

@@ -5,8 +5,10 @@
 #include "filterform.h"
 #include "settingsform.h"
 
+#include <QBrush>
 #include <QDebug>
 #include <QDesktopWidget>
+#include <QRadialGradient>
 #include <QHash>
 #include <QInputDialog>
 #include <QLabel>
@@ -1613,6 +1615,75 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
     QApplication::restoreOverrideCursor();
 }
 
+void MainWindow::on_cbHideValues_toggled(bool checked)
+{
+    if(checked)
+    {
+        ui->leDeposit->setEchoMode(QLineEdit::Password);
+        ui->leWithdrawal->setEchoMode(QLineEdit::Password);
+        ui->leInvested->setEchoMode(QLineEdit::Password);
+        ui->leTransactionFee->setEchoMode(QLineEdit::Password);
+        ui->leFees->setEchoMode(QLineEdit::Password);
+        ui->lePortfolio->setEchoMode(QLineEdit::Password);
+        ui->lePerformance->setEchoMode(QLineEdit::Password);
+        ui->leSell->setEchoMode(QLineEdit::Password);
+        ui->leDividends->setEchoMode(QLineEdit::Password);
+        ui->leDivTax->setEchoMode(QLineEdit::Password);
+        ui->leDY->setEchoMode(QLineEdit::Password);
+        ui->leAccount->setEchoMode(QLineEdit::Password);
+
+        QRadialGradient radialGrad(QPointF(1000, 1000), 1000);
+        radialGrad.setColorAt(0, Qt::gray);
+        radialGrad.setColorAt(0.5, Qt::white);
+        radialGrad.setColorAt(1, Qt::gray);
+
+        for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
+        {
+            for(int col = 5; col<ui->tableOverview->colorCount(); ++col)
+            {
+                QTableWidgetItem *passwordItem = ui->tableOverview->item(row, col);
+
+                if(passwordItem != nullptr)
+                {
+                    passwordItem->setData(Qt::UserRole, passwordItem->text());
+                    passwordItem->setText("******");
+                }
+            }
+        }
+
+        ui->cbHideValues->setText(tr("Show"));
+    }
+    else
+    {
+        ui->leDeposit->setEchoMode(QLineEdit::Normal);
+        ui->leWithdrawal->setEchoMode(QLineEdit::Normal);
+        ui->leInvested->setEchoMode(QLineEdit::Normal);
+        ui->leTransactionFee->setEchoMode(QLineEdit::Normal);
+        ui->leFees->setEchoMode(QLineEdit::Normal);
+        ui->lePortfolio->setEchoMode(QLineEdit::Normal);
+        ui->lePerformance->setEchoMode(QLineEdit::Normal);
+        ui->leSell->setEchoMode(QLineEdit::Normal);
+        ui->leDividends->setEchoMode(QLineEdit::Normal);
+        ui->leDivTax->setEchoMode(QLineEdit::Normal);
+        ui->leDY->setEchoMode(QLineEdit::Normal);
+        ui->leAccount->setEchoMode(QLineEdit::Normal);
+
+        for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
+        {
+            for(int col = 5; col<ui->tableOverview->colorCount(); ++col)
+            {
+                QTableWidgetItem *passwordItem = ui->tableOverview->item(row, col);
+
+                if(passwordItem != nullptr)
+                {
+                    passwordItem->setText(passwordItem->data(Qt::UserRole).toString());
+                }
+            }
+        }
+
+        ui->cbHideValues->setText(tr("Hide"));
+    }
+}
 
 /********************************
 *

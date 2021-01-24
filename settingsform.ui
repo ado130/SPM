@@ -98,7 +98,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leWidth">
+            <widget class="MyLineEdit" name="leWidth">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -120,7 +120,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="lePosX">
+            <widget class="MyLineEdit" name="lePosX">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -143,7 +143,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leHeight">
+            <widget class="MyLineEdit" name="leHeight">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -165,7 +165,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="lePosY">
+            <widget class="MyLineEdit" name="lePosY">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -284,7 +284,7 @@ QTabBar::close-button {
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="leLastUpdate">
+          <widget class="MyLineEdit" name="leLastUpdate">
            <property name="styleSheet">
             <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -309,7 +309,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leCZK2USD">
+            <widget class="MyLineEdit" name="leCZK2USD">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -332,7 +332,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leCZK2GBP">
+            <widget class="MyLineEdit" name="leCZK2GBP">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -355,7 +355,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leCZK2EUR">
+            <widget class="MyLineEdit" name="leCZK2EUR">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -382,7 +382,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leEUR2USD">
+            <widget class="MyLineEdit" name="leEUR2USD">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -405,7 +405,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leEUR2GBP">
+            <widget class="MyLineEdit" name="leEUR2GBP">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -428,7 +428,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leEUR2CZK">
+            <widget class="MyLineEdit" name="leEUR2CZK">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -455,7 +455,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leUSD2EUR">
+            <widget class="MyLineEdit" name="leUSD2EUR">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -478,7 +478,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leUSD2GBP">
+            <widget class="MyLineEdit" name="leUSD2GBP">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -501,7 +501,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leUSD2CZK">
+            <widget class="MyLineEdit" name="leUSD2CZK">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -528,7 +528,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leGBP2EUR">
+            <widget class="MyLineEdit" name="leGBP2EUR">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -551,7 +551,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leGBP2USD">
+            <widget class="MyLineEdit" name="leGBP2USD">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -574,7 +574,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leGBP2CZK">
+            <widget class="MyLineEdit" name="leGBP2CZK">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -601,7 +601,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leGBP2CZKDAP">
+            <widget class="MyLineEdit" name="leGBP2CZKDAP">
              <property name="statusTip">
               <string/>
              </property>
@@ -630,7 +630,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leUSD2CZKDAP">
+            <widget class="MyLineEdit" name="leUSD2CZKDAP">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -656,7 +656,7 @@ QTabBar::close-button {
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leEUR2CZKDAP">
+            <widget class="MyLineEdit" name="leEUR2CZKDAP">
              <property name="statusTip">
               <string/>
              </property>
@@ -776,7 +776,7 @@ QGroupBox::title {
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
-               <widget class="QLineEdit" name="leDegiroCSV">
+               <widget class="MyLineEdit" name="leDegiroCSV">
                 <property name="styleSheet">
                  <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -950,7 +950,7 @@ QGroupBox::title {
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_23">
               <item>
-               <widget class="QLineEdit" name="leTastyworksCSV">
+               <widget class="MyLineEdit" name="leTastyworksCSV">
                 <property name="styleSheet">
                  <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -1210,6 +1210,13 @@ QPushButton:default {
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>mainwindow.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
