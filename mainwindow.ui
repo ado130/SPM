@@ -80,7 +80,7 @@ QTabBar::close-button {
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <property name="iconSize">
        <size>
@@ -339,7 +339,7 @@ QGroupBox::title {
              <item>
               <widget class="QLineEdit" name="lePerformance">
                <property name="toolTip">
-                <string>(Portfolio value + div - fees) / Deposit</string>
+                <string>(Portfolio value + netto div - fees) / Deposit</string>
                </property>
                <property name="styleSheet">
                 <string notr="true">QLineEdit {

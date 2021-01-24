@@ -109,7 +109,6 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 
                 case BUY:
                 {
-                    //invested += database->getExchangePrice(stock.currency, stock.price) * stock.count;
                     transFees += database->getExchangePrice(stock.currency, stock.fee);
                 }
                 break;

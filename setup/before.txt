@@ -10,6 +10,10 @@
    * Changed or Information
    ! Important - Take note!
 =======================================================
+=== Client Release 1.2.0.0 24 Jan 2021
+- Fixed manually added records
++ Editable manualy added records
+
 === Client Release 1.1.9.0 15 Jan 2021
 * Minor changes, code refactoring
 

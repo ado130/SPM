@@ -61,6 +61,7 @@ Name: "slovak"; MessagesFile: "compiler:Languages\Slovak.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
+Name: "deletefiles"; Description: Remove any existing settings; Flags: unchecked
 
 [Files]
 Source: "..\build\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
@@ -78,3 +79,5 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[UninstallDelete]
+Type: filesandordirs; Name: {localappdata}\SPM;

@@ -626,7 +626,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     const QString ISIN = rowItem->text();
 
-    StockDataType stockList = stockData->getStockData();
+    const StockDataType stockList = stockData->getStockData();
     QVector<sSTOCKDATA> vector = stockList.value(ISIN);
 
     if (vector.count() == 0) return;
@@ -649,7 +649,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
 
     QStringList header;
-    header << "Date" << "Type" << "Count" << "Price" << "Fee" << "Delete";
+    header << tr("Date") << tr("Type") << tr("Count") << tr("Price") << tr("Fee") << tr("Delete");
     table->setColumnCount(header.count());
 
     table->setRowCount(0);
@@ -679,39 +679,52 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
         table->insertRow(pos);
 
-        QTableWidgetItem *item = new QTableWidgetItem;
-        item->setData(Qt::EditRole, stock.dateTime.date());
-        table->setItem(pos, 0, item);
+        QTableWidgetItem *dateTimeItem = new QTableWidgetItem;
+        dateTimeItem->setFlags(Qt::ItemIsEnabled);
+        dateTimeItem->setData(Qt::EditRole, stock.dateTime.date());
+        table->setItem(pos, 0, dateTimeItem);
 
-        double price = 0.0;
-        double fee = 0.0;
-
-        price = database->getExchangePrice(stock.currency, stock.price) * stock.count;
-        fee = database->getExchangePrice(stock.currency, stock.fee);
+        QTableWidgetItem *typeItem = new QTableWidgetItem;
+        typeItem->setFlags(Qt::ItemIsEnabled);
 
         switch(stock.type)
         {
-            case DEPOSIT: table->setItem(pos, 1, new QTableWidgetItem("Deposit"));
+            case DEPOSIT: typeItem->setText(tr("Deposit"));
                 break;
-            case BUY: table->setItem(pos, 1, new QTableWidgetItem("Buy"));
+            case BUY: typeItem->setText(tr("Buy"));
                 break;
-            case SELL: table->setItem(pos, 1, new QTableWidgetItem("Sell"));
+            case SELL: typeItem->setText(tr("Sell"));
                 break;
-            case DIVIDEND: table->setItem(pos, 1, new QTableWidgetItem("Dividend"));
+            case DIVIDEND: typeItem->setText(tr("Dividend"));
                 break;
-            case TAX: table->setItem(pos, 1, new QTableWidgetItem("Tax"));
+            case TAX: typeItem->setText(tr("Tax"));
                 break;
-            case FEE: table->setItem(pos, 1, new QTableWidgetItem("Fee"));
+            case FEE: typeItem->setText(tr("Fee"));
                 break;
-            case TRANSACTIONFEE: table->setItem(pos, 1, new QTableWidgetItem("Transaction fee"));
+            case TRANSACTIONFEE: typeItem->setText(tr("Transaction fee"));
                 break;
-            case WITHDRAWAL: table->setItem(pos, 1, new QTableWidgetItem("Withdrawal"));
+            case WITHDRAWAL: typeItem->setText(tr("Withdrawal"));
                 break;
         }
 
-        table->setItem(pos, 2, new QTableWidgetItem(QString::number(stock.count)));
-        table->setItem(pos, 3, new QTableWidgetItem(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign));
-        table->setItem(pos, 4, new QTableWidgetItem(QString("%L1").arg(abs(fee), 0, 'f', 2) + " " + currencySign));
+        table->setItem(pos, 1, typeItem);
+
+        QTableWidgetItem *countItem = new QTableWidgetItem;
+        countItem->setFlags(stock.source==MANUALLY ? Qt::ItemIsEnabled|Qt::ItemIsEditable : Qt::ItemIsEnabled);
+        countItem->setText(QString::number(stock.count));
+        table->setItem(pos, 2, countItem);
+
+        double price = database->getExchangePrice(stock.currency, stock.price); //* stock.count;
+        QTableWidgetItem *priceItem = new QTableWidgetItem;
+        priceItem->setFlags(stock.source==MANUALLY ? Qt::ItemIsEnabled|Qt::ItemIsEditable : Qt::ItemIsEnabled);
+        priceItem->setText(QString("%L1").arg(abs(price), 0, 'f', 2) + " " + currencySign);
+        table->setItem(pos, 3, priceItem);
+
+        double fee = database->getExchangePrice(stock.currency, stock.fee);
+        QTableWidgetItem *feeItem = new QTableWidgetItem;
+        feeItem->setFlags(stock.source==MANUALLY ? Qt::ItemIsEnabled|Qt::ItemIsEditable : Qt::ItemIsEnabled);
+        feeItem->setText(QString("%L1").arg(abs(fee), 0, 'f', 2) + " " + currencySign);
+        table->setItem(pos, 4, feeItem);
 
 
         QPushButton *pbDelete = new QPushButton(table);
@@ -811,6 +824,54 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     QHBoxLayout *HBTable = new QHBoxLayout();
     HBTable->addWidget(table);
     VB->addLayout(HBTable);
+
+
+
+    connect(table, &QTableWidget::itemDoubleClicked, [this, ISIN, header](QTableWidgetItem *item)
+                       {
+                            if(item->flags() & Qt::ItemIsEditable)
+                            {
+                                const QString previousText = item->text();
+
+                                bool ok;
+                                QString newText = QInputDialog::getText(this,
+                                                                        tr("Change ") + header[item->column()],
+                                                                        header[item->column()],
+                                                                        QLineEdit::Normal,
+                                                                        previousText,
+                                                                        &ok);
+
+                                if (ok && !newText.isEmpty())
+                                {
+                                    item->setText(newText);
+
+                                    const int row = item->row();
+
+                                    const StockDataType stockList = stockData->getStockData();
+                                    QVector<sSTOCKDATA> vector = stockList.value(ISIN);
+                                    sSTOCKDATA data = vector.at(row);
+
+                                    switch(item->column())
+                                    {
+                                        // Count
+                                        case 2: data.count = newText.toInt();
+                                            break;
+
+                                        // Price
+                                        case 3: data.price = newText.toDouble();
+                                            break;
+
+                                        // Fee
+                                        case 4: data.fee = newText.toDouble();
+                                            break;
+                                    }
+
+                                    vector[row] = data;
+
+                                    stockData->updateStockDataVector(ISIN, vector);
+                                }
+                            }
+                       });
 
 
     /************************
@@ -1304,7 +1365,7 @@ void MainWindow::on_pbAddRecord_clicked()
 
     QStringList isinWords;
     QStringList tickerWords;
-    QVector<sISINDATA> isinList = database->getIsinList();
+    const QVector<sISINDATA> isinList = database->getIsinList();
 
     for (const sISINDATA &key : qAsConst(isinList))
     {
@@ -1316,42 +1377,42 @@ void MainWindow::on_pbAddRecord_clicked()
     QVBoxLayout *VB = new QVBoxLayout(inputDlg);
 
     QHBoxLayout *HB1 = new QHBoxLayout();
-    QLabel *label1 = new QLabel("Date", inputDlg);
+    QLabel *dateLabel = new QLabel("Date", inputDlg);
     QDateEdit *date = new QDateEdit(QDate::currentDate(), inputDlg);
-    HB1->addWidget(label1);
+    HB1->addWidget(dateLabel);
     HB1->addWidget(date);
 
     QHBoxLayout *HB2 = new QHBoxLayout();
-    QLabel *label2 = new QLabel("Type", inputDlg);
+    QLabel *typeLabel = new QLabel("Type", inputDlg);
 
     QComboBox *type = new QComboBox(inputDlg);
     QStringList typeList;
-    typeList << "Deposit" << "Withdrawal" << "Buy" << "Sell" << "Fee" << "Dividend";
+    typeList << tr("Deposit") << tr("Withdrawal") << tr("Buy") << tr("Sell") << tr("Fee") << tr("Dividend");
     type->addItems(typeList);
 
-    HB2->addWidget(label2);
+    HB2->addWidget(typeLabel);
     HB2->addWidget(type);
 
     QHBoxLayout *HB3 = new QHBoxLayout();
-    QLabel *label3 = new QLabel("Ticker", inputDlg);
+    QLabel *tickerLabel = new QLabel("Ticker", inputDlg);
 
     QLineEdit *leTicker = new QLineEdit(inputDlg);
     QCompleter *tickerCompleter = new QCompleter(tickerWords, this);
     tickerCompleter->setCaseSensitivity(Qt::CaseInsensitive);
     leTicker->setCompleter(tickerCompleter);
 
-    HB3->addWidget(label3);
+    HB3->addWidget(tickerLabel);
     HB3->addWidget(leTicker);
 
     QHBoxLayout *HB4 = new QHBoxLayout();
-    QLabel *label4 = new QLabel("ISIN", inputDlg);
+    QLabel *isinLabel = new QLabel("ISIN", inputDlg);
 
     QLineEdit *leISIN = new QLineEdit(inputDlg);
     QCompleter *isinCompleter = new QCompleter(isinWords, this);
     isinCompleter->setCaseSensitivity(Qt::CaseInsensitive);
     leISIN->setCompleter(isinCompleter);
 
-    HB4->addWidget(label4);
+    HB4->addWidget(isinLabel);
     HB4->addWidget(leISIN);
 
     // Autocomplete ticker or isin if exists
@@ -1396,40 +1457,40 @@ void MainWindow::on_pbAddRecord_clicked()
 
 
     QHBoxLayout *HB5 = new QHBoxLayout();
-    QLabel *label5 = new QLabel("Currency", inputDlg);
+    QLabel *currencyLabel = new QLabel("Currency", inputDlg);
     QComboBox *cmCurrency = new QComboBox(inputDlg);
     cmCurrency->addItem("CZK");
     cmCurrency->addItem("EUR");
     cmCurrency->addItem("USD");
-    HB5->addWidget(label5);
+    HB5->addWidget(currencyLabel);
     HB5->addWidget(cmCurrency);
 
     QHBoxLayout *HB6 = new QHBoxLayout();
-    QLabel *label6 = new QLabel("Count", inputDlg);
+    QLabel *countLabel = new QLabel("Count", inputDlg);
     QLineEdit *leCount = new QLineEdit(inputDlg);
     leCount->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
-    HB6->addWidget(label6);
+    HB6->addWidget(countLabel);
     HB6->addWidget(leCount);
 
     QHBoxLayout *HB7 = new QHBoxLayout();
-    QLabel *label7 = new QLabel("Price per pcs", inputDlg);
+    QLabel *priceLabel = new QLabel("Price per pcs", inputDlg);
     QLineEdit *lePrice = new QLineEdit(inputDlg);
-    lePrice->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
-    HB7->addWidget(label7);
+    lePrice->setValidator(new QDoubleValidator(0, 9999, 2, lePrice));
+    HB7->addWidget(priceLabel);
     HB7->addWidget(lePrice);
 
     QHBoxLayout *HB8 = new QHBoxLayout();
-    QLabel *label8 = new QLabel("Total fee/tax", inputDlg);
+    QLabel *feeLabel = new QLabel("Total fee/tax", inputDlg);
     QLineEdit *leFee = new QLineEdit(inputDlg);
-    leFee->setValidator(new QDoubleValidator(0, 9999, 2, leCount));
-    HB8->addWidget(label8);
+    leFee->setValidator(new QDoubleValidator(0, 9999, 2, leFee));
+    HB8->addWidget(feeLabel);
     HB8->addWidget(leFee);
 
     QPushButton *pbSave = new QPushButton("Add", inputDlg);
     connect(pbSave, &QPushButton::clicked,
             [=]()
             {
-                if ( leTicker->text().isEmpty() || leISIN->text().isEmpty() || leCount->text().isEmpty() || lePrice->text().isEmpty() || leFee->text().isEmpty() )
+                if ( (leTicker->text().isEmpty() || leISIN->text().isEmpty() || leCount->text().isEmpty() || lePrice->text().isEmpty() || leFee->text().isEmpty()) )
                 {
                     QMessageBox::critical(inputDlg,
                                           "Add record",
@@ -1438,18 +1499,19 @@ void MainWindow::on_pbAddRecord_clicked()
                 }
                 else
                 {
-                    lastRecord.dateTime = date->dateTime();
-                    lastRecord.type = static_cast<eSTOCKEVENTTYPE>(type->currentIndex());
-                    lastRecord.ticker = leTicker->text();
-                    lastRecord.ISIN = leISIN->text();
-                    lastRecord.currency = static_cast<eCURRENCY>(cmCurrency->currentIndex());
-                    lastRecord.count = leCount->text().toInt();
-                    lastRecord.price = lePrice->text().toDouble();
-                    lastRecord.fee = leFee->text().toDouble();
+                    manualAddedRecord.dateTime = date->dateTime();
+                    manualAddedRecord.type = static_cast<eSTOCKEVENTTYPE>(type->currentIndex());
+                    manualAddedRecord.ticker = leTicker->text();
+                    manualAddedRecord.ISIN = leISIN->text();
+                    manualAddedRecord.currency = static_cast<eCURRENCY>(cmCurrency->currentIndex());
+                    manualAddedRecord.count = leCount->text().toInt();
+                    manualAddedRecord.price = lePrice->text().toDouble();
+                    manualAddedRecord.fee = leFee->text().toDouble();
 
 
                     QApplication::setOverrideCursor(Qt::WaitCursor);
 
+                    lastRequestSource = FINVIZ;
                     connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::addRecord);
                     downloadManager.get()->execute("https://finviz.com/quote.ashx?t=" + leTicker->text());
                 }
@@ -1479,57 +1541,43 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
     if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
-        setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode).arg(lastRecord.ticker));
+        setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode).arg(manualAddedRecord.ticker));
     }
     else
     {
-        sSTOCKDATA row1;
-        row1.dateTime = lastRecord.dateTime;
-        row1.type = lastRecord.type;
-        row1.ticker = lastRecord.ticker;
-        row1.ISIN = lastRecord.ISIN;
-        row1.currency = lastRecord.currency;
-        row1.count = lastRecord.count;
-        row1.price = lastRecord.price;
-        row1.source = MANUALLY;
+        sSTOCKDATA valueRow;
+        valueRow.dateTime = manualAddedRecord.dateTime;
+        valueRow.type = manualAddedRecord.type;
+        valueRow.ticker = manualAddedRecord.ticker;
+        valueRow.ISIN = manualAddedRecord.ISIN;
+        valueRow.currency = manualAddedRecord.currency;
+        valueRow.count = manualAddedRecord.count;
+        valueRow.price = manualAddedRecord.price;
+        valueRow.fee = manualAddedRecord.fee;
+        valueRow.source = MANUALLY;
 
-        sSTOCKDATA row2;
-
-        if (!qFuzzyIsNull(lastRecord.fee))
-        {
-            row2.dateTime = lastRecord.dateTime;
-            row2.type = FEE;
-            row2.ticker = lastRecord.ticker;
-            row2.ISIN = lastRecord.ISIN;
-            row2.currency = lastRecord.currency;
-            row2.price = lastRecord.fee;
-            row1.source = MANUALLY;
-        }
 
         sONLINEDATA table = screener->finvizParse(QString(data));
-        row1.stockName = table.info.stockName;
-        row2.stockName = table.info.stockName;
-
+        valueRow.stockName = table.info.stockName;
 
         StockDataType stockList = stockData->getStockData();
 
-        QVector<sSTOCKDATA> vector = stockList[lastRecord.ISIN];
-        vector.append(row1);
+        //QVector<sSTOCKDATA> vector = stockList[manualAddedRecord.ISIN];
+        QVector<sSTOCKDATA> vector = stockList.value(manualAddedRecord.ISIN);
+        vector.append(valueRow);
 
-        if (!qFuzzyIsNull(lastRecord.fee))
-        {
-            vector.append(row2);
-        }
+        // The record is not in the ISIN list, add it
+        QVector<sISINDATA> isinList = database->getIsinList();
+        auto it = std::find_if(isinList.begin(), isinList.end(), [this](sISINDATA rec)
+                            {
+                                return rec.ISIN == manualAddedRecord.ISIN;
+                            });
 
-        // The record is not in the ISIN list, so add it
-        auto it = stockList.find(lastRecord.ISIN);
-
-        if (it == stockList.end())
-        {
-            QVector<sISINDATA> isinList = database->getIsinList();
-
+        if (it == isinList.end())
+        {            
             sISINDATA record;
-            record.ISIN = lastRecord.ISIN;
+            record.ISIN = manualAddedRecord.ISIN;
+            record.ticker = manualAddedRecord.ticker;
             record.name = table.info.stockName;
             record.sector = table.info.sector;
             record.industry = table.info.industry;
@@ -1541,7 +1589,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
             fillISINTable();
         }
 
-        stockList[lastRecord.ISIN] = vector;
+        stockList[manualAddedRecord.ISIN] = vector;
 
         stockData->setStockData(stockList);
 
@@ -2683,7 +2731,7 @@ void MainWindow::clickedScreenerTabSlot(int index)
 void MainWindow::on_pbFilter_clicked()
 {
     FilterForm *dlg = new FilterForm(database->getEnabledScreenerParams(), database->getFilterList(), this);
-    connect(dlg, SIGNAL(setFilter(QVector<sFILTER>)), this, SLOT(setFilterSlot(QVector<sFILTER>)));
+    connect(dlg, &FilterForm::setFilter, this, &MainWindow::setFilterSlot);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setModal(false);
     dlg->open();
@@ -2987,7 +3035,7 @@ void MainWindow::fillISINTable()
         pbUpdate->setStyleSheet("QPushButton {border-image:url(:/images/update.png);}");
         connect(pbUpdate, &QPushButton::clicked, [this, row]()
                 {
-                    QVector<sISINDATA> isinList = database->getIsinList();  // we need to load it again, since the ticker might be added in the meantime
+                    QVector<sISINDATA> isinList = database->getIsinList();  // needs to be loaded again, since the ticker might be added in the meantime
 
                     if (isinList.count() < row)
                     {
@@ -3114,20 +3162,20 @@ void MainWindow::on_tableISIN_cellDoubleClicked(int row, int column)
 
     QString previousText = clickedItem->text();
 
-    QString header = "Input";
+    QString header = tr("Input");
 
     switch(column)
     {
-        case 0: header = "ISIN:"; break;
-        case 1: header = "Ticker:"; break;
-        case 2: header = "Name:"; break;
-        case 3: header = "Sector:"; break;
-        case 4: header = "Industry:"; break;
+        case 0: header = tr("ISIN:"); break;
+        case 1: header = tr("Ticker:"); break;
+        case 2: header = tr("Name:"); break;
+        case 3: header = tr("Sector:"); break;
+        case 4: header = tr("Industry:"); break;
     }
 
     bool ok;
     QString newText = QInputDialog::getText(this,
-                                         "Change " + header,
+                                         tr("Change ") + header,
                                          header,
                                          QLineEdit::Normal,
                                          previousText,

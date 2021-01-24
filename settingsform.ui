@@ -73,7 +73,7 @@ QTabBar::close-button {
 </string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -872,7 +872,10 @@ QPushButton:default {
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="gbDegiro_2">
+        <widget class="QGroupBox" name="gbTastyworks">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="styleSheet">
           <string notr="true">QGroupBox {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,

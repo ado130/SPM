@@ -123,7 +123,7 @@ private:
      * @brief lastRecord
      * @details last manualy added record
      */
-    sNEWRECORD lastRecord;
+    sNEWRECORD manualAddedRecord;
 
 
     void centerAndResize();
