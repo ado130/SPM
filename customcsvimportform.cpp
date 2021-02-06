@@ -1,18 +1,48 @@
 #include "customcsvimportform.h"
 #include "ui_customcsvimportform.h"
 
-CustomCSVImportForm::CustomCSVImportForm(QWidget *parent) :
+CustomCSVImportForm::CustomCSVImportForm(eCUSTOMCSVACTION action, QWidget *parent, StockDataType *data) :
     QDialog(parent),
     ui(new Ui::CustomCSVImportForm)
 {
     ui->setupUi(this);
+
+    this->action = action;
+
+    switch (action)
+    {
+        case IMPORTCSV:
+        {
+            ui->pbLoad->setText(tr("Load"));
+        }
+        break;
+
+        case EXPORTCSV:
+        {
+            ui->pbLoad->setText(tr("Export"));
+            ui->label_2->setVisible(false);
+            ui->sbSkipLines->setVisible(false);
+            ui->label_3->setVisible(false);
+            ui->cmDateType->setVisible(false);
+            fillTable(data);
+        }
+        break;
+    }
 
     loadedFile = nullptr;
 
     connect(ui->cmDelimeter, &QComboBox::currentIndexChanged, this, &CustomCSVImportForm::loadCSV);
     connect(ui->sbSkipLines, &QSpinBox::valueChanged, this, &CustomCSVImportForm::loadCSV);
     connect(ui->cbHeader, &QCheckBox::stateChanged, this, &CustomCSVImportForm::loadCSV);
-    connect(ui->cmDateType, &QComboBox::currentIndexChanged, this, &CustomCSVImportForm::checkTableColumns);
+
+    connect(ui->cmDateType,
+            &QComboBox::currentIndexChanged,
+            [this](const int &index)
+            {
+                selectedDateType = index;
+                validateTableColumns();
+            });
+
 
     ui->table->horizontalHeader()->setVisible(true);
     ui->table->verticalHeader()->setVisible(true);
@@ -62,6 +92,9 @@ CustomCSVImportForm::CustomCSVImportForm(QWidget *parent) :
     typeTypes.append("Dividend (D)");
     typeTypes.append("Deposit (De)");
     typeTypes.append("Withdrawal (W)");
+    typeTypes.append("Fee (F)");
+    typeTypes.append("Dividend (Di)");
+    typeTypes.append("Tax (T)");
 
     ui->cmDateType->addItems(dateTypes);
 }
@@ -78,35 +111,150 @@ CustomCSVImportForm::~CustomCSVImportForm()
 
 void CustomCSVImportForm::on_pbLoad_clicked()
 {
-    const QString filePath = QFileDialog::getOpenFileName(this,
-                                                        tr("Open CSV File"),
-                                                        "",
-                                                        tr("CSV files (*.csv)"));
-
-    if(!filePath.isEmpty())
+    switch (action)
     {
-        ui->lbFilePath->setText(filePath);
-
-        if (loadedFile != nullptr)
+        case IMPORTCSV:
         {
-            delete loadedFile;
+            const QString filePath = QFileDialog::getOpenFileName(this,
+                                                                  tr("Open CSV File"),
+                                                                  "",
+                                                                  tr("CSV files (*.csv)"));
+
+            if (!filePath.isEmpty()) {
+                ui->lbFilePath->setText(filePath);
+
+                if (loadedFile != nullptr)
+                {
+                    delete loadedFile;
+                }
+
+                loadedFile = new QFile(filePath);
+
+                if (!loadedFile->open(QIODevice::ReadOnly))
+                {
+                    qDebug() << loadedFile->errorString();
+                    return;
+                }
+
+                loadCSV();
+            }
         }
+        break;
 
-        loadedFile = new QFile(filePath);
-
-        if (!loadedFile->open(QIODevice::ReadOnly))
+    case EXPORTCSV:
         {
-            qDebug() << loadedFile->errorString();
-            return;
-        }
+            QString fileName = QFileDialog::getSaveFileName(this,
+                                                            tr("Save File"),
+                                                            "",
+                                                            tr("Excel (*.csv)"));
 
-        loadCSV();
+            if(!fileName.isEmpty())
+            {
+                saveCSV(fileName);
+            }
+        }
+        break;
+
     }
+
+
+}
+
+void CustomCSVImportForm::saveCSV(const QString &fileName)
+{
+    const eDELIMETER delimeter = static_cast<eDELIMETER>(ui->cmDelimeter->currentIndex());
+
+    char chDelimeter = ',';
+    switch (delimeter)
+    {
+        case COMMA_SEPARATED:
+            chDelimeter = ','; break;
+        case SEMICOLON_SEPARATED:
+            chDelimeter = ';'; break;
+        case POINT_SEPARATED:
+            chDelimeter = '.'; break;
+    }
+
+    QFile data(fileName);
+
+    if(data.open(QFile::WriteOnly |QFile::Truncate))
+    {
+        QTextStream output(&data);
+
+        if(ui->cbHeader->isChecked())
+        {
+            const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type")} );
+
+            for (const QString &str : header)
+            {
+                output << str << chDelimeter;
+            }
+        }
+
+        output << '\n';
+
+        for (const sSTOCKDATA &stock : qAsConst(exportTableData))
+        {
+            QString curr;
+            switch (stock.currency)
+            {
+                case CZK: curr = "CZK"; break;
+                case EUR: curr = "EUR"; break;
+                case USD: curr = "USD"; break;
+                case GBP: curr = "GBP"; break;
+            }
+
+            QString type;
+            switch (stock.type)
+            {
+                case DEPOSIT:
+                    type = "Deposit";
+                    break;
+                case WITHDRAWAL:
+                    type = "Withdrawal";
+                    break;
+                case BUY:
+                    type = "Buy";
+                    break;
+                case SELL:
+                    type = "Sell";
+                    break;
+                case FEE:
+                    type = "Fee";
+                    break;
+                case DIVIDEND:
+                    type = "Dividend";
+                    break;
+                case TAX:
+                    type = "Tax";
+                    break;
+                case TRANSACTIONFEE:
+                    type = "Transactionfee";
+                    break;
+                case CURRENCYEXCHANGE:
+                    type = "Currency exchange";
+                    break;
+            }
+
+            output << stock.dateTime.date().toString("dd.MM.yyyy") << chDelimeter;
+            output << stock.dateTime.time().toString("hh:mm") << chDelimeter;
+            output << stock.ticker << chDelimeter;
+            output << stock.ISIN << chDelimeter;
+            output << stock.stockName << chDelimeter;
+            output << curr << chDelimeter;
+            output << stock.price << chDelimeter;
+            output << stock.fee << chDelimeter;
+            output << type << chDelimeter;
+            output << '\n';
+        }
+    }
+
+    data.close();
 }
 
 void CustomCSVImportForm::loadCSV()
 {
-    if(loadedFile == nullptr)
+    if (loadedFile == nullptr)
     {
         return;
     }
@@ -135,6 +283,7 @@ void CustomCSVImportForm::loadCSV()
 
     ui->table->setRowCount(0);
     ui->table->setSortingEnabled(false);
+
     while (!loadedFile->atEnd())
     {
         QString line = loadedFile->readLine();
@@ -284,26 +433,26 @@ void CustomCSVImportForm::on_table_cellDoubleClicked(int row, int column)
             const int pos = itemTypes.indexOf(item);
             const eITEMTYPE type = static_cast<eITEMTYPE>(pos);
 
-            selectedColumnType.append(qMakePair(type, column));
+            selectedColumnType.append( {column, type} );
 
-            checkTableColumns();
+            validateTableColumns();
         }
     }
 }
 
-void CustomCSVImportForm::checkTableColumns()
+void CustomCSVImportForm::validateTableColumns()
 {
     for (int col = 0; col<ui->table->columnCount(); ++col)
     {
-        auto it = std::find_if(selectedColumnType.begin(), selectedColumnType.end(), [col](QPair<eITEMTYPE, int> val)
+        auto it = std::find_if(selectedColumnType.begin(), selectedColumnType.end(), [col](sCOLUMNTYPE val)
                                             {
-                                                return val.second == col;
+                                                return val.column == col;
                                             });
         eITEMTYPE columnType;
 
         if(it != selectedColumnType.end())
         {
-            columnType = it->first;
+            columnType = it->type;
         }
         else
         {
@@ -324,9 +473,9 @@ void CustomCSVImportForm::checkTableColumns()
 
             switch (columnType)
             {
-                case NO:
+                case ITEMNO:
                     break;
-                case DATE:
+                case ITEMDATE:
                     {
                         if (QDate::fromString(text, dateTypes[selectedDateType].replace('?', '.')).isValid() ||
                             QDate::fromString(text, dateTypes[selectedDateType].replace('?', '/')).isValid() ||
@@ -340,7 +489,7 @@ void CustomCSVImportForm::checkTableColumns()
                         }
                     }
                     break;
-                case TIME:
+                case ITEMTIME:
                     {
                         if (QTime::fromString(text, "hh:mm").isValid() || QTime::fromString(text, "hh:mm:ss").isValid())
                         {
@@ -352,10 +501,10 @@ void CustomCSVImportForm::checkTableColumns()
                         }
                     }
                     break;
-                case TICKER:
+                case ITEMTICKER:
                     item->setBackground(Qt::green);
                     break;
-                case ISIN:
+                case ITEMISIN:
                     {
                         QRegExp rx("[a-zA-Z]{2}[a-zA-Z0-9]{1,10}");
                         QRegExpValidator v(rx, 0);
@@ -370,7 +519,7 @@ void CustomCSVImportForm::checkTableColumns()
                         }
                     }
                     break;
-                case CURRENCY:
+                case ITEMCURRENCY:
                     {
                         QRegExp rx("[a-zA-Z]{3}");
                         QRegExpValidator v(rx, 0);
@@ -385,8 +534,8 @@ void CustomCSVImportForm::checkTableColumns()
                         }
                     }
                     break;
-                case VALUE:
-                case FEE:
+                case ITEMVALUE:
+                case ITEMFEE:
                     {
                         QRegExp rx("[+-]?[0-9]+[.]?[0-9]*[,]?[0-9]*");
                         QRegExpValidator v(rx, 0);
@@ -401,7 +550,7 @@ void CustomCSVImportForm::checkTableColumns()
                         }
                     }
                     break;
-                case TYPE:
+                case ITEMTYPE:
                     {
                         if(typeTypes.contains(text, Qt::CaseInsensitive))
                         {
@@ -414,9 +563,104 @@ void CustomCSVImportForm::checkTableColumns()
     }
 }
 
-
-
-void CustomCSVImportForm::on_cmDateType_currentIndexChanged(int index)
+void CustomCSVImportForm::fillTable(StockDataType *data)
 {
-    selectedDateType = index;
+    exportTableData.clear();
+
+    for (const auto &it : *qAsConst(data))
+    {
+        exportTableData.append(it);
+    }
+
+    std::sort(exportTableData.begin(), exportTableData.end(), [](sSTOCKDATA &a, sSTOCKDATA &b)
+              {
+                  return a.dateTime > b.dateTime;
+              });
+
+    exportTableData.erase(std::remove_if(exportTableData.begin(), exportTableData.end(),
+                          [](const sSTOCKDATA &x)
+                          {
+                            return x.stockName.toLower().contains("fundshare");
+                          }),
+                          exportTableData.end());
+
+    ui->table->setRowCount(0);
+
+    const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type")} );
+    ui->table->setColumnCount(header.count());
+    ui->table->setHorizontalHeaderLabels(header);
+
+    int pos = 0;
+
+    for (const sSTOCKDATA &stock : qAsConst(exportTableData))
+    {
+        ui->table->insertRow(pos);
+
+        QString curr;
+        switch (stock.currency)
+        {
+            case CZK: curr = "CZK"; break;
+            case EUR: curr = "EUR"; break;
+            case USD: curr = "USD"; break;
+            case GBP: curr = "GBP"; break;
+        }
+
+        QString type;
+        switch (stock.type)
+        {
+            case DEPOSIT:
+                type = "Deposit";
+                break;
+            case WITHDRAWAL:
+                type = "Withdrawal";
+                break;
+            case BUY:
+                type = "Buy";
+                break;
+            case SELL:
+                type = "Sell";
+                break;
+            case FEE:
+                type = "Fee";
+                break;
+            case DIVIDEND:
+                type = "Dividend";
+                break;
+            case TAX:
+                type = "Tax";
+                break;
+            case TRANSACTIONFEE:
+                type = "Transactionfee";
+                break;
+            case CURRENCYEXCHANGE:
+                type = "Currency exchange";
+                break;
+        }
+
+        ui->table->setItem(pos, 0, new QTableWidgetItem(stock.dateTime.date().toString("dd.MM.yyyy")));
+        ui->table->setItem(pos, 1, new QTableWidgetItem(stock.dateTime.time().toString("hh:mm")));
+        ui->table->setItem(pos, 2, new QTableWidgetItem(stock.ticker));
+        ui->table->setItem(pos, 3, new QTableWidgetItem(stock.ISIN));
+        ui->table->setItem(pos, 4, new QTableWidgetItem(stock.stockName));
+        ui->table->setItem(pos, 5, new QTableWidgetItem(curr));
+        ui->table->setItem(pos, 6, new QTableWidgetItem(QString::number(stock.price)));
+        ui->table->setItem(pos, 7, new QTableWidgetItem(QString::number(stock.fee)));
+        ui->table->setItem(pos, 8, new QTableWidgetItem(type));
+
+        pos++;
+    }
+
+    ui->table->setSortingEnabled(false);
+
+    for (int row = 0; row<ui->table->rowCount(); ++row)
+    {
+        for (int col = 0; col<ui->table->columnCount(); ++col)
+        {
+            ui->table->item(row, col)->setTextAlignment(Qt::AlignCenter);
+        }
+    }
+
+    ui->table->resizeColumnsToContents();
+    ui->table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+
 }

@@ -93,7 +93,7 @@ void SettingsForm::on_pbLoadParameters_clicked()
                                    "This will overwrite your screener parameters setting!\nDo you want to continue?",
                                    QMessageBox::Yes, QMessageBox::No);
 
-    if(ret == QMessageBox::Yes)
+    if (ret == QMessageBox::Yes)
     {
         emit loadOnlineParameters();
     }
@@ -124,7 +124,7 @@ void SettingsForm::on_pbDegiroPath_clicked()
 
     const QString currentPath = ui->leDegiroCSV->text();
 
-    if(!currentPath.isEmpty())
+    if (!currentPath.isEmpty())
     {
         QDir dir = QFileInfo(currentPath).absoluteDir();
         path = dir.absolutePath();

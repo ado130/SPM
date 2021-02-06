@@ -26,7 +26,7 @@ void Screener::loadAllScreenerData()
 {
     QFile qFile(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + SCREENERALLDATA);
 
-    if(qFile.exists())
+    if (qFile.exists())
     {
         if (qFile.open(QIODevice::ReadOnly))
         {
@@ -98,16 +98,16 @@ sONLINEDATA Screener::finvizParse(QString data)
 
     QStringList TRvalues = content.mid(startInnerTable, endInnderTable-startInnerTable).split("<tr");
 
-    for(const QString &TR : TRvalues)
+    for (const QString &TR : TRvalues)
     {
-        if(!TR.startsWith(" class")) continue;
+        if (!TR.startsWith(" class")) continue;
 
         QStringList TDvalues = TR.split("<td");
         TDvalues.removeFirst();
 
-        for(int a = 0; a<TDvalues.count(); a+=2)
+        for (int a = 0; a<TDvalues.count(); a+=2)
         {
-            if(!TDvalues.at(a).startsWith(" width")) continue;
+            if (!TDvalues.at(a).startsWith(" width")) continue;
 
             QString name = TDvalues.at(a);
             QString value = TDvalues.at(a+1);
@@ -118,7 +118,7 @@ sONLINEDATA Screener::finvizParse(QString data)
 
             name = name.mid(startName+1, endName-(startName+1));
 
-            if(value.contains("<span"))
+            if (value.contains("<span"))
             {
                 int startValue = value.indexOf("<span", 0);
                 startValue = value.indexOf(">", startValue);
@@ -126,14 +126,14 @@ sONLINEDATA Screener::finvizParse(QString data)
 
                 value = value.mid(startValue+1, endValue-(startValue+1));
             }
-            else if(value.contains("<small>"))
+            else if (value.contains("<small>"))
             {
                 int startValue = value.indexOf("<small>", 0);
                 int endValue = value.indexOf("</small>", startValue);
 
                 value = value.mid(startValue+7, endValue-(startValue+7));
             }
-            else if(value.contains("<b>"))
+            else if (value.contains("<b>"))
             {
                 int startValue = value.indexOf("<b>", 0);
                 int endValue = value.indexOf("</b>", startValue);
@@ -172,7 +172,7 @@ sONLINEDATA Screener::yahooParse(QString data)
 
         QStringList TRvalues = body.mid(startTB, endTB-startTB).split("<tr");
 
-        for(const QString &TR : TRvalues)
+        for (const QString &TR : TRvalues)
         {
             if(!TR.startsWith(" class")) continue;
 

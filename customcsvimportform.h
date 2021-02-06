@@ -18,21 +18,16 @@ class CustomCSVImportForm : public QDialog
 {
     Q_OBJECT
 
-    enum eITEMTYPE
+    enum eITEMTYPE { ITEMNO = 0, ITEMDATE, ITEMTIME, ITEMTICKER, ITEMISIN, ITEMCURRENCY, ITEMVALUE, ITEMFEE, ITEMTYPE };
+
+    typedef struct sCOLUMNTYPE
     {
-        NO = 0,
-        DATE,
-        TIME,
-        TICKER,
-        ISIN,
-        CURRENCY,
-        VALUE,
-        FEE,
-        TYPE
-    };
+        int column;
+        eITEMTYPE type;
+    }sCOLUMNTYPE;
 
 public:
-    explicit CustomCSVImportForm(QWidget *parent = nullptr);
+    explicit CustomCSVImportForm(eCUSTOMCSVACTION action, QWidget *parent = nullptr, StockDataType *data = nullptr);
     ~CustomCSVImportForm();
 
 private slots:
@@ -40,24 +35,28 @@ private slots:
     void on_table_cellDoubleClicked(int row, int column);
 
     void loadCSV();   
-    void checkTableColumns();
-    void on_cmDateType_currentIndexChanged(int index);
+    void validateTableColumns();
 
 private:
     Ui::CustomCSVImportForm *ui;
 
-    QFile *loadedFile;
+    eCUSTOMCSVACTION action;
 
-    int setTableHeader(const QString &line, const char &delimeter);
-    int setTableHeader(const int &columns);
-    QStringList parseLine(QString line, char delimeter);
+    QFile *loadedFile;
+    QVector<sSTOCKDATA> exportTableData;
 
     QStringList itemTypes;
     QStringList dateTypes;
     QStringList typeTypes;
 
-    QVector<QPair<eITEMTYPE, int>> selectedColumnType;
+    QVector<sCOLUMNTYPE> selectedColumnType;
     int selectedDateType;
+
+    int setTableHeader(const QString &line, const char &delimeter);
+    int setTableHeader(const int &columns);
+    QStringList parseLine(QString line, char delimeter);
+    void saveCSV(const QString &fileName);
+    void fillTable(StockDataType *data);
 };
 
 #endif // CUSTOMCSVIMPORTFORM_H

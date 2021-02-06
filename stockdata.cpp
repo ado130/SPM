@@ -94,16 +94,16 @@ double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDat
 
     double price = 0.0;
 
-    for(const sSTOCKDATA &stock : vector)
+    for (const sSTOCKDATA &stock : vector)
     {
-        if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+        if ( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
-        if(stock.type == BUY || stock.type == SELL)
+        if (stock.type == BUY || stock.type == SELL)
         {
             QString rates;
             eCURRENCY currencyFrom = stock.currency;
 
-            switch(currencyFrom)
+            switch (currencyFrom)
             {
                 case USD: rates = "USD";
                     break;
@@ -117,7 +117,7 @@ double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDat
 
             rates += "2";
 
-            switch(selectedCurrency)
+            switch (selectedCurrency)
             {
                 case USD: rates += "USD";
                     break;
@@ -151,7 +151,7 @@ double StockData::getReceivedDividend(const QString &ISIN, const QDate &from, co
             QString rates;
             eCURRENCY currencyFrom = stock.currency;
 
-            switch(currencyFrom)
+            switch (currencyFrom)
             {
                 case USD: rates = "USD";
                     break;
@@ -165,7 +165,7 @@ double StockData::getReceivedDividend(const QString &ISIN, const QDate &from, co
 
             rates += "2";
 
-            switch(selectedCurrency)
+            switch (selectedCurrency)
             {
                 case USD: rates += "USD";
                     break;
@@ -189,15 +189,15 @@ double StockData::getTotalSell(const QDate &from, const QDate &to, double EUR2CZ
     double price = 0.0;
     QList<QString> keys = stockData.keys();
 
-    for(const QString &key : keys)
+    for (const QString &key : keys)
     {
-        for(const sSTOCKDATA &stock : stockData.value(key))
+        for (const sSTOCKDATA &stock : stockData.value(key))
         {
-            if( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
+            if ( !(stock.dateTime.date() >= from && stock.dateTime.date() <= to) ) continue;
 
             if(stock.type == SELL)
             {
-                switch(stock.currency)
+                switch (stock.currency)
                 {
                     case USD: price += stock.price * stock.count * USD2CZK;
                         break;
@@ -219,7 +219,7 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
 {
     StockDataType stockList = getStockData();
 
-    if(stockList.isEmpty())
+    if (stockList.isEmpty())
     {
         return QVector<sPDFEXPORTDATA>();
     }
@@ -232,13 +232,13 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
 
     QList<QString> keys = stockList.keys();
 
-    for(const QString &key : keys)
+    for (const QString &key : keys)
     {
-        for(const sSTOCKDATA &deg : stockList.value(key))
+        for (const sSTOCKDATA &deg : stockList.value(key))
         {
-            if( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
+            if ( !(deg.dateTime.date() >= from && deg.dateTime.date() <= to) ) continue;
 
-            if( deg.stockName.toLower().contains("fundshare") ) continue;
+            if ( deg.stockName.toLower().contains("fundshare") ) continue;
 
 
             if(deg.type == SELL)
@@ -278,7 +278,7 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
                     exportData.append(pdfRow);
                 }
             }
-            else if(deg.type == DIVIDEND)
+            else if (deg.type == DIVIDEND)
             {
                 sPDFEXPORTDATA pdfRow;
 
@@ -318,7 +318,7 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
                                        (const sPDFEXPORTDATA& pdf) -> bool { return ( (pdf.date.date() == pdfRow.date.date()) && (pdf.name == pdfRow.name) ); }
                                        );
 
-                if(it != exportData.end())
+                if (it != exportData.end())
                 {
                     it->priceInCZK += pdfRow.priceInCZK;
                     it->tax += pdfRow.tax;
@@ -418,9 +418,9 @@ QString StockData::getCachedISINParam(const QString &ISIN, const QString &param)
                            }
                            );
 
-    if(it != cachedStockData.end())
+    if (it != cachedStockData.end())
     {
-        if(it->second.row.contains(param))
+        if (it->second.row. contains(param))
         {
             return it->second.row.value(param);
         }
@@ -435,20 +435,20 @@ void StockData::loadOnlineStockInfo()
 
     QDir dir(path);
 
-    if(!dir.exists())
+    if (!dir.exists())
     {
         dir.mkpath(".");
     }
 
     QStringList files = dir.entryList(QStringList() << "*.json" << "*.JSON", QDir::Files);
 
-    for(const QString &file : files)
+    for (const QString &file : files)
     {
         QString filePath = path + file;
 
         QFile loadFile(filePath);
 
-        if(!loadFile.open(QIODevice::ReadOnly))
+        if (!loadFile.open(QIODevice::ReadOnly))
         {
             qWarning("Couldn't open json file.");
         }
@@ -465,32 +465,32 @@ void StockData::loadOnlineStockInfo()
 
         sONLINEDATA table;
 
-        if(json.keys().count() > 0)
+        if (json.keys().count() > 0)
         {
             QString ISIN = json.keys().at(0);
             QJsonObject arr = json.value(ISIN).toObject();
 
-            for(const QString& key : arr.keys())
+            for (const QString& key : arr.keys())
             {
                 QJsonValue value = arr.value(key);
 
-                if(key.contains("Sector"))
+                if (key.contains("Sector"))
                 {
                     table.info.sector = value.toString();
                 }
-                else if(key.contains("Ticker"))
+                else if (key.contains("Ticker"))
                 {
                     table.info.ticker = value.toString();
                 }
-                else if(key.contains("Country"))
+                else if (key.contains("Country"))
                 {
                     table.info.country = value.toString();
                 }
-                else if(key.contains("Industry"))
+                else if (key.contains("Industry"))
                 {
                     table.info.industry = value.toString();
                 }
-                else if(key.contains("Stockname"))
+                else if (key.contains("Stockname"))
                 {
                     table.info.stockName = value.toString();
                 }
@@ -510,7 +510,7 @@ void StockData::loadOnlineStockInfo()
 
 void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &table)
 {
-    if(table.row.isEmpty() || ISIN.isEmpty()) return;
+    if (table.row.isEmpty() || ISIN.isEmpty()) return;
 
     auto it = std::find_if(cachedStockData.begin(), cachedStockData.end(), [ISIN](QPair<QString, sONLINEDATA> a)
                            {
@@ -538,7 +538,7 @@ void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &tabl
 
     QStringList keys = table.row.keys();
 
-    for(const QString &key : keys)
+    for (const QString &key : keys)
     {
         recordObject.insert(key, table.row.value(key));
     }

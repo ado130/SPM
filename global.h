@@ -30,6 +30,12 @@ enum eDELIMETER
     POINT_SEPARATED = 2
 };
 
+enum eCUSTOMCSVACTION
+{
+    IMPORTCSV = 0,
+    EXPORTCSV
+};
+
 struct sSCREENERPARAM
 {
     QString name;

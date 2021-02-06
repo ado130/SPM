@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QMessageBox::critical(this,
                               "SSL supports",
-                              "The application does not support the SSL, the application might not work correct!",
+                              "The application does not support the SSL and might not work properly!",
                               QMessageBox::Ok);
     }
 
@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
                     database->getSetting().height);
     }
 
-    // set status bar text
+    // Set status bar text
     QLabel *author = new QLabel("Author: Andrej © 2019-2020", this);
     QLabel *version = new QLabel(QString("Version: %1").arg(VERSION_STR), this);
     QLabel *built = new QLabel(QString("Built: %1 %2").arg(__DATE__).arg(__TIME__), this);
@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lePDFUSD2CZK->setText(QString::number(database->getSetting().USD2CZKDAP, 'f', 2));
     ui->lePDFGBP2CZK->setText(QString::number(database->getSetting().GBP2CZKDAP, 'f', 2));
 
-    // default graph date time values
+    // Default graph date time values
     ui->deGraphTo->setDate(QDate::currentDate());
     ui->deGraphFrom->setDate(QDate(QDate::currentDate().year(), 1, 1));
     ui->deGraphYear->setDate(QDate::currentDate());
@@ -326,14 +326,17 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionCSV_Import_triggered()
 {
-    CustomCSVImportForm *dlg = new CustomCSVImportForm(this);
+    CustomCSVImportForm *dlg = new CustomCSVImportForm(IMPORTCSV, this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->open();
 }
 
 void MainWindow::on_actionCSV_Export_triggered()
 {
-
+    StockDataType data = stockData->getStockData();
+    CustomCSVImportForm *dlg = new CustomCSVImportForm(EXPORTCSV, this, &data);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->open();
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()
@@ -621,14 +624,8 @@ void MainWindow::fillOverviewTable()
     }
 
     ui->tableOverview->resizeColumnsToContents();
+    ui->tableOverview->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
 
-    for (int col = 0; col < ui->tableOverview->horizontalHeader()->count(); ++col)
-    {
-        if (col == 2)
-        {
-            ui->tableOverview->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Stretch);
-        }
-    }
 }
 
 void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)

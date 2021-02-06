@@ -21,15 +21,15 @@ ScreenerForm::~ScreenerForm()
 
 void ScreenerForm::fillList()
 {
-    for(const sSCREENERPARAM &row : screenerParams)
+    for (const sSCREENERPARAM &row : qAsConst(screenerParams))
     {
-        if(row.name.isEmpty() || row.name.isNull() || row.name == "FINVIZ" || row.name == "YAHOO") continue;
+        if (row.name.isEmpty() || row.name.isNull() || row.name == "FINVIZ" || row.name == "YAHOO") continue;
 
         QListWidgetItem* item = new QListWidgetItem(row.name, ui->listWidget);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable); // set checkable flag
         item->setCheckState(row.enabled ? Qt::Checked : Qt::Unchecked); // AND initialize check state
 
-        if(item->text() == "Ticker")
+        if (item->text() == "Ticker")
         {
             item->setCheckState(Qt::Checked);
         }
@@ -40,7 +40,7 @@ void ScreenerForm::on_buttonBox_accepted()
 {
     screenerParams.clear();
 
-    for(int a = 0; a<ui->listWidget->count(); ++a)
+    for (int a = 0; a<ui->listWidget->count(); ++a)
     {
         sSCREENERPARAM param;
         param.name = ui->listWidget->item(a)->text();
@@ -56,7 +56,7 @@ void ScreenerForm::on_listWidget_itemChanged(QListWidgetItem *item)
 {
     QString text = item->text();
 
-    if(text == "Ticker")
+    if (text == "Ticker")
     {
         item->setCheckState(Qt::Checked);
     }
