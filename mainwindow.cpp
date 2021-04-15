@@ -123,8 +123,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Update the exchange rates
     if (database->getSetting().lastExchangeRatesUpdate < QDate::currentDate())
     {
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-
         connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::updateExchangeRates);
         downloadManager.get()->execute("https://api.exchangeratesapi.io/latest?base=USD&symbols=EUR,CZK,GBP");
     }
@@ -206,7 +204,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-    QTimer::singleShot(1000, [this]()
+    QTimer::singleShot(5000, [this]()
                        {
                             connect(downloadManager.get(), &DownloadManager::sendData, this, &MainWindow::checkVersion);
                             downloadManager.get()->execute("http://ado.4fan.cz/SPM/version.txt");
@@ -479,6 +477,11 @@ void MainWindow::updateExchangeRates(const QByteArray data, QString statusCode)
 
                 setStatus("The exchange rates have been updated!");
                 QApplication::restoreOverrideCursor();
+            }
+            else
+            {
+                QJsonObject error = jsonObject["error"].toObject();
+                setStatus(QString("The exchange rates have not been updated because of the following error: %1: %2").arg(error["code"].toString()).arg(error["info"].toString()));
             }
         }
         else
