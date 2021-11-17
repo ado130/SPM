@@ -166,7 +166,7 @@ sOVERVIEWINFO Calculation::getOverviewInfo(const QDate &from, const QDate &to)
 
     if(!qFuzzyIsNull(invested-sell))
     {
-        info.DY = ((dividends-divTax)/(invested-sell))*100.0;
+        info.DY = ((dividends-divTax)/(invested))*100.0;
     }
 
     //info.account = (deposit + sell + dividends - divTax - invested - fees - transFees - withdrawal);

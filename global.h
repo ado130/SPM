@@ -47,7 +47,8 @@ enum eCURRENCY
     CZK = 0,
     EUR = 1,
     USD = 2,
-    GBP = 3
+    GBP = 3,
+    CAD = 4
 };
 
 struct sSETTINGS
@@ -70,22 +71,32 @@ struct sSETTINGS
     double CZK2USD;
     double CZK2EUR;
     double CZK2GBP;
+    double CZK2CAD;
 
     double EUR2USD;
     double EUR2GBP;
     double EUR2CZK;
+    double EUR2CAD;
 
     double GBP2USD;
     double GBP2EUR;
     double GBP2CZK;
+    double GBP2CAD;
 
     double USD2EUR;
     double USD2GBP;
-    double USD2CZK;   
+    double USD2CZK;
+    double USD2CAD;
+
+    double CAD2USD;
+    double CAD2EUR;
+    double CAD2GBP;
+    double CAD2CZK;
 
     double EUR2CZKDAP;
     double USD2CZKDAP;
     double GBP2CZKDAP;
+    double CAD2CZKDAP;
 
     // DeGiro
     QString degiroCSV;

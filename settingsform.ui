@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>430</width>
+    <width>685</width>
     <height>309</height>
    </rect>
   </property>
@@ -73,7 +73,7 @@ QTabBar::close-button {
 </string>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -211,6 +211,11 @@ QTabBar::close-button {
                <string>USD</string>
               </property>
              </item>
+             <item>
+              <property name="text">
+               <string>CAD</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item>
@@ -298,7 +303,7 @@ QTabBar::close-button {
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_28">
+        <layout class="QHBoxLayout" name="horizontalLayout_37">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_14">
            <item>
@@ -368,10 +373,33 @@ QTabBar::close-button {
            </item>
           </layout>
          </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_28">
+           <item>
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>CZK2CAD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCZK2CAD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_19">
+        <layout class="QHBoxLayout" name="horizontalLayout_30">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_10">
            <item>
@@ -429,6 +457,29 @@ QTabBar::close-button {
            </item>
            <item>
             <widget class="MyLineEdit" name="leEUR2CZK">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_34">
+           <item>
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>EUR2CAD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leEUR2CAD">
              <property name="styleSheet">
               <string notr="true">QLineEdit {
     border: 2px solid gray;
@@ -514,10 +565,33 @@ QTabBar::close-button {
            </item>
           </layout>
          </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_35">
+           <item>
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string>USD2CAD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leUSD2CAD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_30">
+        <layout class="QHBoxLayout" name="horizontalLayout_19">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_31">
            <item>
@@ -587,10 +661,129 @@ QTabBar::close-button {
            </item>
           </layout>
          </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_36">
+           <item>
+            <widget class="QLabel" name="label_27">
+             <property name="text">
+              <string>GBP2CAD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leGBP2CAD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_29">
+        <layout class="QHBoxLayout" name="horizontalLayout_38">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_39">
+           <item>
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>CAD2EUR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCAD2EUR">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_40">
+           <item>
+            <widget class="QLabel" name="label_29">
+             <property name="text">
+              <string>CAD2USD</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCAD2USD">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_41">
+           <item>
+            <widget class="QLabel" name="label_30">
+             <property name="text">
+              <string>CAD2CZK</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCAD2CZK">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_42">
+           <item>
+            <widget class="QLabel" name="label_31">
+             <property name="text">
+              <string>CAD2GBP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCAD2GBP">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_43">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_25">
            <item>
@@ -675,20 +868,36 @@ QTabBar::close-button {
            </item>
           </layout>
          </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_29">
+           <item>
+            <widget class="QLabel" name="label_32">
+             <property name="text">
+              <string>CAD2CZK DAP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="MyLineEdit" name="leCAD2CZKDAP">
+             <property name="statusTip">
+              <string/>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {
+    border: 2px solid gray;
+    border-radius: 10px;
+    padding: 0 8px;
+    selection-background-color: darkgray;
+}</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>102</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>

@@ -65,6 +65,8 @@ double StockData::getTotalPrice(const QString &ISIN, const QDate &from, const QD
                     break;
                 case GBP: rates = "GBP";
                     break;
+                case CAD: rates = "CAD";
+                    break;
             }
 
             rates += "2";
@@ -78,6 +80,8 @@ double StockData::getTotalPrice(const QString &ISIN, const QDate &from, const QD
                 case EUR: rates += "EUR";
                     break;
                 case GBP: rates += "GBP";
+                    break;
+                case CAD: rates += "CAD";
                     break;
             }
 
@@ -113,6 +117,8 @@ double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDat
                     break;
                 case GBP: rates = "GBP";
                     break;
+                case CAD: rates = "CAD";
+                    break;
             }
 
             rates += "2";
@@ -126,6 +132,8 @@ double StockData::getTotalFee(const QString &ISIN, const QDate &from, const QDat
                 case EUR: rates += "EUR";
                     break;
                 case GBP: rates += "GBP";
+                    break;
+                case CAD: rates += "CAD";
                     break;
             }
 
@@ -161,6 +169,8 @@ double StockData::getReceivedDividend(const QString &ISIN, const QDate &from, co
                     break;
                 case GBP: rates = "GBP";
                     break;
+                case CAD: rates = "CAD";
+                    break;
             }
 
             rates += "2";
@@ -174,6 +184,8 @@ double StockData::getReceivedDividend(const QString &ISIN, const QDate &from, co
                 case EUR: rates += "EUR";
                     break;
                 case GBP: rates += "GBP";
+                    break;
+                case CAD: rates += "CAD";
                     break;
             }
 
@@ -226,8 +238,6 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
 
     QVector<sPDFEXPORTDATA> exportData;
 
-
-
     bool isSellValueTest = getTotalSell(from, to, EUR2CZK, USD2CZK, GBP2CZK) > 100000 ? true : false;
 
     QList<QString> keys = stockList.keys();
@@ -269,7 +279,7 @@ QVector<sPDFEXPORTDATA> StockData::prepareDataToExport(const QDate &from, const 
                         case GBP:
                             pdfRow.priceInCZK = round(deg.price * GBP2CZK) * deg.count;
                             pdfRow.priceInOriginal = QString("%1 %2").arg(deg.price * deg.count).arg("GBP");
-                            break;
+                            break;                         
                     }
 
                     pdfRow.date = deg.dateTime;
@@ -524,10 +534,6 @@ void StockData::saveOnlineStockInfo(const QString &ISIN, const sONLINEDATA &tabl
     }
 
     cachedStockData.push_back(qMakePair(ISIN, table));
-
-
-
-
 
     QJsonObject recordObject;
     recordObject.insert("Sector", table.info.sector);

@@ -429,7 +429,7 @@ QGroupBox::title {
              <item>
               <widget class="MyLineEdit" name="leDY">
                <property name="toolTip">
-                <string>Dividends / (Invested - Sold)</string>
+                <string>Netto Dividends / Invested</string>
                </property>
                <property name="styleSheet">
                 <string notr="true">QLineEdit {

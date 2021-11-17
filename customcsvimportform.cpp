@@ -183,7 +183,7 @@ void CustomCSVImportForm::saveCSV(const QString &fileName)
 
         if(ui->cbHeader->isChecked())
         {
-            const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type")} );
+            const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type"), tr("Shares")} );
 
             for (const QString &str : header)
             {
@@ -202,6 +202,7 @@ void CustomCSVImportForm::saveCSV(const QString &fileName)
                 case EUR: curr = "EUR"; break;
                 case USD: curr = "USD"; break;
                 case GBP: curr = "GBP"; break;
+                case CAD: curr = "CAD"; break;
             }
 
             QString type;
@@ -245,6 +246,7 @@ void CustomCSVImportForm::saveCSV(const QString &fileName)
             output << stock.price << chDelimeter;
             output << stock.fee << chDelimeter;
             output << type << chDelimeter;
+            output << stock.count << chDelimeter;
             output << '\n';
         }
     }
@@ -586,7 +588,7 @@ void CustomCSVImportForm::fillTable(StockDataType *data)
 
     ui->table->setRowCount(0);
 
-    const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type")} );
+    const QStringList header( {tr("Date"), tr("Time"), tr("Ticker"), tr("ISIN"), tr("Name"), tr("Currency"), tr("Value"), tr("Fee"), tr("Type"), tr("Shares")} );
     ui->table->setColumnCount(header.count());
     ui->table->setHorizontalHeaderLabels(header);
 
@@ -603,6 +605,7 @@ void CustomCSVImportForm::fillTable(StockDataType *data)
             case EUR: curr = "EUR"; break;
             case USD: curr = "USD"; break;
             case GBP: curr = "GBP"; break;
+            case CAD: curr = "CAD"; break;
         }
 
         QString type;
@@ -643,9 +646,11 @@ void CustomCSVImportForm::fillTable(StockDataType *data)
         ui->table->setItem(pos, 3, new QTableWidgetItem(stock.ISIN));
         ui->table->setItem(pos, 4, new QTableWidgetItem(stock.stockName));
         ui->table->setItem(pos, 5, new QTableWidgetItem(curr));
-        ui->table->setItem(pos, 6, new QTableWidgetItem(QString::number(stock.price)));
-        ui->table->setItem(pos, 7, new QTableWidgetItem(QString::number(stock.fee)));
+        ui->table->setItem(pos, 6, new QTableWidgetItem(QString::number(stock.price, 'f', 2)));
+        ui->table->setItem(pos, 7, new QTableWidgetItem(QString::number(stock.fee, 'f', 2)));
         ui->table->setItem(pos, 8, new QTableWidgetItem(type));
+        ui->table->setItem(pos, 9, new QTableWidgetItem(QString::number(stock.count, 'f', 0)));
+
 
         pos++;
     }

@@ -41,22 +41,32 @@ SettingsForm::SettingsForm(sSETTINGS set, QWidget *parent) :
     ui->leCZK2USD->setText(QString::number(setting.CZK2USD, 'f', 2));
     ui->leCZK2EUR->setText(QString::number(setting.CZK2EUR, 'f', 2));
     ui->leCZK2GBP->setText(QString::number(setting.CZK2GBP, 'f', 2));
+    ui->leCZK2CAD->setText(QString::number(setting.CZK2CAD, 'f', 2));
 
     ui->leEUR2USD->setText(QString::number(setting.EUR2USD, 'f', 2));
     ui->leEUR2CZK->setText(QString::number(setting.EUR2CZK, 'f', 2));
     ui->leEUR2GBP->setText(QString::number(setting.EUR2GBP, 'f', 2));
+    ui->leEUR2CAD->setText(QString::number(setting.EUR2CAD, 'f', 2));
 
     ui->leUSD2CZK->setText(QString::number(setting.USD2CZK, 'f', 2));
     ui->leUSD2GBP->setText(QString::number(setting.USD2GBP, 'f', 2));
     ui->leUSD2EUR->setText(QString::number(setting.USD2EUR, 'f', 2));
+    ui->leUSD2CAD->setText(QString::number(setting.USD2CAD, 'f', 2));
 
     ui->leGBP2CZK->setText(QString::number(setting.GBP2CZK, 'f', 2));
     ui->leGBP2USD->setText(QString::number(setting.GBP2USD, 'f', 2));
     ui->leGBP2EUR->setText(QString::number(setting.GBP2EUR, 'f', 2));
+    ui->leGBP2CAD->setText(QString::number(setting.GBP2CAD, 'f', 2));
+
+    ui->leCAD2CZK->setText(QString::number(setting.CAD2CZK, 'f', 2));
+    ui->leCAD2USD->setText(QString::number(setting.CAD2USD, 'f', 2));
+    ui->leCAD2EUR->setText(QString::number(setting.CAD2EUR, 'f', 2));
+    ui->leCAD2GBP->setText(QString::number(setting.CAD2GBP, 'f', 2));
 
     ui->leEUR2CZKDAP->setText(QString::number(setting.EUR2CZKDAP, 'f', 2));
     ui->leUSD2CZKDAP->setText(QString::number(setting.USD2CZKDAP, 'f', 2));
     ui->leGBP2CZKDAP->setText(QString::number(setting.GBP2CZKDAP, 'f', 2));
+    ui->leCAD2CZKDAP->setText(QString::number(setting.CAD2CZKDAP, 'f', 2));
 
     ui->tabWidget->setCurrentIndex(0);
 }
@@ -81,6 +91,7 @@ void SettingsForm::on_buttonBox_accepted()
     setting.EUR2CZKDAP = ui->leEUR2CZKDAP->text().toDouble();
     setting.USD2CZKDAP = ui->leUSD2CZKDAP->text().toDouble();
     setting.GBP2CZKDAP = ui->leGBP2CZKDAP->text().toDouble();
+    setting.CAD2CZKDAP = ui->leCAD2CZKDAP->text().toDouble();
 
     emit setSetting(setting);
 }

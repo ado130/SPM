@@ -827,7 +827,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
     QLabel *labelName = new QLabel(QString("%1").arg(vector.first().stockName));
     labelName->setAlignment(Qt::AlignCenter);
     labelName->setFont(font);
-    HBStockName->addWidget(labelName);
+    HBStockName->addWidget(labelName);;;
     VB->addLayout(HBStockName);
 
     QHBoxLayout *HBIsin = new QHBoxLayout();
@@ -844,7 +844,7 @@ void MainWindow::on_tableOverview_cellDoubleClicked(int row, int column)
 
     connect(table, &QTableWidget::itemDoubleClicked, [this, ISIN, header](QTableWidgetItem *item)
                        {
-                            if(item->flags() & Qt::ItemIsEditable)
+                            if (item->flags() & Qt::ItemIsEditable)
                             {
                                 const QString previousText = item->text();
 
@@ -1062,7 +1062,7 @@ void MainWindow::on_pbShowGraph_clicked()
         QStringList header;
         header << "Month/Year";
 
-        for(quint8 a = 0; a<dividends.keys().count(); ++a)
+        for (quint8 a = 0; a<dividends.keys().count(); ++a)
         {
             header << QString::number(dividends.keys().at(a));
         }
@@ -1556,7 +1556,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
     if (!statusCode.contains("200"))
     {
         qDebug() << QString("There is something wrong with the request! %1").arg(statusCode);
-        setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode).arg(manualAddedRecord.ticker));
+        setStatus(QString("There is something wrong with the request! %1\nPlease check the ticker %2").arg(statusCode, manualAddedRecord.ticker));
     }
     else
     {
@@ -1583,7 +1583,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 
         // The record is not in the ISIN list, add it
         QVector<sISINDATA> isinList = database->getIsinList();
-        auto it = std::find_if(isinList.begin(), isinList.end(), [this](sISINDATA rec)
+        auto it = std::find_if (isinList.begin(), isinList.end(), [this](sISINDATA rec)
                             {
                                 return rec.ISIN == manualAddedRecord.ISIN;
                             });
@@ -1617,7 +1617,7 @@ void MainWindow::addRecord(const QByteArray data, QString statusCode)
 
 void MainWindow::on_cbHideValues_toggled(bool checked)
 {
-    if(checked)
+    if (checked)
     {
         ui->leDeposit->setEchoMode(QLineEdit::Password);
         ui->leWithdrawal->setEchoMode(QLineEdit::Password);
@@ -1637,13 +1637,13 @@ void MainWindow::on_cbHideValues_toggled(bool checked)
         radialGrad.setColorAt(0.5, Qt::white);
         radialGrad.setColorAt(1, Qt::gray);
 
-        for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
+        for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
         {
-            for(int col = 5; col<ui->tableOverview->colorCount(); ++col)
+            for (int col = 5; col<ui->tableOverview->colorCount(); ++col)
             {
                 QTableWidgetItem *passwordItem = ui->tableOverview->item(row, col);
 
-                if(passwordItem != nullptr)
+                if (passwordItem != nullptr)
                 {
                     passwordItem->setData(Qt::UserRole, passwordItem->text());
                     passwordItem->setText("******");
@@ -1668,13 +1668,13 @@ void MainWindow::on_cbHideValues_toggled(bool checked)
         ui->leDY->setEchoMode(QLineEdit::Normal);
         ui->leAccount->setEchoMode(QLineEdit::Normal);
 
-        for(int row = 0; row<ui->tableOverview->rowCount(); ++row)
+        for (int row = 0; row<ui->tableOverview->rowCount(); ++row)
         {
-            for(int col = 5; col<ui->tableOverview->colorCount(); ++col)
+            for (int col = 5; col<ui->tableOverview->colorCount(); ++col)
             {
                 QTableWidgetItem *passwordItem = ui->tableOverview->item(row, col);
 
-                if(passwordItem != nullptr)
+                if (passwordItem != nullptr)
                 {
                     passwordItem->setText(passwordItem->data(Qt::UserRole).toString());
                 }
@@ -3191,9 +3191,7 @@ void MainWindow::fillISINTable()
                             ui->tableISIN->removeRow(row);
                         }
                     }
-                }
-
-                );
+                });
 
 
         ui->tableISIN->setItem(row, 7, new QTableWidgetItem());
@@ -3354,7 +3352,7 @@ void MainWindow::updateStockDataSlot(QString ISIN, sONLINEDATA table)
     {
         it->lastUpdate = QDateTime::currentDateTime();
 
-        if(it->sector != "ETF")
+        if (it->sector != "ETF")
         {
             it->sector = table.info.sector;
             it->industry = table.info.industry;

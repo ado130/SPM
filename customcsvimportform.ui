@@ -195,5 +195,38 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pbClose</sender>
+   <signal>clicked()</signal>
+   <receiver>CustomCSVImportForm</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>980</x>
+     <y>744</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>757</x>
+     <y>742</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pbFinish</sender>
+   <signal>clicked()</signal>
+   <receiver>CustomCSVImportForm</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>894</x>
+     <y>751</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>813</x>
+     <y>753</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

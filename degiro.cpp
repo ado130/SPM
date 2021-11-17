@@ -74,7 +74,14 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         }
         else if(list.at(7).contains("USD"))
         {
-            degiroRaw.currency = USD;
+            if(degiroRaw.ISIN.startsWith("CA"))
+            {
+               degiroRaw.currency = CAD;
+            }
+            else
+            {
+                degiroRaw.currency = USD;
+            }
         }
         else if(list.at(7).contains("EUR"))
         {
@@ -90,7 +97,14 @@ void DeGiro::loadCSV(QString path, eDELIMETER delimeter)
         }
         else if(list.at(9).contains("USD"))
         {
-            degiroRaw.currency = USD;
+            if(degiroRaw.ISIN.startsWith("CA"))
+            {
+                degiroRaw.currency = CAD;
+            }
+            else
+            {
+                degiroRaw.currency = USD;
+            }
         }
         else if(list.at(9).contains("EUR"))
         {
@@ -322,6 +336,9 @@ StockDataType DeGiro::mergeFeeWithEvent(StockDataType &data)
                     case GBP:
                         feeInUSD = exists->price * settings.GBP2USD;
                         break;
+                    case CAD:
+                        feeInUSD = exists->price * settings.CAD2USD;
+                        break;
                 }
 
                 switch (it->currency)
@@ -337,6 +354,9 @@ StockDataType DeGiro::mergeFeeWithEvent(StockDataType &data)
                         break;
                     case GBP:
                         it->fee += feeInUSD * settings.USD2GBP;
+                        break;
+                    case CAD:
+                        it->fee += feeInUSD * settings.USD2CAD;
                         break;
                 }
 

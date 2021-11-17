@@ -53,18 +53,27 @@ Database::Database(QObject *parent) : QObject(parent)
             { "CZK2EUR", [this](double x){return (x * setting.CZK2EUR); }},
             { "CZK2USD", [this](double x){return (x * setting.CZK2USD); }},
             { "CZK2GBP", [this](double x){return (x * setting.CZK2GBP); }},
+            { "CZK2CAD", [this](double x){return (x * setting.CZK2CAD); }},
             { "EUR2EUR", [](double x){return x; }},
             { "EUR2CZK", [this](double x){return (x * setting.EUR2CZK); }},
             { "EUR2USD", [this](double x){return (x * setting.EUR2USD); }},
             { "EUR2GBP", [this](double x){return (x * setting.EUR2GBP); }},
+            { "EUR2CAD", [this](double x){return (x * setting.EUR2CAD); }},
             { "USD2USD", [](double x){return x; }},
             { "USD2CZK", [this](double x){return (x * setting.USD2CZK); }},
             { "USD2EUR", [this](double x){return (x * setting.USD2EUR); }},
             { "USD2GBP", [this](double x){return (x * setting.USD2GBP); }},
+            { "USD2CAD", [this](double x){return (x * setting.USD2CAD); }},
             { "GBP2GBP", [](double x){return x; }},
             { "GBP2CZK", [this](double x){return (x * setting.GBP2CZK); }},
             { "GBP2USD", [this](double x){return (x * setting.GBP2USD); }},
-            { "GBP2EUR", [this](double x){return (x * setting.GBP2EUR); }}
+            { "GBP2EUR", [this](double x){return (x * setting.GBP2EUR); }},
+            { "GBP2CAD", [this](double x){return (x * setting.GBP2CAD); }},
+            { "CAD2CAD", [](double x){return x; }},
+            { "CAD2CZK", [this](double x){return (x * setting.CAD2CZK); }},
+            { "CAD2USD", [this](double x){return (x * setting.CAD2USD); }},
+            { "CAD2EUR", [this](double x){return (x * setting.CAD2EUR); }},
+            { "CAD2GBP", [this](double x){return (x * setting.CAD2GBP); }}
         };
 
     loadConfig();
@@ -105,22 +114,32 @@ void Database::loadConfig()
     setting.CZK2USD = settings.value("Exchange/CZK2USD", 0.044).toDouble();
     setting.CZK2EUR = settings.value("Exchange/CZK2EUR", 0.040).toDouble();
     setting.CZK2GBP = settings.value("Exchange/CZK2GBP", 0.034).toDouble();
+    setting.CZK2CAD = settings.value("Exchange/CZK2CAD", 0.057).toDouble();
 
     setting.EUR2USD = settings.value("Exchange/EUR2USD", 1.12).toDouble();
     setting.EUR2GBP = settings.value("Exchange/EUR2GBP", 0.85).toDouble();
     setting.EUR2CZK = settings.value("Exchange/EUR2CZK", 25.42).toDouble();
+    setting.EUR2CAD = settings.value("Exchange/EUR2CAD", 1.48).toDouble();
 
     setting.GBP2CZK = settings.value("Exchange/GBP2CZK", 29.71).toDouble();
     setting.GBP2EUR = settings.value("Exchange/GBP2EUR", 1.18).toDouble();
     setting.GBP2USD = settings.value("Exchange/GBP2USD", 1.31).toDouble();
+    setting.GBP2CAD = settings.value("Exchange/GBP2CAD", 1.70).toDouble();
 
     setting.USD2CZK = settings.value("Exchange/USD2CZK", 22.68).toDouble();
     setting.USD2EUR = settings.value("Exchange/USD2EUR", 0.89).toDouble();
     setting.USD2GBP = settings.value("Exchange/USD2GBP", 0.76).toDouble();
+    setting.USD2CAD = settings.value("Exchange/USD2CAD", 1.23).toDouble();
+
+    setting.CAD2CZK = settings.value("Exchange/CAD2CZK", 17.50).toDouble();
+    setting.CAD2EUR = settings.value("Exchange/CAD2EUR", 0.68).toDouble();
+    setting.CAD2GBP = settings.value("Exchange/CAD2GBP", 0.59).toDouble();
+    setting.CAD2USD = settings.value("Exchange/CAD2USD", 0.81).toDouble();
 
     setting.EUR2CZKDAP = settings.value("Exchange/EUR2CZKDAP", 25.66).toDouble();
     setting.USD2CZKDAP = settings.value("Exchange/USD2CZKDAP", 22.93).toDouble();
     setting.GBP2CZKDAP = settings.value("Exchange/GBP2CZKDAP", 29.31).toDouble();
+    setting.CAD2CZKDAP = settings.value("Exchange/CAD2CZKDAP", 17.50).toDouble();
 }
 
 void Database::saveConfig()
@@ -154,22 +173,32 @@ void Database::saveConfig()
     settings.setValue("Exchange/CZK2USD", setting.CZK2USD);
     settings.setValue("Exchange/CZK2EUR", setting.CZK2EUR);
     settings.setValue("Exchange/CZK2GBP", setting.CZK2GBP);
+    settings.setValue("Exchange/CZK2CAD", setting.CZK2CAD);
 
     settings.setValue("Exchange/EUR2USD", setting.EUR2USD);
     settings.setValue("Exchange/EUR2GBP", setting.EUR2GBP);
     settings.setValue("Exchange/EUR2CZK", setting.EUR2CZK);
+    settings.setValue("Exchange/EUR2CAD", setting.EUR2CAD);
 
     settings.setValue("Exchange/USD2CZK", setting.USD2CZK);
     settings.setValue("Exchange/USD2EUR", setting.USD2EUR);
     settings.setValue("Exchange/USD2GBP", setting.USD2GBP);
+    settings.setValue("Exchange/USD2CAD", setting.USD2CAD);
 
     settings.setValue("Exchange/GBP2CZK", setting.GBP2CZK);
     settings.setValue("Exchange/GBP2EUR", setting.GBP2EUR);
     settings.setValue("Exchange/GBP2USD", setting.GBP2USD);
+    settings.setValue("Exchange/GBP2CAD", setting.GBP2CAD);
+
+    settings.setValue("Exchange/GBP2CZK", setting.CAD2CZK);
+    settings.setValue("Exchange/GBP2EUR", setting.CAD2EUR);
+    settings.setValue("Exchange/GBP2USD", setting.CAD2USD);
+    settings.setValue("Exchange/GBP2CAD", setting.CAD2GBP);
 
     settings.setValue("Exchange/EUR2CZKDAP", setting.EUR2CZKDAP);
     settings.setValue("Exchange/USD2CZKDAP", setting.USD2CZKDAP);
     settings.setValue("Exchange/GBP2CZKDAP", setting.GBP2CZKDAP);
+    settings.setValue("Exchange/CAD2CZKDAP", setting.CAD2CZKDAP);
 }
 
 void Database::loadScreenParams()
@@ -231,6 +260,8 @@ double Database::getExchangePrice(const eCURRENCY &currencyFrom, const double &p
             break;
         case GBP: rates = "GBP";
             break;
+        case CAD: rates = "CAD";
+            break;
     }
 
     rates += "2";
@@ -245,6 +276,8 @@ double Database::getExchangePrice(const eCURRENCY &currencyFrom, const double &p
             break;
         case GBP: rates += "GBP";
             break;
+        case CAD: rates += "CAD";
+            break;
     }
 
     return exchangeRatesFuncMap[rates](price);
@@ -258,6 +291,7 @@ QString Database::getCurrencyText(eCURRENCY currency)
         case EUR: return "EUR";
         case USD: return "USD";
         case GBP: return "GBP";
+        case CAD: return "CAD";
     }
 
     return "";
@@ -271,6 +305,7 @@ QString Database::getCurrencySign(eCURRENCY currency)
         case EUR: return "€";
         case USD: return "$";
         case GBP: return "Ł";
+        case CAD: return "CAD";
     }
 
     return "";
@@ -331,7 +366,7 @@ void Database::setEnabledScreenerParams()
 {
     enabledScreenerParams.clear();
 
-    for(const sSCREENERPARAM &param : setting.screenerParams)
+    for(const sSCREENERPARAM &param : qAsConst(setting.screenerParams))
     {
         if(param.enabled)
         {
